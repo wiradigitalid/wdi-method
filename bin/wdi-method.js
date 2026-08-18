@@ -59,6 +59,8 @@ const AGENT_LABELS = {
 };
 
 const BMAD_INSTALL = `npx bmad-method install`;
+const REPO_URL = "https://github.com/wiradigitalid/wdi-method";
+const HELP_SKILL = "wdi-help";
 const BMAD_REPO = "https://github.com/bmad-code-org/BMAD-METHOD";
 const WDI_REPO = "https://github.com/wiradigitalid/wdi-method";
 
@@ -358,8 +360,8 @@ function syncSkills(target, agents) {
       n += copyTree(src, dest);
     }
   }
-  pruneRetiredSkills(dests);
-  return n;
+  const removed = pruneRetiredSkills(dests);
+  return { files: n, removed };
 }
 
 // A wrapper the method RETIRED is worse than a wrapper missing: the folder is still there, its
@@ -370,6 +372,7 @@ function syncSkills(target, agents) {
 // `wdi-` is the method's namespace, so a `wdi-*` folder carrying a SKILL.md and not in WDI_SKILLS is
 // ours and retired. Each removal is PRINTED: silent deletion in someone else's repo is not a fix.
 function pruneRetiredSkills(dests) {
+  let removed = 0;
   const keep = new Set(WDI_SKILLS);
   for (const root of dests) {
     if (!fs.existsSync(root)) continue;
@@ -382,8 +385,10 @@ function pruneRetiredSkills(dests) {
       }
       fs.rmSync(dir, { recursive: true, force: true });
       note(`removed retired skill ${entry.name}`);
+      removed += 1;
     }
   }
+  return removed;
 }
 
 // `promote` scrubs a product's initiative slug out of bmad-prd.toml before publishing, which is right.
@@ -417,6 +422,7 @@ function syncTomls(target) {
   const dest = path.join(target, "_bmad", "custom");
   fs.mkdirSync(dest, { recursive: true });
   let n = 0;
+  let slugsKept = 0;
   for (const file of walkFiles(src)) {
     if (!file.endsWith(".toml") || file.endsWith(".user.toml")) continue;
     const to = path.join(dest, path.basename(file));
@@ -425,6 +431,7 @@ function syncTomls(target) {
       if (merged !== null) {
         fs.writeFileSync(to, merged);
         note(`kept run_folder_pattern in ${path.basename(file)}`);
+        slugsKept += 1;
         n += 1;
         continue;
       }
@@ -432,7 +439,7 @@ function syncTomls(target) {
     copyFile(file, to);
     n += 1;
   }
-  return n;
+  return { files: n, slugsKept };
 }
 
 function seedControlIfMissing(target) {
@@ -519,6 +526,15 @@ function setLanguagePolicy(target, { docLanguage, docFilenameLanguage }) {
        `doc_filename_language = ${after.docFilenameLanguage}`);
 }
 
+// Dibaca SEBELUM writeStamp menimpanya. Tanpa ini tidak ada transisi versi yang bisa dicetak, dan
+// "updated" tanpa dari-ke tidak memberi tahu apa pun yang bisa dipakai.
+function readStampVersion(target) {
+  const file = path.join(target, ".control", "wdi-method.yaml");
+  if (!fs.existsSync(file)) return "";
+  const m = fs.readFileSync(file, "utf8").match(/^wdi_method:\s*"?([^"\s]+)"?/m);
+  return m ? m[1] : "";
+}
+
 function readIndexPolicy(target) {
   const file = path.join(target, ".control", "registry", "index.yaml");
   if (!fs.existsSync(file)) return { docLanguage: "", docFilenameLanguage: "" };
@@ -571,6 +587,47 @@ function upsertAgentFiles(target, agents, productName) {
   }
 }
 
+// What a run MUST leave a reader able to answer: which version replaced which, what was written, what
+// was KEPT, and what to do next. The third is the one usually missing, and it is the one that decides
+// whether somebody trusts running this over a repo they have already put work into.
+function summaryLine(label, value) {
+  console.log(`  ${DIM}${label.padEnd(11)}${RESET}${value}`);
+}
+
+function printSummary(target, agents, { first, was, written, skipped, skills, tomls }) {
+  const now = PKG.version;
+  const version = first
+    ? `${now} — first install`
+    : was && was !== now
+      ? `${was} ${DIM}→${RESET} ${now}`
+      : `${now} ${DIM}(unchanged)${RESET}`;
+  const bmad = readBmadVersion(target);
+
+  const kept = [];
+  if (skipped) kept.push(`${skipped} constitution file${skipped === 1 ? "" : "s"}`);
+  if (tomls.slugsKept) kept.push(`${tomls.slugsKept} initiative slug${tomls.slugsKept === 1 ? "" : "s"}`);
+  const policy = readIndexPolicy(target);
+  if (policy.docLanguage) kept.push(`language (${policy.docLanguage})`);
+  if (fs.existsSync(path.join(target, ".constitution", "project"))) kept.push(".constitution/project/");
+
+  console.log("");
+  console.log(`${DIM}────${RESET} WDI Method ${DIM}${"─".repeat(46)}${RESET}`);
+  summaryLine("version", version);
+  if (bmad) summaryLine("bmad", bmad);
+  summaryLine("target", target);
+  console.log("");
+  summaryLine("written", `${written} constitution · ${skills.files} skill files · ${tomls.files} bmad overrides`);
+  if (kept.length) summaryLine("kept", kept.join(" · "));
+  if (skills.removed) {
+    summaryLine("removed", `${skills.removed} retired wrapper${skills.removed === 1 ? "" : "s"}`);
+  }
+  summaryLine("agents", agents.join(", ") || "none");
+  console.log("");
+  summaryLine("next", `invoke the ${HELP_SKILL} skill and ask what to do`);
+  summaryLine("", REPO_URL);
+  console.log(`${DIM}${"─".repeat(62)}${RESET}`);
+}
+
 function printNextSteps({ first, productSet }) {
   console.log("");
   console.log(first ? "Sesudah install:" : "Sesudah update:");
@@ -587,8 +644,8 @@ function printNextSteps({ first, productSet }) {
     console.log("  5. Pilah dokumen lama. Jangan dipindah di langkah ini.");
     console.log("");
     console.log("Update berikutnya:");
-    console.log("  npx github:wiradigitalid/wdi-method");
-    console.log("  (TUI akan menawarkan update)  atau:  npx github:wiradigitalid/wdi-method update --yes");
+    console.log("  npx wdi-method");
+    console.log("  (TUI akan menawarkan update)  atau:  npx wdi-method update --yes");
   } else {
     console.log("  1. Blok <!-- BEGIN:wdi-method --> di AGENTS.md sudah diganti. Cek diff-nya.");
     console.log("  2. Pasal 1–2–5 constitution.md, ## Code, dan *.user.toml tidak ditimpa.");
@@ -598,19 +655,20 @@ function printNextSteps({ first, productSet }) {
 
 function apply(target, agents, { first, product, client, docLanguage, docFilenameLanguage }) {
   requireKit();
+  const was = readStampVersion(target);
   const { written, skipped } = syncConstitution(target);
   note(`constitution wrote ${written}, kept ${skipped}`);
-  const nSkills = syncSkills(target, agents);
-  note(`skills ${nSkills} files`);
-  const nToml = syncTomls(target);
-  note(`bmad custom ${nToml} toml → _bmad/custom/`);
+  const skills = syncSkills(target, agents);
+  note(`skills ${skills.files} files`);
+  const tomls = syncTomls(target);
+  note(`bmad custom ${tomls.files} toml → _bmad/custom/`);
   if (first) seedControlIfMissing(target);
   seedEmptyLayers(target, { first });
   setProductIdentity(target, { name: product, client });
   setLanguagePolicy(target, { docLanguage, docFilenameLanguage });
   upsertAgentFiles(target, agents, product);
   writeStamp(target);
-  ok(`${first ? "installed" : "updated"} into ${target}`);
+  printSummary(target, agents, { first, was, written, skipped, skills, tomls });
   printNextSteps({
     first,
     productSet: Boolean(product) && !identityIsPlaceholder(product),
@@ -788,7 +846,7 @@ async function runWizard(pre) {
 
   if (!hasBmad && !pre.skipBmad) {
     p.note(bmadMissingMessage(), "BMad dulu");
-    p.outro("Pasang BMad, lalu jalankan lagi: npx github:wiradigitalid/wdi-method");
+    p.outro("Pasang BMad, lalu jalankan lagi: npx wdi-method");
     process.exit(1);
   }
 

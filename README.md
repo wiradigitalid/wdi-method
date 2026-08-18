@@ -1,184 +1,198 @@
 # WDI Method
 
-Metode pengiriman perangkat lunak WDI. Membungkus BMad; tidak menggantikannya.
+A software delivery method for agent-driven work. It **wraps [BMad](https://github.com/bmad-code-org/BMAD-METHOD); it does not replace it.**
 
-WDI software delivery method. It wraps BMad; it does not replace it.
+BMad decides *what to build* and *how to build it* well. What it leaves thin is the middle: the
+documents a **human** reads to check that the decision is right before anybody writes code. WDI Method
+adds that middle, and a way to choose how much of it you want.
 
-This repository is **public**. It MUST NOT contain a client name, a product name, or a
-link to any other private repository. Product identity lives in the consuming repo, at
-`.control/registry/index.yaml` (`product.name`, optional `product.client`), filled at G1.
+This repository is **public** and generic. It MUST NOT contain a client name, a product name, or a link
+to a private repository. Product identity lives in the consuming repo.
+
+---
 
 ## Install
 
-BMad first, then WDI Method. The wrappers call BMad skills; without BMad they cannot run.
+BMad first, then this. The wrappers call BMad skills; without BMad they cannot run.
 
 ```bash
 cd /path/to/your/product-repo
 npx bmad-method install
-npx github:wiradigitalid/wdi-method
+npx wdi-method
 ```
 
-Tanpa subcommand, installer membuka **TUI**: cek BMad, deteksi install vs update, tanya nama
-produk / klien, pilih agen, tampilkan folder yang akan ditulis, lalu langkah sesudahnya.
-
-Folder korpus (`.constitution` `.control` `.what` `.how` `.work`) **bukan** opsi — namanya
-identitas metode. Yang dipilih di TUI adalah repo tujuan dan agennya.
-
-Non-interactive (CI):
+The second command opens a TUI: it checks BMad, detects install versus update, asks the product name and
+the document language, lets you pick agents, shows what it will write, and prints what to do next.
 
 ```bash
-npx github:wiradigitalid/wdi-method install --yes --agents cursor,claude --product "Nama Produk"
+npx wdi-method update      # later, to take a newer method
+npx wdi-method verify      # check the method files are all present
 ```
 
-## Update
+Non-interactive, for CI:
 
 ```bash
-npx github:wiradigitalid/wdi-method update
+npx wdi-method install --yes --agents claude,codex --product "Your Product" \
+  --doc-language "Bahasa Indonesia"
 ```
 
-Update overwrites method files. It MUST NOT touch `.what/`, `.how/`, filled `.control/` state,
-existing `constitution.md` Articles 1–2 and 5, `codebase/*-guide.md` once `Accepted`, extra
-constitution files this repo added, or `_bmad/custom/*.user.toml`.
+Then invoke the **`wdi-help`** skill and ask what to do next. It reads where the project actually is and
+answers with the gate you are at, not with a menu.
 
-`AGENTS.md` has a marked method block (`<!-- BEGIN:wdi-method -->` … `<!-- END:wdi-method -->`).
-Update replaces **that block only** — including how to install and update. Product sections
-outside it (`## Code`, extra boundaries) stay. A file without the markers gets the block
-injected before `## Code`; existing product prose above `## Language` is kept.
+---
 
-A stamp is written to `.control/wdi-method.yaml` (`wdi_method`, `bmad_method` if detectable).
-It is a trace, not a lockfile.
+## The gap this fills
 
-## Agents
+A gate is only as good as the artifact it reads. Between *"the architecture is decided"* and *"the code
+is written"* there is a set of questions that decide whether a build goes straight or crooked, and they
+are all **list-shaped**:
 
-`--agents` chooses **where skills are copied**, not a different method. Default: all.
+- Which use cases exist, and which of them touch money, personal data, or something irreversible?
+- Which tables exist, and which component is allowed to **write** each one?
+- Which endpoints exist, on which host, and which promise does each serve?
+- Which screens exist, in which application?
+- When a boundary fails halfway — the other side slow, absent, or lying — what does the user see?
 
-| Flag | Writes |
-|---|---|
-| `claude` | `.claude/skills/wdi-*`, `CLAUDE.md` |
-| `cursor` | `.agents/skills/wdi-*`, `.cursorrules` |
-| `codex` | `AGENTS.md` |
-| `antigravity` | `.agents/skills/wdi-*`, `.agents/AGENTS.md` |
+Those questions have answers inside an architecture document and a build spec. What they usually do not
+have is a **place where a person can read all of one kind at once** and notice the row that is missing,
+the table with two owners, or the endpoint nobody promised.
 
-`AGENTS.md` is created on first install if missing. On update, only the marked method block
-is replaced.
-
-## What travels, what does not
-
-| Travels (the method) | Stays in the product repo |
-|---|---|
-| `.constitution/` guides, templates, scripts, `method/` | `.control/` `.what/` `.how/` `_bmad-output/` `.work/` |
-| fifteen `wdi-*` skills | `constitution.md` that already exists (Articles 1, 2, 5) |
-| `_bmad/custom/*.toml` | `codebase/*-guide.md` once `Accepted` |
-| | **`.constitution/project/`** — the product's custom room |
-| | `_bmad/custom/*.user.toml` |
-
-`.control/` empty stubs are written only when that folder is absent.
-
-## `.constitution/project/` — the custom room
-
-Everything else in `.constitution/` belongs to the method and is **overwritten** on update. This one
-folder is not: `install` seeds it, `update` never writes over a file that exists in it, and `promote`
-**skips it entirely** — so a rule that names a client cannot reach this public repository.
-
-| Goes there | Does not, and where it goes |
-|---|---|
-| A review policy a client requires | product / client name → `index.yaml` `product:` |
-| A process rule that came from a contract | code conventions → `codebase/*-guide.md` |
-| A policy that differs from the method default | scope, method ownership → `constitution.md` Art. 1, 2, 5 |
-| A prohibition specific to this domain | agent instructions → `AGENTS.md`, outside the marked block |
-
-**A generic rule MUST NOT be moved there.** If it holds in any project it belongs to the package — fix
-it there and `promote`. Using the room to bypass the package is how a method stops being generic with
-nobody deciding it, and **an empty room is a valid state**: filling it so it gets used is the very
-failure this rule prevents.
-
-Required frontmatter, checked by `V27` in `validate.py`:
-
-```yaml
-scope: project      # exactly this
-purpose: ""         # one line: what this rule protects
-overrides: null     # optional: the kit file it narrows or contradicts
-decision: null      # REQUIRED when `overrides:` is set — the DEC- that decided it
-```
-
-A file there MAY narrow or add with none of the last two. To **contradict** a generic rule it MUST name
-it in `overrides:` and carry `decision:`; a method that can be contradicted without a decision stops
-being trustworthy in the next repo.
-
-**Whole files, not marked blocks.** `AGENTS.md` uses a marked block because it is *one* file.
-`.constitution/` has fifty-odd, and blocks inside them would make `update` perform surgery in each —
-one broken marker and either the product's rule is erased or the generic rule freezes forever.
-
-The room's own `README.md` is authored in the package and `promote` never carries it home. Edit it if
-you like; the edit will not survive the next install elsewhere, so **your rules MUST be other files.**
-
-## Product name — one room, filled at G1
-
-`.control/registry/index.yaml`:
-
-```yaml
-product:
-  name: "{product}"   # set at G1; the brief title uses this value
-  client: ""          # empty when there is no client
-```
-
-The brief at `.what/_product-brief/brief.md` uses that name. `constitution.md` Article 1 cites
-the field. Neither document is a second source of the name.
-
-## Language — two settings, and nothing else is a choice
-
-The TUI asks two questions; `install`/`update` write the answers to `.control/registry/index.yaml`:
-
-```yaml
-policy:
-  doc_language: "English"           # prose of working documents in .what/ .how/ .control/
-  doc_filename_language: "English"  # the slug part of a document filename
-```
-
-**Both are free text, not a list of codes.** `English`, `Bahasa Indonesia`, `id`, `Indonesia` — write
-whatever names the language. What reads the value is a **model**, and a model does not need a lookup
-table; fencing it into two codes would only make you translate your intent into this installer's
-vocabulary first. The one value refused is an empty one.
-
-Non-interactive: `--doc-language "Bahasa Indonesia" --doc-filename-language Indonesia`.
-
-**A setting that already exists is kept**, and the run says so. A language somebody already chose is
-not the installer's to change behind their back.
-
-Always English, and a skill MUST NOT ask about them:
+WDI Method's whole contribution is that place, plus the discipline that keeps it honest:
 
 | | |
 |---|---|
-| Method terminology | `DEC` `SRS` `SDD` `UC` `FR` `AD`, the gate names, `mode` and `risk_accepted` values |
-| Document code prefixes | `UC-` `DEC-` `SRS-` — only the slug after them follows the setting |
-| Machine-facing markers | `[NEEDS CONFIRMATION]` `[MISSING]` `[ASSUMED]` `[PARTIAL]`, `yes`/`no` |
-| Code identifiers, DB columns, config keys | `language-guide.md` owns this |
+| **Inventories** | Tables, endpoints, and screens as three flat lists — **derived from the code**, not hand-written, so the difference between plan and reality is a finding rather than an argument |
+| **Use case catalogue** | One line per use case with its actor, the requirement it satisfies, and whether it is `critical` |
+| **SRS / SDD** | What a component promises, and how it is built — one pair per component, in human language |
+| **C4** | Context, containers, and one component view per container that carries more than one domain slice |
+| **Robustness** | For the deepest mode: boundary, control, and entity objects per critical use case, before code |
+| **Invariants** | A spine of `AD-N` rules that constrain every component, separate from the decisions that produced them |
 
-**A corpus written before these settings existed is not migrated for them.** `validate.py` accepts both
-languages — `yes|ya`, and V23's keyword set is the union of both — so existing documents keep working
-and only new writing follows the setting.
+---
 
-## Gitignore (optional)
+## Two knobs, never merged
 
-This package does not require method files to be committed or ignored. Each product repo decides.
-BMad does not mandate it either. A repo that ignores the payload reinstalls with `update`.
+The reason a method like this usually fails is that it asks for the same depth everywhere, so people
+either drown in it or abandon it. WDI splits depth from scrutiny into **two independent fields**:
 
-Example, if you choose not to commit skills:
+| Field | Controls | Values |
+|---|---|---|
+| `mode` | **Document depth**, and nothing else | `catalog` · `outline` · `guarded` · `deep` |
+| `risk_accepted` | **Review intensity**, and nothing else | `low` · `medium` · `high` |
 
+| `mode` | What is written per component | G4 |
+|---|---|---|
+| `catalog` | Nothing. Code is written from the use case catalogue, the three inventories, and C4 | **skipped** |
+| `outline` | + a decision summary and the component list in the SDD, full flows for at most 3 use cases, local rules | 20 min |
+| `guarded` | + **failure behaviour for every boundary**, inherited invariants quoted verbatim, integration documents | 20 min |
+| `deep` | + robustness analysis, a contract per endpoint, data dictionary, flow diagrams, state machines | 30 min |
+
+Neither field is derived from the other, and that is the point: **a component MAY be thin on purpose and
+reviewed the hardest.** A component at `catalog` skips the component gate entirely — which is what makes
+a shallow default genuinely fast rather than nominally fast.
+
+Depth is a preference and needs no defence. Accepting risk on something that touches money, personal
+data, or an irreversible action is **not** free: it requires a recorded decision, and a validator checks
+that the decision exists.
+
+---
+
+## Five gates, fifteen skills
+
+| Gate | Decides | Skill |
+|---|---|---|
+| **G1 Problem** | What the problem is, whose it is, why it earns work | `wdi-problem` |
+| **G2 Product** | What is built, and how it feels to use | `wdi-product` · optional `wdi-ux` |
+| **G3 Blueprint** | The whole portrait, once per product | `wdi-blueprint` |
+| **G4 Component** | How one component is built — **skipped at `catalog`** | `wdi-component` |
+| **G5 Release** | Whether it is done and proven | `wdi-build` |
+
+Around them: `wdi-init` (scaffold, component birth, depth and risk settings, structure maps),
+`wdi-decision`, `wdi-question`, `wdi-log`, `wdi-help`, `wdi-reconcile`, `wdi-review`, `wdi-report`, and
+`wdi-systematic-debugging`.
+
+**No BMad skill is invoked directly.** Each has a wrapper, and the wrapper is what checks position,
+verifies the result, and records what happened.
+
+### Decisions, not ADRs
+
+A decision is a `DEC-`, and **recording one is not mandatory.** The test is one sentence: *if somebody
+asks in three months why it is like this, is the answer readable from the code?* If yes, it MUST NOT be
+recorded — a register nobody trusts is worse than no register. One case is mandatory: contradicting an
+invariant on the spine.
+
+A `DEC-` freezes when it is applied. A change of mind produces a new one; it never edits the old.
+
+---
+
+## The mechanical half
+
+`validate.py` runs **V1–V27** over the registries and the corpus, and `inventory.py` derives the three
+inventories from code and reports the difference against the plan without patching either side.
+
+The validators exist because prose that nothing checks is prose that gets contradicted by the first
+person in a hurry. Every one of them also states **the state in which it does not apply** — a rule that
+demands a trace before the trace can exist is a rule that gets switched off, and a validator nobody
+reads guards nothing.
+
+---
+
+## What is generic, and where your own rules live
+
+`.constitution/` belongs to the method and is **overwritten** on every update. Four rooms are yours:
+
+| Room | Yours because |
+|---|---|
+| `.control/registry/index.yaml` → `product:` | The product and client name live in exactly one place |
+| `constitution.md` Articles 1, 2, 5 | Scope, repo checklist, method ownership |
+| `.constitution/codebase/*-guide.md` | Your stack and conventions, protected once `Accepted` |
+| **`.constitution/project/`** | Any rule that binds **only this product** |
+| `_bmad/custom/*.user.toml` | Your BMad overrides |
+
+`.control/` `.what/` `.how/` are never touched by an update at all — they are your state, your promises,
+and your design.
+
+The custom room takes whole files, not marked blocks inside generic ones: `AGENTS.md` can use a marked
+block because it is *one* file, while `.constitution/` has fifty-odd, and blocks inside them would make
+an update perform surgery in every file. A file there declares `scope: project` and a one-line
+`purpose:`; to **contradict** a generic rule it must name that rule and carry the decision that allowed
+it. **An empty room is a valid state** — filling it so that it gets used is the failure the rule prevents.
+
+### Language
+
+Two settings, both free text, both defaulting to English:
+
+```yaml
+policy:
+  doc_language: "English"           # prose of working documents
+  doc_filename_language: "English"  # the slug part of a document filename
 ```
-.claude/skills/wdi-*/
-.agents/skills/wdi-*/
-```
 
-Do not ignore all of `.constitution/` — Articles 1, 2, 5 and extra product files belong to the
-product and MUST stay tracked.
+Write whatever names the language — `English`, `Bahasa Indonesia`, `id`. What reads the value is a model,
+and a model does not need a lookup table.
 
-## Carrying a method change into this package
+Always English, and never asked: method terminology, document code prefixes (`UC-`, `DEC-`), machine
+markers (`[NEEDS CONFIRMATION]`, `[MISSING]`), and code identifiers.
 
-The published source is this repository. A product repo that still holds a newer working copy
-of the method MUST promote it here before the change is treated as published.
+---
 
-From a checkout of this repo:
+## What update does
+
+| | |
+|---|---|
+| Overwrites | `.constitution/` guides, templates and scripts · the fifteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
+| Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the fifteen. Each removal is printed |
+| Keeps | Everything in the table above, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
+| Never resurrects | A folder you retired. On update, absence is treated as a decision |
+
+It prints the version it replaced, what it wrote, what it kept, and what to do next.
+
+---
+
+## Carrying a change back into this package
+
+The published source is this repository. A product repo that holds a newer working copy of the method
+promotes it here before the change counts as published:
 
 ```bash
 npx wdi-method promote /path/to/the/product-repo
@@ -186,23 +200,9 @@ npm test
 git commit && git push
 ```
 
-`promote` copies the portable method, replaces product-named files with `kit-overlay/`, and
-scrubs initiative slugs to the placeholder `ISI-slug-inisiatif`.
+`promote` copies the portable method, replaces product-named files with their generic versions, scrubs
+initiative slugs, and **skips `.constitution/project/`** so a product's own rules can never be published.
 
-Do not run `update` against a repo you are about to promote from — that would overwrite the
-newer working copy.
+---
 
-A product name, a client name, or a link to another private repository MUST NOT land in this
-tree. If the cleanliness test fails, fix the overlay or the source, never weaken the test.
-
-## Commands
-
-| Command | Direction |
-|---|---|
-| `(no command)` | interactive TUI |
-| `install [dir]` | this package → product repo (first time) |
-| `update [dir]` | this package → product repo (again) |
-| `verify [dir]` | list missing method files |
-| `promote <dir>` | product repo → this package (maintainers) |
-
-`install` and `update` share one copy path. `install` seeds empty `.control/` if it is missing.
+MIT. Requires Node 20+ and [uv](https://docs.astral.sh/uv/) for the Python scripts.

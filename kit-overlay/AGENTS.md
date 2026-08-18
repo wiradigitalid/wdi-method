@@ -15,15 +15,15 @@ BMad first, then WDI Method. In the product repo:
 
 ```bash
 npx bmad-method install
-npx github:wiradigitalid/wdi-method
+npx wdi-method
 ```
 
 No subcommand opens the installer TUI. It detects an existing install and offers
 **update**. Non-interactive:
 
 ```bash
-npx github:wiradigitalid/wdi-method install --yes
-npx github:wiradigitalid/wdi-method update --yes
+npx wdi-method install --yes
+npx wdi-method update --yes
 ```
 
 BMad: https://github.com/bmad-code-org/BMAD-METHOD
