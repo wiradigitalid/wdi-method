@@ -165,15 +165,18 @@ reads guards nothing.
 
 ## What is generic, and where your own rules live
 
-`.constitution/` belongs to the method and is **overwritten** on every update. Four rooms are yours:
+`.constitution/` belongs to the method and is **overwritten** on every update — **except at five
+paths, which are yours.** The seam is always a whole path, never a marked region inside a generic
+file. Each is seeded once when absent and then never written again: an update does not touch it, and
+`promote` never carries it back into the package.
 
 | Room | Yours because |
 |---|---|
 | `.control/registry/index.yaml` → `product:` | The product and client name live in exactly one place |
-| `constitution.md` Articles 1, 2, 5 | Scope, repo checklist, method ownership |
-| `.constitution/codebase/*-guide.md` | Your stack and conventions, protected once `Accepted` |
+| `constitution.md` | Articles 1, 2, 5 are yours — scope, repo checklist, method ownership. The file is kept whole, because prose has no merge algebra |
+| `.constitution/codebase/*-guide.md` | Your stack and conventions, protected at any `status:` — `Draft` is when they get written |
 | **`.constitution/project/`** | Any rule that binds **only this product** |
-| `_bmad/custom/*.user.toml` | Your BMad overrides |
+| `_bmad/custom/*.user.toml` | Your BMad overrides — TOML, so these genuinely merge: a string replaces, a list appends, a table merges per key |
 
 `.control/` `.what/` `.how/` are never touched by an update at all — they are your state, your promises,
 and your design.

@@ -109,6 +109,30 @@ test("promote SKIPS codebase/ too: an Accepted stack guide is not published, and
   }
 });
 
+test("update keeps a codebase guide that is still Draft — that is when it is being written", () => {
+  // The template itself says this file stays Draft until the first wave's distillation ratifies it.
+  // Gating the keep on `status: Accepted` therefore protected it in every window EXCEPT the one that
+  // matters: a half-written stack guide was silently replaced by the empty template, with no note.
+  const pkg = isolatedPackage();
+  const target = tmp("target");
+  const mine = path.join(target, ".constitution", "codebase", "stack-guide.md");
+  const written = "---\nstatus: Draft\n---\n\n# stack\n\nHalf-written, not yet ratified.\n";
+  fs.mkdirSync(path.dirname(mine), { recursive: true });
+  fs.writeFileSync(mine, written);
+  try {
+    const out = execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+       "--agents", "claude"],
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    assert.equal(fs.readFileSync(mine, "utf8"), written,
+      "a Draft codebase guide was overwritten — update destroyed work in the only window it is written in");
+    assert.match(out, /keep codebase\/stack-guide\.md/, "keeping it silently is not enough");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
 test("update SEEDS the room once and never overwrites it again", () => {
   const pkg = isolatedPackage();
   const target = tmp("target");

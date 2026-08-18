@@ -205,15 +205,6 @@ function posixRel(from, to) {
   return path.relative(from, to).split(path.sep).join("/");
 }
 
-function acceptedCodebase(file) {
-  try {
-    const head = fs.readFileSync(file, "utf8").slice(0, 400);
-    return /status:\s*Accepted/i.test(head);
-  } catch {
-    return false;
-  }
-}
-
 function bmadPresent(target) {
   const markers = [
     path.join(target, ".claude", "skills", "bmad-help", "SKILL.md"),
@@ -330,9 +321,14 @@ function syncConstitution(target) {
       note(`keep ${rel} (product articles)`);
       continue;
     }
-    if (rel.startsWith("codebase/") && fs.existsSync(dest) && acceptedCodebase(dest)) {
+    // NOT gated on `status: Accepted`. The template itself says this file stays Draft until the
+    // first wave's distillation ratifies it — so the whole window in which a product is actually
+    // writing its stack guide was exactly the window in which update silently replaced it with the
+    // empty template again. Seeded when absent, never written again: the same rule as the room
+    // below and as the language policy.
+    if (rel.startsWith("codebase/") && fs.existsSync(dest)) {
       skipped += 1;
-      note(`keep ${rel} (Accepted codebase guide)`);
+      note(`keep ${rel} (product codebase guide)`);
       continue;
     }
     if (rel.startsWith(PROJECT_ROOM) && fs.existsSync(dest)) {
