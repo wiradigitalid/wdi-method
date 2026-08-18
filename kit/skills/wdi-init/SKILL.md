@@ -106,7 +106,7 @@ statement that the content was wrong.
 
 ## Intent `structure`
 
-The rules for what belongs in a map live in `.constitution/structure-guide.md`. This intent applies
+The rules for what belongs in a map live in `.constitution/method/structure-guide.md`. This intent applies
 them; it MUST NOT restate them.
 
 1. **Derive from the tree on disk**, honouring `.gitignore`. A map assembled from what the caller says

@@ -6,7 +6,7 @@ status: Accepted
 
 **Loaded when:** naming anything — a code identifier, a database field, a file, a folder.
 
-Which language a name is written in, and nothing else. Case style → `codebase/conventions-guide.md`;
+Which language a name is written in, and nothing else. Case style → `../project/codebase-conventions-guide.md`;
 legal characters → `structure-guide.md`; the right domain word → `.control/product-glossary.md`.
 
 ## Code MUST be English
@@ -71,4 +71,4 @@ and they travel to every repo through the `wdi-method` package.
 ## A wrong name MUST NOT be fixed inside an unrelated change
 
 A rename reaches the schema, the API, and every caller. It gets a change of its own, or a ratified
-row in `codebase/brownfield-guide.md`. A **new** name MUST NOT copy a wrong neighbour.
+row in `../project/codebase-brownfield-guide.md`. A **new** name MUST NOT copy a wrong neighbour.

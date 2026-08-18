@@ -3,12 +3,12 @@
 # session.
 #
 # Only a house rule that changes HOW a critique lands belongs here — the full method stays in
-# .constitution/document/delivery-flow-guide.md.
+# .constitution/method/document/delivery-flow-guide.md.
 
 [workflow]
 
 preferences = [
-  "Honor AGENTS.md and .constitution/document/ as the rules currently in force in this repo.",
+  "Honor AGENTS.md and .constitution/method/document/ as the rules currently in force in this repo.",
   "Judge a G1-G4 artifact chiefly by its Decision Summary: one page, business language, no jargon that lacks a Glossary entry. A summary that cannot be read in full within its gate's time budget is the finding itself.",
   "There are only five normative words — MUST, MUST NOT, SHOULD, SHOULD NOT, MAY — in English and uppercase; the surrounding prose follows the product's chosen `doc_language`. Flag as a defect: any other imperative marker in any language, a translated method term, or an invented equivalent for a technical term the industry writes in English.",
   "Pushback MUST name the decision actually at stake and its cost if wrong, not merely grade the writing.",

@@ -8,6 +8,6 @@
 [workflow]
 
 persistent_facts = [
-  "file:{project-root}/.constitution/codebase/conventions-guide.md",
+  "file:{project-root}/.constitution/project/codebase-conventions-guide.md",
   "A finding that repeats across stories MUST be recorded through bmad-project-context intent record, not fixed silently every time it recurs.",
 ]

@@ -154,31 +154,31 @@ verifies the result, and lands the memlog.
 
 | Task | Load |
 |---|---|
-| Wanting the whole method in five minutes | `.constitution/method/README.md` |
-| About to change a rule, and needing to know what breaks | `.constitution/method/rationale.md` |
-| Asking whether a document exists at this `mode`, or where a file goes | `.constitution/method/artifact-map.md` |
-| Unsure whether a file may exist in this repo | `.constitution/repo-guide.md` |
-| Unsure where a file lives | `.constitution/document/corpus-guide.md` |
-| Unsure what a method term means | `.constitution/method-glossary.md` |
+| Wanting the whole method in five minutes | `.constitution/method/why/README.md` |
+| About to change a rule, and needing to know what breaks | `.constitution/method/why/rationale.md` |
+| Asking whether a document exists at this `mode`, or where a file goes | `.constitution/method/why/artifact-map.md` |
+| Unsure whether a file may exist in this repo | `.constitution/method/repo-guide.md` |
+| Unsure where a file lives | `.constitution/method/document/corpus-guide.md` |
+| Unsure what a method term means | `.constitution/method/method-glossary.md` |
 | Unsure about a domain term | `.control/product-glossary.md` |
 | Looking for a non-technical fact — a domain, an account, a legal entity, a locked date | `.control/project-non-technical-log.md` |
-| Naming anything — a code identifier, a file, a database column | `.constitution/language-guide.md` |
-| Asking "which gate now, what next" | `.constitution/document/delivery-flow-guide.md` · skill `wdi-help` |
-| Setting or changing `mode` or `risk_accepted` | `.constitution/document/delivery-flow-guide.md` · skill `wdi-init` |
-| Invoking a BMad skill | `.constitution/document/bmad-guide.md` · `document/bmad-skill-register.md` |
-| Writing or reviewing a product brief | `.constitution/document/brief-guide.md` |
-| Writing or reviewing a PRD | `.constitution/document/prd-guide.md` |
-| Writing or reviewing UX | `.constitution/document/ux-guide.md` |
-| Writing or reviewing an SRS | `.constitution/document/srs-guide.md` |
-| Writing or reviewing an SDD | `.constitution/document/sdd-guide.md` |
-| Writing the spine, an `AD-N`, C4, or one of the three inventories | `.constitution/document/architecture-guide.md` |
-| Opening, accepting, or applying a `DEC-` | `.constitution/document/decision-guide.md` |
-| Writing or reading a structure map | `.constitution/structure-guide.md` |
+| Naming anything — a code identifier, a file, a database column | `.constitution/method/language-guide.md` |
+| Asking "which gate now, what next" | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-help` |
+| Setting or changing `mode` or `risk_accepted` | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-init` |
+| Invoking a BMad skill | `.constitution/method/document/bmad-guide.md` · `document/bmad-skill-register.md` |
+| Writing or reviewing a product brief | `.constitution/method/document/brief-guide.md` |
+| Writing or reviewing a PRD | `.constitution/method/document/prd-guide.md` |
+| Writing or reviewing UX | `.constitution/method/document/ux-guide.md` |
+| Writing or reviewing an SRS | `.constitution/method/document/srs-guide.md` |
+| Writing or reviewing an SDD | `.constitution/method/document/sdd-guide.md` |
+| Writing the spine, an `AD-N`, C4, or one of the three inventories | `.constitution/method/document/architecture-guide.md` |
+| Opening, accepting, or applying a `DEC-` | `.constitution/method/document/decision-guide.md` |
+| Writing or reading a structure map | `.constitution/method/structure-guide.md` |
 | Looking for where code lives, or placing new code | `.control/structure-codebase.md` |
 | Looking for where a document lives | `.control/structure-document.md` |
-| Writing or reviewing code | `.constitution/codebase/stack-guide.md` · `conventions-guide.md` · `brownfield-guide.md` |
+| Writing or reviewing code | `.constitution/project/codebase-stack-guide.md` · `conventions-guide.md` · `brownfield-guide.md` |
 
-All three `codebase/*-guide.md` start as `status: Draft`. While they are, their contents MAY be read
+All three `.constitution/project/codebase-*-guide.md` start as `status: Draft`. While they are, their contents MAY be read
 as guidance but MUST NOT be used to reject a change.
 
 The two structure maps MUST NOT be installed as `doc_standards` — they are facts, not standards. Nor

@@ -10,7 +10,7 @@
 ux_output_path     = "{project-root}/_bmad-output/ux"
 run_folder_pattern = "ux"
 
-doc_standards = ["file:{project-root}/.constitution/document/ux-guide.md"]
+doc_standards = ["file:{project-root}/.constitution/method/document/ux-guide.md"]
 
 persistent_facts = [
   "Every memlog.py call MUST use --path {project-root}/.control/memlog/ux.md. --workspace MUST NOT be used.",

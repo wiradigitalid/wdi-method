@@ -6,7 +6,7 @@ status: Reference
 
 **Opened when:** you are about to change a rule and need to know what you would break.
 
-This file **explains**. It does not bind — `document/*-guide.md` does, and where the two disagree the guide
+This file **explains**. It does not bind — `../document/*-guide.md` does, and where the two disagree the guide
 wins and the disagreement is a defect to report. **A rule MUST NOT be born here.** If this file notices a
 rule that should exist, it says so as a finding and the rule is written in its guide.
 
@@ -18,11 +18,11 @@ not finished. Six complaints, their causes, and where each is answered now:
 
 | Complaint | Cause | Answered in |
 |---|---|---|
-| Open questions in floods — ids reached `OQ-146`; one review produced 200 findings, then another produced 90 | Three rules combined into a generator: the `edge-case-hunter` lens mandatory over a whole SRS at once; no route for *"take the assumption, record it, continue"*; no budget and no severity class | `document/decision-guide.md`, `.control/questions/` |
-| Ceremony drift into the PRD; three corrections ended "reported but not fixed" | Correcting a *sentence* of an `FR` was treated as changing its *promise* — both had to go through the PRD skill | `document/prd-guide.md` |
+| Open questions in floods — ids reached `OQ-146`; one review produced 200 findings, then another produced 90 | Three rules combined into a generator: the `edge-case-hunter` lens mandatory over a whole SRS at once; no route for *"take the assumption, record it, continue"*; no budget and no severity class | `../document/decision-guide.md`, `.control/questions/` |
+| Ceremony drift into the PRD; three corrections ended "reported but not fixed" | Correcting a *sentence* of an `FR` was treated as changing its *promise* — both had to go through the PRD skill | `../document/prd-guide.md` |
 | Gates failing repeatedly over unanswered questions | No rule said that only a **blocking** question holds a gate | `.control/questions/blocking.md` |
-| The spine had to be updated every story | Invariants and inventories were mixed, and the tax was paid before the story, when the information was thinnest | `document/architecture-guide.md` |
-| A large PRD made `.what` over-think — 41 of 56 use cases marked `critical` (73%) | Not the PRD's length. The stage's scope was the whole corpus at once, plus a `critical` definition with two elastic criteria that passed everything | `document/delivery-flow-guide.md` |
+| The spine had to be updated every story | Invariants and inventories were mixed, and the tax was paid before the story, when the information was thinnest | `../document/architecture-guide.md` |
+| A large PRD made `.what` over-think — 41 of 56 use cases marked `critical` (73%) | Not the PRD's length. The stage's scope was the whole corpus at once, plus a `critical` definition with two elastic criteria that passed everything | `../document/delivery-flow-guide.md` |
 | Too slow for a small-to-medium application | A composite of the five above | all of it |
 
 One cause was **not** the method: **model choice.** A "find the gap" lens with no upper bound, run by the

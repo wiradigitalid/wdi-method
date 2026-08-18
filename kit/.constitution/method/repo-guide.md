@@ -82,9 +82,22 @@ document.
 
 ## How the method arrives
 
-Method files in `.constitution/` (except this product's Articles 1, 2, and 5, `codebase/*-guide.md`
-once `Accepted`, and any extra file this repo added), the `wdi-*` skills, and `_bmad/custom/*.toml`
-arrive from the public WDI Method package via `npx wdi-method install` / `update`.
+Method files in `.constitution/`, the `wdi-*` skills, and `_bmad/custom/*.toml` arrive from the
+public WDI Method package via `npx wdi-method install` / `update`.
+
+**Three paths inside `.constitution/` are this product's, not the method's.** Each is seeded once
+when absent and then never written again — an update MUST NOT touch one, and `promote` MUST NOT
+carry one back into the package:
+
+| Path | Holds |
+|---|---|
+| `constitution.md` | This product's Articles 1, 2, and 5 |
+| `codebase/*-guide.md` | This product's stack, conventions, and brownfield rules — at **any** `status:`, including `Draft`, which is when they are being written |
+| `project/` | Any rule that binds only this product |
+
+The seam is the **path**, never a marked region inside a generic file. `AGENTS.md` uses a marked
+block because it is one file with no alternative; `.constitution/` has fifty-odd, and blocks inside
+them would make every update perform surgery in every file.
 
 At **read time** this repo is self-contained: every file the rules need is here, readable with the
 repo alone. At **change time** the method has one published writer — the WDI Method package. Two

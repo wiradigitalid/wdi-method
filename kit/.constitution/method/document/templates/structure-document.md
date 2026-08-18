@@ -14,7 +14,7 @@ commit: '{sha}'               # the commit it was read at — staleness is measu
      corpus-guide.md and MUST NOT be restated here.
 
      Written and refreshed only by `wdi-init` intent `structure`, never by hand. Rules for both maps live in
-     .constitution/structure-guide.md.
+     .constitution/method/structure-guide.md.
 
      Same shape as the codebase map: annotated trees, folders complete, ★ inline on the documents
      that earn it. What differs is the split — the codebase map splits by deployability, this one

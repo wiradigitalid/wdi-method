@@ -22,8 +22,8 @@ about BMad itself.
 | `.control/registry/index.yaml` | The global `mode`, and the gate map |
 | `.control/registry/components.yaml` | Per-component `mode`, `risk_accepted`, and `g4_passed` |
 | `.control/registry/waves.yaml` | Wave → release, size, `depends_on` |
-| `.constitution/document/delivery-flow-guide.md` | The five gates and their checklists |
-| `.constitution/method/README.md` | The whole shape, when the caller has never seen the method |
+| `.constitution/method/document/delivery-flow-guide.md` | The five gates and their checklists |
+| `.constitution/method/why/README.md` | The whole shape, when the caller has never seen the method |
 
 You MUST read `.control/generated/status` rather than counting files yourself. It is generated from the
 registry; hand-counting produces a second answer that will disagree.
@@ -89,7 +89,7 @@ it claims, or when one of its eight required sections is missing outright.
   `wdi-decision`, not to a producing skill.
 - When asked about BMad itself — what a BMad skill does, what it writes, which are deprecated — answer
   from `bmad-skill-register.md`, and only fall back to `bmad-help` for module documentation.
-- When the caller has never seen this method, point at `.constitution/method/README.md` rather than
+- When the caller has never seen this method, point at `.constitution/method/why/README.md` rather than
   paraphrasing it here.
 
 ## When there is no wave open

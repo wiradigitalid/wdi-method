@@ -43,7 +43,7 @@ between them is intact and it is **horizontal**: `behaviour` writes what the sys
 | `.how/_platform/ARCHITECTURE-SPINE.md` | Every `AD-N` that binds this component |
 | `.how/_platform/cross-cutting.md` | The error envelope, and anything else decided once |
 | `.control/decisions/` | `applied` decisions this must not contradict |
-| `.constitution/document/srs-guide.md` · `sdd-guide.md` | The rules the result is checked against |
+| `.constitution/method/document/srs-guide.md` · `sdd-guide.md` | The rules the result is checked against |
 | `src/` · `web/` | Only as evidence when the code already exists. Never as a substitute for the SRS |
 
 ## Step 1 — Scope, one component

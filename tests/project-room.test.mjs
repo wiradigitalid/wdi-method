@@ -43,12 +43,12 @@ function isolatedPackage() {
 function fakeLiveRepo(pkg) {
   const live = tmp("live");
   fs.mkdirSync(path.join(live, ".constitution", "project"), { recursive: true });
-  fs.mkdirSync(path.join(live, ".constitution", "codebase"), { recursive: true });
+
   fs.writeFileSync(path.join(live, ".constitution", "generic-guide.md"), "# generic\n");
   fs.writeFileSync(path.join(live, ".constitution", "project", "secret-client.md"),
     "---\nscope: project\npurpose: \"a rule that MUST NOT be published\"\n---\nSecret Client Name\n");
   fs.writeFileSync(path.join(live, ".constitution", "project", "README.md"), "EDITED IN THE PRODUCT\n");
-  fs.writeFileSync(path.join(live, ".constitution", "codebase", "stack-guide.md"),
+  fs.writeFileSync(path.join(live, ".constitution", "project", "codebase-stack-guide.md"),
     "---\nstatus: Accepted\n---\n# stack\n\nThis product runs on Elixir and a secret client's own conventions.\n");
   for (const name of fs.readdirSync(path.join(pkg, "kit", "skills"))) {
     const dst = path.join(live, ".claude", "skills", name);
@@ -58,11 +58,18 @@ function fakeLiveRepo(pkg) {
   return live;
 }
 
-test("the kit carries the room's README, and it is the only package file inside it", () => {
+test("the kit's room holds exactly the five files the package authors, and nothing a product wrote", () => {
+  // 0.5.0 moved two more things into the room: the product's Articles 1-2-5, and the three codebase
+  // guides that used to sit in their own folder. All five are authored HERE and seeded once; anything
+  // else appearing means a product's own rule was published.
   const room = path.join(ROOT, "kit", ".constitution", "project");
-  assert.ok(fs.existsSync(path.join(room, "README.md")), "kit/.constitution/project/README.md is missing");
-  assert.deepEqual(fs.readdirSync(room), ["README.md"],
-    "the room in the kit MUST hold README.md only — any other file means a product's own rule got published");
+  assert.deepEqual(fs.readdirSync(room).sort(), [
+    "README.md",
+    "codebase-brownfield-guide.md",
+    "codebase-conventions-guide.md",
+    "codebase-stack-guide.md",
+    "constitution.md",
+  ], "the room in the kit MUST hold exactly the package's own five files");
 });
 
 test("promote SKIPS the room: a product's own rule is not published, and the package README survives", () => {
@@ -85,24 +92,22 @@ test("promote SKIPS the room: a product's own rule is not published, and the pac
   }
 });
 
-test("promote SKIPS codebase/ too: an Accepted stack guide is not published, and the empty template survives", () => {
+test("promote SKIPS the codebase guides too — they live in the room now, so one rule covers them", () => {
+  // Before 0.5.0 these sat in .constitution/codebase/ and needed a promote rule of their own, which
+  // they did not have: a product's Accepted stack guide would have been published. Now they are room
+  // files, so the room's single skip covers them — this test is what proves that claim.
   const pkg = isolatedPackage();
   const live = fakeLiveRepo(pkg);
-  const codebaseKit = path.join(pkg, "kit", ".constitution", "codebase");
-  const before = fs.existsSync(codebaseKit) ? fs.readdirSync(codebaseKit) : null;
+  const room = path.join(pkg, "kit", ".constitution", "project");
   try {
     execFileSync(process.execPath, [path.join(pkg, "bin", "wdi-method.js"), "promote", live],
                  { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-    if (before !== null) {
-      for (const name of before) {
-        const content = fs.readFileSync(path.join(codebaseKit, name), "utf8");
-        assert.doesNotMatch(content, /Elixir|secret client/,
-          "a product's Accepted codebase guide reached the kit — codebase/ is a product-owned room, same as project/");
-      }
-    } else {
-      assert.ok(!fs.existsSync(codebaseKit) || fs.readdirSync(codebaseKit).length === 0,
-        "codebase/ appeared in the kit from nowhere — it MUST only ever hold the package's own empty template");
+    for (const name of fs.readdirSync(room)) {
+      assert.doesNotMatch(fs.readFileSync(path.join(room, name), "utf8"), /Elixir|Secret Client/,
+        `${name} carries the product's content — the room MUST stay the package's own`);
     }
+    assert.ok(fs.existsSync(path.join(room, "codebase-stack-guide.md")),
+      "the package's empty codebase template did not survive promote");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(live, { recursive: true, force: true });
@@ -115,7 +120,7 @@ test("update keeps a codebase guide that is still Draft — that is when it is b
   // matters: a half-written stack guide was silently replaced by the empty template, with no note.
   const pkg = isolatedPackage();
   const target = tmp("target");
-  const mine = path.join(target, ".constitution", "codebase", "stack-guide.md");
+  const mine = path.join(target, ".constitution", "project", "codebase-stack-guide.md");
   const written = "---\nstatus: Draft\n---\n\n# stack\n\nHalf-written, not yet ratified.\n";
   fs.mkdirSync(path.dirname(mine), { recursive: true });
   fs.writeFileSync(mine, written);
@@ -126,7 +131,7 @@ test("update keeps a codebase guide that is still Draft — that is when it is b
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.equal(fs.readFileSync(mine, "utf8"), written,
       "a Draft codebase guide was overwritten — update destroyed work in the only window it is written in");
-    assert.match(out, /keep codebase\/stack-guide\.md/, "keeping it silently is not enough");
+    assert.match(out, /keep project\/codebase-stack-guide\.md/, "keeping it silently is not enough");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
@@ -233,6 +238,86 @@ test("update keeps the product's initiative slug — promote scrubs it, update M
     assert.match(after, /folder named FILL-initiative-slug/,
       "a bare mention in a comment was rewritten; that sentence explains the pattern");
     assert.match(out, /kept run_folder_pattern in bmad-prd\.toml/, "keeping it silently is not enough");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------- the 0.5.0 layout migration
+//
+// 0.5.0 moved .constitution/ to exactly two folders. An installed repo carries the OLD shape, and
+// without a migration `update` would write the new paths while the old files stayed behind: two
+// copies of most guides, and no way for an agent reading AGENTS.md routing to tell which one binds.
+
+/** A repo in the pre-0.5.0 shape, with the product's own work in it. */
+function fakeOldLayoutRepo() {
+  const t = tmp("old");
+  const c = (...p) => path.join(t, ".constitution", ...p);
+  fs.mkdirSync(c("document", "templates"), { recursive: true });
+  fs.mkdirSync(c("scripts"), { recursive: true });
+  fs.mkdirSync(c("codebase"), { recursive: true });
+  fs.mkdirSync(c("method"), { recursive: true });
+  fs.mkdirSync(c("project"), { recursive: true });
+  // generic, at the old locations
+  for (const n of ["README", "language-guide", "method-glossary", "repo-guide", "structure-guide"]) {
+    fs.writeFileSync(c(`${n}.md`), `# ${n} (old location)\n`);
+  }
+  for (const n of ["README", "artifact-map", "portability", "rationale"]) {
+    fs.writeFileSync(c("method", `${n}.md`), `# ${n} (was method/ root)\n`);
+  }
+  fs.writeFileSync(c("document", "srs-guide.md"), "# srs\n");
+  fs.writeFileSync(c("document", "templates", "srs.md"), "# srs template\n");
+  fs.writeFileSync(c("scripts", "validate.py"), "# validate\n");
+  // the product's own work — every one of these MUST survive
+  fs.writeFileSync(c("constitution.md"), "# Constitution\n\n## Article 2\n\nMY OWN BOUNDARY RULE\n");
+  fs.writeFileSync(c("codebase", "stack-guide.md"),
+    "---\nstatus: Draft\n---\n\n# stack\n\nGo 1.23 and MariaDB. HALF-WRITTEN BY THE PRODUCT.\n");
+  fs.writeFileSync(c("project", "my-rule.md"),
+    "---\nscope: project\npurpose: \"mine\"\n---\nPRODUCT RULE\n");
+  // a file the product ADDED at the root — not the method's, and not ours to place
+  fs.writeFileSync(c("our-own-extra-guide.md"), "ADDED BY THE PRODUCT\n");
+  return t;
+}
+
+test("update migrates a pre-0.5.0 repo: nothing of the product's is lost, nothing is left behind", () => {
+  const pkg = isolatedPackage();
+  const target = fakeOldLayoutRepo();
+  const c = (...p) => path.join(target, ".constitution", ...p);
+  try {
+    const out = execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+       "--agents", "claude"],
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+
+    // 1. the product's three pieces of work survive, byte for byte
+    assert.match(fs.readFileSync(c("project", "constitution.md"), "utf8"), /MY OWN BOUNDARY RULE/,
+      "the product's Articles were lost — constitution.md MUST move whole into the room");
+    assert.match(fs.readFileSync(c("project", "codebase-stack-guide.md"), "utf8"), /HALF-WRITTEN BY THE PRODUCT/,
+      "a half-written codebase guide was lost in the move");
+    assert.match(fs.readFileSync(c("project", "my-rule.md"), "utf8"), /PRODUCT RULE/,
+      "an existing room file was overwritten by the migration");
+
+    // 2. nothing is left at an old location — that is what makes the repo single-layout again
+    for (const stale of ["document", "scripts", "codebase", "constitution.md",
+                         "README.md", "language-guide.md", "method-glossary.md",
+                         "repo-guide.md", "structure-guide.md"]) {
+      assert.ok(!fs.existsSync(c(stale)), `.constitution/${stale} is still there — two layouts at once`);
+    }
+    for (const n of ["README", "artifact-map", "portability", "rationale"]) {
+      assert.ok(fs.existsSync(c("method", "why", `${n}.md`)), `${n}.md did not reach method/why/`);
+    }
+    assert.ok(fs.existsSync(c("method", "document", "srs-guide.md")), "document/ did not reach method/");
+    assert.ok(fs.existsSync(c("method", "scripts", "validate.py")), "scripts/ did not reach method/");
+
+    // 3. a file the PRODUCT added is not guessed at — it may be routed by its current path
+    assert.ok(fs.existsSync(c("our-own-extra-guide.md")),
+      "a file the product added was moved; the migration MUST NOT guess where somebody else's file goes");
+    assert.match(out, /our-own-extra-guide\.md/, "leaving it silently is not enough — say so");
+
+    // 4. the one thing no script can resolve MUST be said out loud
+    assert.match(out, /Articles 3, 4, 6, 7/,
+      "the duplicated generic articles were not reported — a migration that hides its own loose end");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

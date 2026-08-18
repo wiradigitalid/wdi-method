@@ -137,7 +137,7 @@ reviewed:                # V13. Diisi hanya setelah bmad-review benar-benar dija
                        alone does not say what a column means. LC type store
      06-flows/         [deep]. Sequence diagrams ONLY for flows involving money, irreversible state, or
                        a third party. Lane order is fixed once for the project in
-                       codebase/conventions-guide.md; the No-op lane rule is REPEALED
+                       ../../../project/codebase-conventions-guide.md; the No-op lane rule is REPEALED
 
      supplements/ is REPEALED along with the ANX- concept it existed for. -->
 

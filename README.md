@@ -165,17 +165,26 @@ reads guards nothing.
 
 ## What is generic, and where your own rules live
 
-`.constitution/` belongs to the method and is **overwritten** on every update — **except at five
-paths, which are yours.** The seam is always a whole path, never a marked region inside a generic
-file. Each is seeded once when absent and then never written again: an update does not touch it, and
-`promote` never carries it back into the package.
+`.constitution/` holds **exactly two folders**, and the folder is the whole answer to who owns a file:
 
-| Room | Yours because |
+| Folder | Owner | `update` | `promote` |
+|---|---|---|---|
+| `.constitution/method/` | the method | **overwritten** in full | carries it into the package |
+| **`.constitution/project/`** | you | **never touched** — seeded once when absent | never carries it, so your rules cannot be published |
+
+Everything in the room is yours: `project/constitution.md` (Articles 1, 2, 5 — scope, repo checklist,
+method ownership), `project/codebase-*-guide.md` (stack, conventions, brownfield, protected at **any**
+`status:` — `Draft` is when they actually get written), and any rule file you add.
+
+**The seam is a folder, never a marked region inside a generic file.** Prose has no merge algebra: you
+cannot "merge" your paragraph with the method's, so only a path can say unambiguously whose a file is.
+`AGENTS.md` is the one exception, and only because it is a single file with nowhere else to go.
+
+Two more things are yours, outside `.constitution/`:
+
+| Yours | Because |
 |---|---|
 | `.control/registry/index.yaml` → `product:` | The product and client name live in exactly one place |
-| `constitution.md` | Articles 1, 2, 5 are yours — scope, repo checklist, method ownership. The file is kept whole, because prose has no merge algebra |
-| `.constitution/codebase/*-guide.md` | Your stack and conventions, protected at any `status:` — `Draft` is when they get written |
-| **`.constitution/project/`** | Any rule that binds **only this product** |
 | `_bmad/custom/*.user.toml` | Your BMad overrides — TOML, so these genuinely merge: a string replaces, a list appends, a table merges per key |
 
 `.control/` `.what/` `.how/` are never touched by an update at all — they are your state, your promises,
@@ -210,9 +219,9 @@ English, whatever the settings say — it travels to every repo through this pac
 
 | | |
 |---|---|
-| Overwrites | `.constitution/` guides, templates and scripts · the fifteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
+| Overwrites | everything in `.constitution/method/` · the fifteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
 | Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the fifteen. Each removal is printed |
-| Keeps | Everything in the table above, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
+| Keeps | All of `.constitution/project/`, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
 | Never resurrects | A folder you retired. On update, absence is treated as a decision |
 
 It prints the version it replaced, what it wrote, what it kept, and what to do next.

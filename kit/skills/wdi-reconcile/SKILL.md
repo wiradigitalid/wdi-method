@@ -40,7 +40,7 @@ in one line before checking, and say what it excluded.
 
 ## Step 2 — Run the validators first
 
-Run `uv run .constitution/scripts/validate.py`, and `uv run .constitution/scripts/inventory.py` when code
+Run `uv run .constitution/method/scripts/validate.py`, and `uv run .constitution/method/scripts/inventory.py` when code
 exists. V1–V24 answer everything that can be **counted**, and you MUST NOT re-derive by reading what they
 already report. Carry their findings as they came, then spend the reading on what no validator can see.
 
@@ -82,7 +82,7 @@ governs it, and the four failures worth looking for are the ones no ID chain rec
 
 You MUST NOT invent a rule to fail an artifact against. Every finding here MUST quote the guide it comes
 from. A file at `status: Draft` MAY be read as guidance but MUST NOT be used to reject anything — that
-holds for all three `codebase/*-guide.md` — and a file at `status: Reference` MUST NOT be cited to reject
+holds for all three `.constitution/project/codebase-*-guide.md` — and a file at `status: Reference` MUST NOT be cited to reject
 anything at all.
 
 ### What the Evidence check is, and what it is not

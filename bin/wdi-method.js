@@ -42,7 +42,6 @@ const WDI_SKILLS = [
   "wdi-systematic-debugging",
 ];
 
-const PRODUCT_CONSTITUTION = "constitution.md";
 const PRD_SLUG_PLACEHOLDER = "FILL-initiative-slug";
 const GENERIC_FOLDER_PATTERNS = new Set([
   "_product-brief",
@@ -307,6 +306,94 @@ function bmadMissingMessage() {
 // through promote.
 const PROJECT_ROOM = "project/";
 
+// 0.5.0 moved `.constitution/` to exactly two folders: `method/` is the method's and is overwritten,
+// `project/` is the product's and is never touched. Before it, generic and product-owned files sat
+// side by side at the root, `codebase/` was a third product-owned room nobody had written down, and
+// `constitution.md` was ONE file holding both — which is why `update` had to keep the whole thing and
+// the product never received a fixed generic Article.
+//
+// Without this migration an installed repo would end up carrying BOTH layouts: the kit writes the new
+// paths while the old files stay behind, and an agent reading `AGENTS.md` routing would find two
+// copies of most guides and no way to tell which binds.
+const OLD_ROOT_GUIDES = ["README", "language-guide", "method-glossary", "repo-guide", "structure-guide"];
+const OLD_WHY = ["README", "artifact-map", "portability", "rationale"];
+const OLD_CODEBASE = ["stack", "conventions", "brownfield"];
+
+function mv(from, to) {
+  fs.mkdirSync(path.dirname(to), { recursive: true });
+  fs.renameSync(from, to);
+}
+
+function migrateToTwoFolders(target) {
+  const c = path.join(target, ".constitution");
+  if (!fs.existsSync(c)) return false;          // a first install has nothing to migrate
+  const at = (...p) => path.join(c, ...p);
+  // The old layout is identified by `document/` at the ROOT — in the new layout that folder only ever
+  // exists under `method/`. Checking a loose guide instead would misfire on a repo that added one.
+  if (!fs.existsSync(at("document")) && !fs.existsSync(at("codebase"))
+      && !fs.existsSync(at("constitution.md")) && !fs.existsSync(at("scripts"))) {
+    return false;
+  }
+  note("pre-0.5.0 .constitution/ found — migrating to method/ + project/");
+
+  // 1. The four Reference files go one level deeper. This MUST run before the kit is written, or the
+  //    kit's own why/ files land while the old copies still sit at method/ root.
+  for (const name of OLD_WHY) {
+    const from = at("method", `${name}.md`);
+    if (fs.existsSync(from)) {
+      mv(from, at("method", "why", `${name}.md`));
+      note(`  moved method/${name}.md → method/why/${name}.md`);
+    }
+  }
+  // 2. and 3. whole folders
+  for (const dir of ["document", "scripts"]) {
+    if (fs.existsSync(at(dir)) && !fs.existsSync(at("method", dir))) {
+      mv(at(dir), at("method", dir));
+      note(`  moved ${dir}/ → method/${dir}/`);
+    }
+  }
+  // 4. the loose generic guides
+  for (const name of OLD_ROOT_GUIDES) {
+    const from = at(`${name}.md`);
+    if (fs.existsSync(from)) {
+      mv(from, at("method", `${name}.md`));
+      note(`  moved ${name}.md → method/${name}.md`);
+    }
+  }
+  // 5. codebase/ was a product-owned room all along — it becomes flat files in the room that says so
+  for (const name of OLD_CODEBASE) {
+    const from = at("codebase", `${name}-guide.md`);
+    if (fs.existsSync(from)) {
+      mv(from, at("project", `codebase-${name}-guide.md`));
+      note(`  moved codebase/${name}-guide.md → project/codebase-${name}-guide.md`);
+    }
+  }
+  if (fs.existsSync(at("codebase"))) {
+    const left = fs.readdirSync(at("codebase"));
+    if (!left.length) fs.rmdirSync(at("codebase"));
+    else note(`  codebase/ still holds ${left.join(", ")} — left in place, move them yourself`);
+  }
+  // 6. The product's constitution.md moves WHOLE into the room, so its Articles 1, 2, and 5 survive
+  //    exactly as written. The generic half then arrives fresh at method/constitution.md.
+  let split = false;
+  if (fs.existsSync(at("constitution.md")) && !fs.existsSync(at("project", "constitution.md"))) {
+    mv(at("constitution.md"), at("project", "constitution.md"));
+    note("  moved constitution.md → project/constitution.md (your Articles 1, 2, 5)");
+    split = true;
+  }
+  // Anything else loose at the root is a file this product ADDED. It is NOT moved: it may be routed
+  // from AGENTS.md by its current path, and guessing a destination would break that silently.
+  const stray = fs.existsSync(c)
+    ? fs.readdirSync(c, { withFileTypes: true })
+        .filter((e) => e.isFile() && e.name.endsWith(".md"))
+        .map((e) => e.name)
+    : [];
+  if (stray.length) {
+    note(`  left at .constitution/ root, yours to place: ${stray.join(", ")}`);
+  }
+  return split;
+}
+
 function syncConstitution(target) {
   const kitConst = path.join(KIT, ".constitution");
   const destConst = path.join(target, ".constitution");
@@ -316,24 +403,14 @@ function syncConstitution(target) {
   for (const file of walkFiles(kitConst)) {
     const rel = posixRel(kitConst, file);
     const dest = path.join(destConst, rel);
-    if (rel === PRODUCT_CONSTITUTION && fs.existsSync(dest)) {
-      skipped += 1;
-      note(`keep ${rel} (product articles)`);
-      continue;
-    }
-    // NOT gated on `status: Accepted`. The template itself says this file stays Draft until the
-    // first wave's distillation ratifies it — so the whole window in which a product is actually
-    // writing its stack guide was exactly the window in which update silently replaced it with the
-    // empty template again. Seeded when absent, never written again: the same rule as the room
-    // below and as the language policy.
-    if (rel.startsWith("codebase/") && fs.existsSync(dest)) {
-      skipped += 1;
-      note(`keep ${rel} (product codebase guide)`);
-      continue;
-    }
+    // ONE rule for everything the product owns, because 0.5.0 put all of it in one folder. Before
+    // that this loop had three branches — the mixed constitution.md kept whole, `codebase/` gated on
+    // `status: Accepted` (which is what silently destroyed a half-written guide), and the room — and
+    // the three disagreed about when a file was the product's. Seeded when absent, never written
+    // again: the same rule as the language policy.
     if (rel.startsWith(PROJECT_ROOM) && fs.existsSync(dest)) {
       skipped += 1;
-      note(`keep ${rel} (product custom room)`);
+      note(`keep ${rel} (yours — the project room)`);
       continue;
     }
     copyFile(file, dest);
@@ -663,8 +740,16 @@ function apply(target, agents,
                { first, product, client, docLanguage, docFilenameLanguage, languageChosen }) {
   requireKit();
   const was = readStampVersion(target);
+  // MUST run before the kit is written: it moves the product's files out of the way of paths the kit
+  // is about to occupy. Running it after would leave two copies of most guides.
+  const splitConstitution = migrateToTwoFolders(target);
   const { written, skipped } = syncConstitution(target);
   note(`constitution wrote ${written}, kept ${skipped}`);
+  if (splitConstitution) {
+    note("  your constitution.md still carries Articles 3, 4, 6, 7 — now also in method/constitution.md.");
+    note("  Delete them from project/constitution.md; only 1, 2, 5 are yours. Not automated: your");
+    note("  copy may have been edited, and no script can tell an edit from the original.");
+  }
   const skills = syncSkills(target, agents);
   note(`skills ${skills.files} files`);
   const tomls = syncTomls(target);
@@ -739,43 +824,32 @@ function promote(live) {
   if (!fs.existsSync(path.join(live, ".constitution"))) {
     die(`${live} has no .constitution/ — is this a method-carrying repo?`);
   }
-  // The custom room's README is authored in the package and MUST survive the rmSync below. Read
-  // here, not after — the first version of this fix read it after the kit was deleted, so it was
-  // always null and the README vanished on every promote. The project-room test caught it.
-  const roomKit = path.join(KIT, ".constitution", PROJECT_ROOM, "README.md");
-  const roomKept = fs.existsSync(roomKit) ? fs.readFileSync(roomKit, "utf8") : null;
-
-  // Same reasoning as the room README: the empty "born on purpose" codebase templates are
-  // authored in the package, skipped from copyTree below, and so MUST be read before the rmSync
-  // wipes them or they vanish on every promote — same failure the room README test already caught
-  // once, now in a second place.
-  const codebaseKit = path.join(KIT, ".constitution", "codebase");
-  const codebaseKept = fs.existsSync(codebaseKit)
-    ? Object.fromEntries(walkFiles(codebaseKit).map((f) => [posixRel(codebaseKit, f), fs.readFileSync(f, "utf8")]))
+  // EVERY file in the room is authored in the package and MUST survive the rmSync below — the room's
+  // README, the generic Articles 1-2-5, and the three empty codebase templates. Read here, not
+  // after: the first version of this preserved only README.md and read it AFTER the kit was deleted,
+  // so it was always null and the file vanished on every promote. Two tests cover it now.
+  const roomKit = path.join(KIT, ".constitution", PROJECT_ROOM);
+  const roomKept = fs.existsSync(roomKit)
+    ? Object.fromEntries(walkFiles(roomKit).map((f) => [posixRel(roomKit, f), fs.readFileSync(f, "utf8")]))
     : {};
 
   fs.rmSync(KIT, { recursive: true, force: true });
   fs.mkdirSync(KIT, { recursive: true });
 
-  // `codebase/` is skipped unconditionally, not only once Accepted: this room is "born empty on
-  // purpose" and filled by a product's own first-wave distillation, so the kit's copy MUST stay
-  // that empty template forever. Promoting a filled-in guide would leak one product's stack and
-  // conventions — possibly written in its own `doc_language` — into the public package.
+  // ONE skip, because 0.5.0 put everything the product owns in one folder. It covers the codebase
+  // guides too, which used to need a rule of their own: promoting a filled-in stack guide would leak
+  // one product's conventions — possibly written in its own `doc_language` — into a public package.
   const nConst = copyTree(path.join(live, ".constitution"), path.join(KIT, ".constitution"),
-                          (rel) => rel.startsWith(PROJECT_ROOM) || rel.startsWith("codebase/"));
-  note(`constitution ${nConst} files (${PROJECT_ROOM} and codebase/ skipped — they are the product's)`);
-  if (roomKept !== null) {
-    fs.mkdirSync(path.dirname(roomKit), { recursive: true });
-    fs.writeFileSync(roomKit, roomKept, "utf8");
-    note(`${PROJECT_ROOM}README.md restored from the package — promote never carries it home`);
-  }
-  for (const [rel, text] of Object.entries(codebaseKept)) {
-    const dest = path.join(codebaseKit, rel);
+                          (rel) => rel.startsWith(PROJECT_ROOM));
+  note(`constitution ${nConst} files (${PROJECT_ROOM} skipped — it is the product's)`);
+  for (const [rel, text] of Object.entries(roomKept)) {
+    const dest = path.join(roomKit, rel);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.writeFileSync(dest, text, "utf8");
   }
-  if (Object.keys(codebaseKept).length) {
-    note("codebase/ templates restored from the package — promote never carries them home");
+  if (Object.keys(roomKept).length) {
+    note(`${PROJECT_ROOM} restored from the package (${Object.keys(roomKept).length} files) — `
+         + "promote never carries the room home");
   }
 
   let copiedSkills = 0;
@@ -803,10 +877,10 @@ function promote(live) {
   note(`bmad custom ${tomls} toml`);
 
   const replacements = {
-    "constitution.md": path.join(KIT, ".constitution", "constitution.md"),
-    "portability.md": path.join(KIT, ".constitution", "method", "portability.md"),
-    "repo-guide.md": path.join(KIT, ".constitution", "repo-guide.md"),
-    "README.md": path.join(KIT, ".constitution", "README.md"),
+    "constitution.md": path.join(KIT, ".constitution", "method", "constitution.md"),
+    "portability.md": path.join(KIT, ".constitution", "method", "why", "portability.md"),
+    "repo-guide.md": path.join(KIT, ".constitution", "method", "repo-guide.md"),
+    "README.md": path.join(KIT, ".constitution", "method", "README.md"),
   };
   for (const [name, dest] of Object.entries(replacements)) {
     const src = path.join(OVERLAY, name);

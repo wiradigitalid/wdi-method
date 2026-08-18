@@ -23,10 +23,10 @@ The content rules are in `ux-guide.md` and MUST NOT be restated here.
 |---|---|
 | `.what/_prd/<initiative>/prd.md` | The promises the UX has to make usable — `FR`, `NFR`, `UJ-N` |
 | `.what/_product-brief/brief.md` | The primary user, and the boundary the UX MUST respect |
-| `.constitution/document/ux-guide.md` | The rules the result is checked against |
-| `.constitution/document/templates/ux.md` | The required shape of each half |
+| `.constitution/method/document/ux-guide.md` | The rules the result is checked against |
+| `.constitution/method/document/templates/ux.md` | The required shape of each half |
 | `.control/registry/components.yaml` | Whether the Product Components and containers a landing needs exist |
-| `.constitution/document/templates/design-system.md` | The shape of the product-level tokens file |
+| `.constitution/method/document/templates/design-system.md` | The shape of the product-level tokens file |
 | `.control/product-glossary.md` | Terms already fixed, so the screens do not invent competing ones |
 | `_bmad-output/ux/` | An earlier run — the input to *land*, and to intent *update* |
 | `.how/_platform/design-system.md` | Tokens and base components already agreed |

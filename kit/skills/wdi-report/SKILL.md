@@ -20,9 +20,9 @@ voice of a derived one is the most expensive kind of wrong.
 
 | Owner | Produces |
 |---|---|
-| `.constitution/scripts/validate.py` | `generated/rtm` · `dag` · `status` · `risks` · `components` · `decisions` · `blueprint` · `estimate` |
-| `.constitution/scripts/timeline.py` | `generated/timeline` · `generated/report` · `.control/reports/<period>.md` |
-| `.constitution/scripts/inventory.py` | The three inventories, derived from code |
+| `.constitution/method/scripts/validate.py` | `generated/rtm` · `dag` · `status` · `risks` · `components` · `decisions` · `blueprint` · `estimate` |
+| `.constitution/method/scripts/timeline.py` | `generated/timeline` · `generated/report` · `.control/reports/<period>.md` |
+| `.constitution/method/scripts/inventory.py` | The three inventories, derived from code |
 | `wdi-reconcile` | Drift between corpus and registry — read-only, no file |
 | **this skill** | The judgment on top: whether the tables are fresh enough to report on, and the human commentary written at publish time |
 
@@ -36,7 +36,7 @@ MUST NOT write into `generated/` yourself. Your job starts where their output st
 ## Step 1 — Refresh, or refuse
 
 ```bash
-uv run .constitution/scripts/timeline.py --refresh --generate
+uv run .constitution/method/scripts/timeline.py --refresh --generate
 ```
 
 `--refresh` runs the validators first, so both halves of `generated/` are derived at the same commit. Read what
@@ -82,7 +82,7 @@ unbounded on the left, and you MUST repeat that rather than picking a date.
 ## Step 4 — Publish
 
 ```bash
-uv run .constitution/scripts/timeline.py --publish weekly
+uv run .constitution/method/scripts/timeline.py --publish weekly
 ```
 
 A published report is **frozen**. It states what was true on a date, exactly like minutes. The script refuses to

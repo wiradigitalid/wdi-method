@@ -85,19 +85,21 @@ document.
 Method files in `.constitution/`, the `wdi-*` skills, and `_bmad/custom/*.toml` arrive from the
 public WDI Method package via `npx wdi-method install` / `update`.
 
-**Three paths inside `.constitution/` are this product's, not the method's.** Each is seeded once
-when absent and then never written again — an update MUST NOT touch one, and `promote` MUST NOT
-carry one back into the package:
+`.constitution/` holds **exactly two folders**, and which one a file is in decides who owns it:
 
-| Path | Holds |
-|---|---|
-| `constitution.md` | This product's Articles 1, 2, and 5 |
-| `codebase/*-guide.md` | This product's stack, conventions, and brownfield rules — at **any** `status:`, including `Draft`, which is when they are being written |
-| `project/` | Any rule that binds only this product |
+| Folder | Owner | On `update` | On `promote` |
+|---|---|---|---|
+| `method/` | the method | **overwritten** in full | carried into the package |
+| `project/` | this product | **never touched** — seeded once when absent | **never carried**, so a product's rules cannot be published |
 
-The seam is the **path**, never a marked region inside a generic file. `AGENTS.md` uses a marked
+Everything in the room is yours: `project/constitution.md` (Articles 1, 2, 5),
+`project/codebase-*-guide.md` (stack, conventions, brownfield — protected at **any** `status:`,
+including `Draft`, which is when they are actually written), and any rule file you add.
+
+The seam is the **folder**, never a marked region inside a generic file. `AGENTS.md` uses a marked
 block because it is one file with no alternative; `.constitution/` has fifty-odd, and blocks inside
-them would make every update perform surgery in every file.
+them would make every update perform surgery in every file. Prose has no merge algebra — only a path
+can say, unambiguously, whose a file is.
 
 At **read time** this repo is self-contained: every file the rules need is here, readable with the
 repo alone. At **change time** the method has one published writer — the WDI Method package. Two

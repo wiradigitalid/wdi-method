@@ -62,7 +62,7 @@ part of producing it — never a follow-up someone else performs.
 | each screen in `DESIGN.md` | an `LC` of type `ui-screen` in `components.yaml` | `wdi-ux` |
 | `RETROSPECTIVE.md` | `RTR-<wave>.md` in `.control/reports/` | `wdi-build`, at wave close |
 | `test-summary.md` | test names → `waves.yaml` | `wdi-build` |
-| `stack.md` · `conventions.md` · `brownfield.md` | merged into `.constitution/codebase/*-guide.md` | `wdi-build`, at wave close |
+| `stack.md` · `conventions.md` · `brownfield.md` | merged into `.constitution/project/codebase-*-guide.md` | `wdi-build`, at wave close |
 | A sprint change proposal | a `DEC-` of `type: course-correction` | `wdi-decision` |
 | The registry rows and skeletons a new PC needs | `components.yaml` · `.what/<pc>/` · `.how/<pc>/` | `wdi-init` intent `component` |
 | `platform_owns` — an entity no component's promise explains | `components.yaml`, plus its description in `cross-cutting.md` | `wdi-blueprint` |
@@ -269,7 +269,7 @@ public package.
 | Goes here | Does not, and its home |
 |---|---|
 | A review policy a client requires | product / client name → `index.yaml` `product:` |
-| A process rule that came from a contract | code conventions → `codebase/*-guide.md` |
+| A process rule that came from a contract | code conventions → `../../project/codebase-*-guide.md` |
 | A policy that differs from the method default | scope and ownership → `constitution.md` Art. 1, 2, 5 |
 | A prohibition specific to this domain | agent instructions → `AGENTS.md`, outside the marked block |
 

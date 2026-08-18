@@ -2,39 +2,15 @@
 status: Accepted
 ---
 
-# Constitution — {product}
+# Constitution — the method's articles
 
-Rewrite Articles 2 and 5 for the product this repo is. Article 1 cites
-`.control/registry/index.yaml` — replace `{product}` there at G1, not here.
-Articles 3, 4, 6, and 7 are the method and travel unchanged.
+Articles 3, 4, 6, and 7. They are the **method's** and arrive from the WDI Method package —
+`update` overwrites this file, so it MUST NOT be edited here.
 
-An agent working here MUST be able to act on the contents of this repo alone.
-
-## Article 1 — Scope
-
-This repo covers the product named at `product.name` in
-`.control/registry/index.yaml`. One product, one repo. A second product MUST
-get a repo of its own.
-
-`product.client` in the same file names the client if there is one, and stays
-empty if there is not. The product brief at G1 uses `product.name` as its
-title. Neither this file nor the brief is a second source of the name.
-
-An agent working here MUST NOT demand that sibling organisation repositories
-be open in the same session.
-
-## Article 2 — Content boundary, `.work/`, and cross-repo references
-
-All three are governed by [`repo-guide.md`](repo-guide.md). Its rules MUST NOT be
-repeated here — one rule, one place.
-
-What is particular to this repo, and therefore lives here:
-
-- Name any extra boundary this product has (a public-repo rule, a ban on `3p.md`,
-  a `.work/` resting state). If there is none, delete this bullet list and the
-  sentence above it.
-- `3p.md` MUST NOT be created in a product repo. Operational engagement memory
-  lives outside.
+This product's own articles — 1 Scope, 2 Content boundary, 5 Method ownership — live in
+[`../project/constitution.md`](../project/constitution.md), which `update` never touches. The
+numbering is shared across the two files and has gaps in each; the numbers are **not** reassigned,
+because a frozen record that cites one MUST NOT be rewritten.
 
 ## Article 3 — Layers
 
@@ -43,13 +19,13 @@ The repo layout is governed by `corpus-guide.md` and mapped by
 
 | Path | Role |
 |---|---|
-| `.constitution/` | Rules — how we work. `method/` holds the non-binding explanation of them |
+| `.constitution/` | Rules — how we work. Exactly two folders: `method/` is the method's and is overwritten by `update`, `project/` is this product's and is never touched. `method/why/` holds the non-binding explanation of the rules |
 | `.control/` | Control — what currently holds and what has been decided |
 | `.what/` | What is promised |
 | `.how/` | How it is built |
 | `_bmad-output/` | Run workspace; committed, not curated |
 | `.work/` | Scratch; committed, emptied when a task closes |
-| *(application roots)* | Application code — name them in this row |
+| *(application roots)* | Application code — named and mapped in `.control/structure-codebase.md` |
 
 The method does not use a `docs/` layer for corpus or rules. A leftover `docs/`
 folder is inventory to sort, not a second home.
@@ -73,32 +49,10 @@ so a status there would land in the artifact and mean something else entirely.
 A missing header anywhere else is a **finding**, not an implicit anything.
 
 `Reference` exists so that the *explanation* of a rule can live beside the rule without competing with it —
-`method/` holds four such files. Where a `Reference` file and an `Accepted` one disagree, the `Accepted`
+`method/why/` holds four such files. Where a `Reference` file and an `Accepted` one disagree, the `Accepted`
 one wins, and the disagreement MUST be reported as a defect rather than resolved by preferring whichever was
 opened first. A rule MUST NOT be born in a `Reference` file; when one is noticed there, it is stated as a
 finding and written in the guide that owns it.
-
-## Article 5 — The method arrives from WDI Method
-
-This is the **consumer** article. Use it in every product repo.
-
-`.constitution/` guides and templates (except this file's Articles 1, 2, and 5,
-`codebase/*-guide.md`, and any extra file this repo added), the `wdi-*` skills,
-and `_bmad/custom/*.toml` arrive from the public WDI Method package via
-`npx wdi-method install` / `update`.
-
-- A method file MUST NOT be invented or patched here to improve the method. If a
-  rule is wrong, it is fixed in the WDI Method package, then brought here with
-  `update`.
-- `wdi-method update` MUST overwrite method files and MUST NOT touch `.what/`,
-  `.how/`, `.control/` product state, this file's Articles 1–2 and 5,
-  `codebase/*-guide.md` once `Accepted`, extra constitution files this repo
-  added, or `_bmad/custom/*.user.toml`.
-- A rule particular to this repo MUST be written out in full in this file or a
-  sibling, and MUST NOT be replaced by a pointer into another repository.
-
-A prefix in `.claude/skills/` names the **method**, not the owner: `bmad-*` is
-BMad's, `wdi-*` is this method's.
 
 ## Article 6 — Decisions
 

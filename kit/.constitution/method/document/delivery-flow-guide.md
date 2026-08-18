@@ -68,7 +68,7 @@ names the endpoints, the screen inventory names the screens.
 Nine things `mode` never touches: the use case list, the API list, the table list, the screen list, the
 domain model, the actor list, the spine, C4 L1/L2/L3, and cross-component business rules. All nine belong
 to the blueprint at G3, so they exist even at `catalog`. The complete per-file manifest is in
-`.constitution/method/artifact-map.md`.
+`.constitution/method/why/artifact-map.md`.
 
 **Lowering `mode` deletes nothing.** A file already written stops being required, and that is all.
 

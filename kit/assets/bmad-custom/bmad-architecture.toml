@@ -7,7 +7,7 @@
 
 [workflow]
 
-spine_template     = "{project-root}/.constitution/document/templates/architecture-spine.md"
+spine_template     = "{project-root}/.constitution/method/document/templates/architecture-spine.md"
 spine_output_path  = "{project-root}/.how/_platform"
 run_folder_pattern = "architecture"
 
@@ -27,7 +27,7 @@ run_folder_pattern = "architecture"
 # manually before G4 — see the "Who calls bmad-review" table in 05-gates.md.
 
 persistent_facts = [
-  "file:{project-root}/.constitution/document/architecture-guide.md",
-  "file:{project-root}/.constitution/document/decision-guide.md",
+  "file:{project-root}/.constitution/method/document/architecture-guide.md",
+  "file:{project-root}/.constitution/method/document/decision-guide.md",
   "Every memlog.py call MUST use --path {project-root}/.control/memlog/spine.md. --workspace MUST NOT be used.",
 ]

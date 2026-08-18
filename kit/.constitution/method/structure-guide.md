@@ -37,9 +37,9 @@ This is the whole reason the maps can exist without colliding with the guides al
 |---|---|
 | Where does this live, and what is already there? | **structure map** |
 | Which layer owns it, and what is it named? | `document/corpus-guide.md` |
-| How is code named, and which patterns apply? | `codebase/conventions-guide.md` |
-| What is it built with, and on which version? | `codebase/stack-guide.md` |
-| Which legacy shapes are ratified rather than fixed? | `codebase/brownfield-guide.md` |
+| How is code named, and which patterns apply? | `../project/codebase-conventions-guide.md` |
+| What is it built with, and on which version? | `../project/codebase-stack-guide.md` |
+| Which legacy shapes are ratified rather than fixed? | `../project/codebase-brownfield-guide.md` |
 
 - A structure map MUST NOT restate a naming rule, a layer rule, or a version. It MUST reference the
   guide that owns it.

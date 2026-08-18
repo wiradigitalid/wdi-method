@@ -16,8 +16,8 @@
 [workflow]
 
 persistent_facts = [
-  "file:{project-root}/.constitution/document/delivery-flow-guide.md",
-  "file:{project-root}/.constitution/document/corpus-guide.md",
+  "file:{project-root}/.constitution/method/document/delivery-flow-guide.md",
+  "file:{project-root}/.constitution/method/document/corpus-guide.md",
   "This skill MUST NOT write or edit anything in {project-root}/.what/ or {project-root}/.how/. Its output is a proposal; document changes are made by wdi-decision intent `apply` once the `DEC-` is accepted, and wave content by wdi-build.",
   "epics.md and sprint-status.yaml are NOT used in this repo — we run the stories route. Neither MUST be read as a source, and neither MUST be created.",
   "The impact scan MUST cover .what/_prd/, .what/<pc>/, .how/_platform/, .how/<pc>/, SPEC.md, .control/registry/waves.yaml, and the story files. .what/<pc>/ is unknown to this skill entirely, and without this it goes stale silently.",

@@ -113,7 +113,7 @@ defect; refusing to work until the paperwork is right is how the file becomes a 
 | `fix` | `fastpath` for a pure code defect, the wave id otherwise. The table above already decides this — `requirement` and `architecture` MUST NOT be `fastpath` |
 
 You MUST NOT write a closure date. It is derived from the history of `defects.yaml` itself by
-`.constitution/scripts/timeline.py`, and a hand-written date would be a second home for one fact —
+`.constitution/method/scripts/timeline.py`, and a hand-written date would be a second home for one fact —
 the stored copy being the one that goes wrong.
 
 You MUST NOT edit `title`, `found_in`, or `reported`. Whoever opened the row owns those; correcting
@@ -155,7 +155,7 @@ terms, the outcome is a `DEC-` — a correction of course is one too — not ano
 | What the root cause turns out to be | Where it goes |
 |---|---|
 | Genuine code defect, no artifact was wrong | Fast Path — fix, test, done |
-| A requirement was missing or wrong | Back to the Impact Matrix in `.constitution/document/delivery-flow-guide.md`; the FR/UC changes before the code does |
+| A requirement was missing or wrong | Back to the Impact Matrix in `.constitution/method/document/delivery-flow-guide.md`; the FR/UC changes before the code does |
 | An architecture decision was wrong | `wdi-decision`, which wraps `bmad-correct-course`; MUST NOT be absorbed as a code patch |
 | Environmental, timing-dependent, or external | Document the investigation, implement handling (retry, timeout, clear error), add monitoring |
 

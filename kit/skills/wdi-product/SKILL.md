@@ -26,7 +26,7 @@ You MUST NOT write or edit `prd.md` yourself. If a check fails, name what is mis
 | `.what/_prd/*/prd.md` | Which initiatives already have a PRD, and what each already promises |
 | `.control/registry/requirements.yaml` | The next `CAP`/`FR`/`NFR`/`UJ` ids, allocated globally |
 | `.control/decisions/` | `applied` decisions the PRD MUST already reflect |
-| `.constitution/document/prd-guide.md` | The rules the result is checked against |
+| `.constitution/method/document/prd-guide.md` | The rules the result is checked against |
 | `.control/product-glossary.md` | Terms already fixed |
 
 ## Step 1 — Position, and `update` is the default

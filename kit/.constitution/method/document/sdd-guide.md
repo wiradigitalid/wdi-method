@@ -88,7 +88,7 @@ Flows **into and out of** each boundary MUST be stated, not just the boundary. A
 direction of call is a name, not a design.
 
 Flow diagrams in `06-flows/` are written only for a flow touching money, irreversible state, or a third
-party. The lane order is the project's to fix, once, in `codebase/conventions-guide.md`. **The `No-op` lane
+party. The lane order is the project's to fix, once, in `../../project/codebase-conventions-guide.md`. **The `No-op` lane
 rule is repealed** — it was a heavy convention for a folder that had never carried a file, and it belongs to
 how a diagram is drawn rather than to what binds.
 

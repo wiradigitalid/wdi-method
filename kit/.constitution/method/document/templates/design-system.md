@@ -55,7 +55,7 @@ updated: '{YYYY-MM-DD}'
 ## Rules that bind every screen
 
 <!-- Only what a screen cannot legitimately override. Each MUST state what it prevents — a rule with
-     no failure behind it is a preference, and preferences go to codebase/conventions-guide.md.
+     no failure behind it is a preference, and preferences go to ../../../project/codebase-conventions-guide.md.
 
      A rule here that also holds for non-UI code is an AD-N and belongs in the spine instead. -->
 

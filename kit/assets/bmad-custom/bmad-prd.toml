@@ -16,11 +16,11 @@
 
 [workflow]
 
-prd_template       = "{project-root}/.constitution/document/templates/prd.md"
+prd_template       = "{project-root}/.constitution/method/document/templates/prd.md"
 prd_output_path    = "{project-root}/.what/_prd"
 run_folder_pattern = "FILL-initiative-slug"
 
-doc_standards = ["file:{project-root}/.constitution/document/prd-guide.md"]
+doc_standards = ["file:{project-root}/.constitution/method/document/prd-guide.md"]
 
 # The facts below deliberately repeat part of prd-guide.md. The reason is timing: doc_standards
 # only activates at the Polish step, while Create-versus-Update intent detection happens at
@@ -28,7 +28,7 @@ doc_standards = ["file:{project-root}/.constitution/document/prd-guide.md"]
 # line here MUST be fixed.
 persistent_facts = [
   "file:{project-root}/.control/registry/requirements.yaml",
-  "file:{project-root}/.constitution/document/prd-guide.md",
+  "file:{project-root}/.constitution/method/document/prd-guide.md",
 
   "FR-N, NFR-N, UJ-N, and CAP-N MUST be allocated from requirements.yaml and MUST NOT restart from 1. The next initiative's PRD continues the previous PRD's sequence — the sequence is global, one product, one sequence.",
 

@@ -18,8 +18,8 @@ hand-patched brief makes the memlog lie about how it got that way.
 | Source | What it answers |
 |---|---|
 | `.what/_product-brief/brief.md` | Whether a brief already exists, and what intent applies |
-| `.constitution/document/brief-guide.md` | The rules the result is checked against |
-| `.constitution/document/templates/brief.md` | The required shape |
+| `.constitution/method/document/brief-guide.md` | The rules the result is checked against |
+| `.constitution/method/document/templates/brief.md` | The required shape |
 | `_bmad-output/brainstorming/` · `forge/` · `planning-artifacts/` | Raw material available to feed in |
 | `.control/product-glossary.md` | Terms already fixed, so the brief does not invent competing ones |
 

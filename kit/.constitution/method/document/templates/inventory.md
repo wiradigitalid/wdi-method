@@ -31,7 +31,7 @@ verified: ''             # commit SHA the derivation was read at; required when 
      TWO WAYS THIS FILE COMES TO EXIST, and derived_from says which:
        plan  no code yet. Written as intent — the tables, endpoints, or screens planned. Nothing can
              be derived, because there is no source.
-       code  code exists. Derived by .constitution/scripts/inventory.py — migrations for tables,
+       code  code exists. Derived by .constitution/method/scripts/inventory.py — migrations for tables,
              route registration for endpoints, pages for screens — and THEN compared with the plan.
              The difference is a FINDING, reported. It MUST NOT be patched into agreement by hand.
 

@@ -46,7 +46,7 @@ read in the places where it is right.
 | **Rule** | One sentence, quotable, checkable. If a reviewer cannot tell whether code obeys it, it is not a rule yet |
 
 An `AD-N` with no **Prevents** is a preference. Preferences belong in
-`.constitution/codebase/conventions-guide.md`, where nothing has to justify itself.
+`.constitution/project/codebase-conventions-guide.md`, where nothing has to justify itself.
 
 ## The spine stops being touched every story
 

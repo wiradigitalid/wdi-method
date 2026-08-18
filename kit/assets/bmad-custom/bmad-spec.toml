@@ -10,7 +10,7 @@
 
 persistent_facts = [
   "A spec slug MUST take the shape w<N>-<pc>, one run per (wave x Product Component) pair.",
-  "SPEC.md MUST NOT carry anything that did not come from the SRS, SDD, or PRD. A new finding MUST be landed in the corpus by the skill that owns that layer — the ownership table in .constitution/document/corpus-guide.md — before the wave closes, never left sitting in the spec.",
+  "SPEC.md MUST NOT carry anything that did not come from the SRS, SDD, or PRD. A new finding MUST be landed in the corpus by the skill that owns that layer — the ownership table in .constitution/method/document/corpus-guide.md — before the wave closes, never left sitting in the spec.",
   "CAP-N MUST be allocated from {project-root}/.control/registry/requirements.yaml.",
   "file:{project-root}/.control/product-glossary.md",
 ]

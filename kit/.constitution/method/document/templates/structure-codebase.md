@@ -14,7 +14,7 @@ commit: '{sha}'               # the commit it was read at — staleness is measu
      (brownfield-guide.md) — reference them instead.
 
      Written and refreshed only by `wdi-init` intent `structure`, never by hand. Rules for both maps live in
-     .constitution/structure-guide.md.
+     .constitution/method/structure-guide.md.
 
      THE SHAPE: annotated trees, not prose. Folders are complete; files are marked ★ inline and only
      when they earn it. A tree that lists every file is unmaintainable, and an unmaintainable map

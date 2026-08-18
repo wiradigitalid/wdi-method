@@ -6,11 +6,11 @@ status: Reference
 
 **Opened when:** someone asks *"where does this file go"*, or *"does this document exist at my `mode`"*.
 
-This file **explains**. It does not bind — `document/*-guide.md` does, and where the two disagree the guide
+This file **explains**. It does not bind — `../document/*-guide.md` does, and where the two disagree the guide
 wins and the disagreement is a defect to report.
 
 It answers three questions and nothing else: which files exist at each `mode`, who owns each one, and how
-the units of work line up. The **rules** about depth live in `document/delivery-flow-guide.md`; what is
+the units of work line up. The **rules** about depth live in `../document/delivery-flow-guide.md`; what is
 here is the map.
 
 ## The one thing to read first
@@ -106,7 +106,7 @@ Repealed: `_platform/architecture/` (one file does not earn a folder) and `<pc>/
 ## Who owns each file
 
 A skill lands the output of the layer it owns, and landing is part of producing it — never a follow-up
-someone else performs. `document/corpus-guide.md` holds the binding version of this table.
+someone else performs. `../document/corpus-guide.md` holds the binding version of this table.
 
 | Owner | Writes |
 |---|---|
@@ -137,7 +137,7 @@ Task** — it travels as a label, because one `FR` can be delivered by stories i
 satisfy part of two `FR`.
 
 The binding version of all of this, including why a wave MAY cross components and what has to be true
-first, is in `document/delivery-flow-guide.md`. It is not restated here.
+first, is in `../document/delivery-flow-guide.md`. It is not restated here.
 
 ## What needs no template, and why
 
@@ -151,5 +151,5 @@ Stated so the next completeness audit does not report it again:
 | `SPEC.md` · story files | They belong to `bmad-spec`. WDI does not write their shape, and MUST NOT |
 | Registry `*.yaml` | Their shape is the comment block at the head of each file, plus the validator |
 
-Everything else in this map has a template in `document/templates/` — 27 of them, and every row above is
+Everything else in this map has a template in `../document/templates/` — 27 of them, and every row above is
 covered by one.

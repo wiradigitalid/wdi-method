@@ -192,7 +192,7 @@ Run in this order and stop at the first failure:
 
 1. **Registry catch-up.** Every `LC` the wave's design named is registered in `components.yaml`, and every
    `touches` value resolves — V12. This is the moment those questions have answers.
-2. **Inventories refreshed from code.** Run `.constitution/scripts/inventory.py`. The plan-versus-reality
+2. **Inventories refreshed from code.** Run `.constitution/method/scripts/inventory.py`. The plan-versus-reality
    difference is reported as a finding; it MUST NOT be patched into agreement by hand.
 3. **Structure maps refreshed** through `wdi-init` intent `structure`, if a base folder was born or removed or a
    key file moved.

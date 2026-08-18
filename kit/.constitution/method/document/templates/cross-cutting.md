@@ -72,7 +72,7 @@ updated: '{YYYY-MM-DD}'
      idempotency key convention · logging fields · rate-limit response shape.
 
      Each MUST state where it is enforced. An agreement nothing enforces is a preference, and
-     preferences belong in codebase/conventions-guide.md where nothing has to justify itself. -->
+     preferences belong in ../../../project/codebase-conventions-guide.md where nothing has to justify itself. -->
 
 ### {agreement}
 

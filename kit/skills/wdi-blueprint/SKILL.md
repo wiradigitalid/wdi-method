@@ -32,7 +32,7 @@ of that is `wdi-component` at G4. You MUST NOT write a promise; when the bluepri
 | `.control/product-glossary.md` | Terms already fixed |
 | `.control/decisions/` | `accepted` and `applied` decisions an `AD-N` usually sits behind |
 | `src/` · `web/` | What actually runs, when this is not a new project |
-| `.constitution/document/srs-guide.md` · `architecture-guide.md` | The rules the result is checked against |
+| `.constitution/method/document/srs-guide.md` · `architecture-guide.md` | The rules the result is checked against |
 
 ## Step 1 — Position
 
@@ -65,7 +65,7 @@ whose nouns nobody defined.
 the count passes a third of a component's use cases, derive it again — `delivery-flow-guide.md` owns the rule
 and it MUST NOT be negotiated.
 
-**A method term MUST NOT be written into `.constitution/method-glossary.md`.** A product term binds one
+**A method term MUST NOT be written into `.constitution/method/method-glossary.md`.** A product term binds one
 project; a method term binds every project the method is installed in. Raise it as a proposal, state where it
 appeared and why the existing vocabulary does not cover it, and hand it to the owner.
 
@@ -152,7 +152,7 @@ copy inside any SDD.
 | State | How each is born |
 |---|---|
 | No code yet | Written as a **plan** — the tables, endpoints, and screens intended. Nothing can be derived, because there is no source |
-| Code exists | **Derived first** by `.constitution/scripts/inventory.py` — migrations for tables, route registration for endpoints, pages for screens — then compared with the plan. The difference is a **finding**, not hand work |
+| Code exists | **Derived first** by `.constitution/method/scripts/inventory.py` — migrations for tables, route registration for endpoints, pages for screens — then compared with the plan. The difference is a **finding**, not hand work |
 
 An inventory MUST NOT be assembled from a README or from route names that look plausible. Numbers are stable:
 a new row takes the next number, never a renumber.

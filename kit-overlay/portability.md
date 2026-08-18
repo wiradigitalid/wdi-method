@@ -22,14 +22,14 @@ them only an *example* does — not a rule.
 
 | File | What is this product's | What to do when carrying it |
 |---|---|---|
-| `constitution.md` | Articles 1, 2, and 5 | **Rewrite 2 and 5.** Article 1 cites `index.yaml` `product.name`. Articles 3, 4, 6, 7 travel unchanged. `wdi-method promote` already replaces this file with the kit template |
-| `document/architecture-guide.md` | Seed examples of stack and tree shape | Re-point the examples. Every rule around them travels |
-| `document/corpus-guide.md` | Worked examples of `_platform` ownership | Re-point the examples. **Keep both kinds**: they teach the trap better than the rule alone |
+| `../constitution.md` | Articles 1, 2, and 5 | **Rewrite 2 and 5.** Article 1 cites `index.yaml` `product.name`. Articles 3, 4, 6, 7 travel unchanged. `wdi-method promote` already replaces this file with the kit template |
+| `../document/architecture-guide.md` | Seed examples of stack and tree shape | Re-point the examples. Every rule around them travels |
+| `../document/corpus-guide.md` | Worked examples of `_platform` ownership | Re-point the examples. **Keep both kinds**: they teach the trap better than the rule alone |
 | `templates/design-system.md` | The pointer to wherever this project keeps its tokens | Re-point at that project's token file |
 | `templates/oq.md` | One example of a bad question title | Cosmetic |
 
 Everything else — the five gates, the two fields, the fifteen skills, the templates, `validate.py`,
-`inventory.py`, `method-glossary.md`, and the three files beside this one — carries without edit.
+`inventory.py`, `../method-glossary.md`, and the three files beside this one — carries without edit.
 
 ## What does NOT travel
 
@@ -37,7 +37,7 @@ Everything else — the five gates, the two fields, the fifteen skills, the temp
 |---|---|
 | `.control/` | This product's state. A new project scaffolds its own through `wdi-init` intent `setup`, or receives empty stubs on first `install` |
 | `.what/` · `.how/` | This product's promises and build |
-| `.constitution/codebase/*-guide.md` | Written by the **project**, not the method. They ship as empty `Draft` stubs |
+| `.constitution/project/codebase-*-guide.md` | Written by the **project**, not the method. They ship as empty `Draft` stubs |
 | `_bmad-output/` | Run workspace |
 | The `bmad-*` skills themselves | BMad's, installed by BMad. Only `_bmad/custom/*.toml` is ours |
 
@@ -75,7 +75,7 @@ the steps that a runbook used to carry are now `wdi-init` intent `setup`. The or
 
 1. `npx bmad-method install` in the product repo.
 2. `npx wdi-method install` (optionally `--agents …`).
-3. Set `product.name` in `.control/registry/index.yaml`. Rewrite `constitution.md` Articles 2 and 5.
+3. Set `product.name` in `.control/registry/index.yaml`. Rewrite `../constitution.md` Articles 2 and 5.
 4. Merge the method routing into `AGENTS.md` if that file already existed.
 5. Run `wdi-init` intent `setup`.
 6. Sort what already existed. A file that is already the artifact one slot asks for goes into that

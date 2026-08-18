@@ -27,8 +27,10 @@ const ALLOWED_GITHUB = [
 
 describe("published kit stays generic", () => {
   it("keeps the product-name placeholder in constitution and index.yaml", () => {
-    assert.match(read("kit/.constitution/constitution.md"), /product\.name/);
-    assert.match(read("kit-overlay/constitution.md"), /\{product\}/);
+    // 0.5.0 split constitution.md: the product's half is authored in the room, and the overlay now
+    // carries only the method's articles — which is exactly why it no longer holds {product}.
+    assert.match(read("kit/.constitution/project/constitution.md"), /product\.name/);
+    assert.match(read("kit/.constitution/project/constitution.md"), /\{product\}/);
     assert.match(read("scaffold/.control/registry/index.yaml"), /name: "\{product\}"/);
     assert.match(read("kit-overlay/AGENTS.md"), /BEGIN:wdi-method/);
     assert.match(read("kit-overlay/AGENTS.md"), /END:wdi-method/);

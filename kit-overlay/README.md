@@ -2,31 +2,37 @@
 status: Reference
 ---
 
-# `.constitution/` — index
+# `.constitution/method/` — index
 
-Method files arrive from the public WDI Method package via `npx wdi-method install`
-or `update`. Load [`constitution.md`](constitution.md) before acting. Guides are
-loaded **lazily** — only when the task matches, and every guide states when on its
-own **Loaded when:** line.
+`.constitution/` holds **exactly two folders**, and the folder is what says who owns a file:
+
+| Folder | Owner | `update` | `promote` |
+|---|---|---|---|
+| `method/` — you are in it | the method | **overwritten** in full | carries it into the package |
+| [`../project/`](../project/) | this product | **never touched** — seeded once when absent | never carries it, so your rules cannot be published |
+
+Load [`constitution.md`](constitution.md) and [`../project/constitution.md`](../project/constitution.md)
+before acting: Articles 3, 4, 6, 7 are here, Articles 1, 2, 5 are yours. Guides are loaded **lazily** —
+only when the task matches, and every guide states when on its own **Loaded when:** line.
 
 Every file here carries a `status:` — Article 4 owns the five values. Only `Accepted` binds;
 `Reference` explains and MUST NOT be cited to reject a change. A template carries no status of its
 own, because its frontmatter belongs to the artifact it produces.
 
-A file this product added (one that is not in the snapshot) stays here across `update` and MUST be
-listed from `constitution.md` Article 2 or from `AGENTS.md` routing — this index is overwritten on
-every update.
+**A file this product adds MUST go in [`../project/`](../project/), not here** — anything in `method/`
+is replaced on the next update, without warning, because that is what `method/` means. This index is
+overwritten too.
 
-## `method/` — the explanation, `status: Reference`
+## `why/` — the explanation, `status: Reference`
 
 Never a rule. When it disagrees with a guide, the guide wins and the disagreement is a defect.
 
 | File | Opened when |
 |---|---|
-| [`method/README.md`](method/README.md) | You want the whole shape in five minutes — five gates, two settings, fifteen skills, WDI ↔ BMad |
-| [`method/artifact-map.md`](method/artifact-map.md) | "Where does this file go", or "does this document exist at my `mode`" |
-| [`method/rationale.md`](method/rationale.md) | Before changing a rule, to know what you would break |
-| [`method/portability.md`](method/portability.md) | Which files are the method and which are the product; how promote and install move them |
+| [`why/README.md`](why/README.md) | You want the whole shape in five minutes — five gates, two settings, fifteen skills, WDI ↔ BMad |
+| [`why/artifact-map.md`](why/artifact-map.md) | "Where does this file go", or "does this document exist at my `mode`" |
+| [`why/rationale.md`](why/rationale.md) | Before changing a rule, to know what you would break |
+| [`why/portability.md`](why/portability.md) | Which files are the method and which are the product; how promote and install move them |
 
 ## Cross-domain
 
@@ -51,12 +57,13 @@ Never a rule. When it disagrees with a guide, the guide wins and the disagreemen
 | [`decision-guide.md`](document/decision-guide.md) | `DEC-`: the one test for recording at all, shape, global numbering, the `draft → accepted → applied` ladder, supersession |
 | [`templates/`](document/templates/) | Templates, one per kind of document; they MUST be copied, and MUST NOT be reproduced from memory |
 
-## `codebase/` — code rules
+## Code rules — in the room, not here
 
-All three are written by the **project**, not the kit. While `Draft`, their contents MAY be read as
-guidance but MUST NOT be used to reject a change.
+All three are written by the **product**, so they live in [`../project/`](../project/) and no update
+touches them at any `status:`. While `Draft`, their contents MAY be read as guidance but MUST NOT be
+used to reject a change.
 
-[`stack-guide.md`](codebase/stack-guide.md) · [`conventions-guide.md`](codebase/conventions-guide.md) · [`brownfield-guide.md`](codebase/brownfield-guide.md)
+[`stack-guide.md`](../project/codebase-stack-guide.md) · [`conventions-guide.md`](../project/codebase-conventions-guide.md) · [`brownfield-guide.md`](../project/codebase-brownfield-guide.md)
 
 ## `scripts/`
 

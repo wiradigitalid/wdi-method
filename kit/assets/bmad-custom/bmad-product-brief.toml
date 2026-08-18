@@ -6,7 +6,7 @@
 
 [workflow]
 
-brief_template     = "{project-root}/.constitution/document/templates/brief.md"
+brief_template     = "{project-root}/.constitution/method/document/templates/brief.md"
 
 # run_folder_pattern MUST be constant — no {project_name}, no {date}.
 # That is what forces the singleton: every run lands in the same folder, so a second run is
@@ -17,7 +17,7 @@ brief_output_path  = "{project-root}/.what"
 run_folder_pattern = "_product-brief"
 
 # Append-only against the default `skill:bmad-review lenses=structure,prose`.
-doc_standards = ["file:{project-root}/.constitution/document/brief-guide.md"]
+doc_standards = ["file:{project-root}/.constitution/method/document/brief-guide.md"]
 
 persistent_facts = [
   "Every memlog.py call — init, append, set, and the read on resume or intent Update — MUST use --path {project-root}/.control/memlog/brief.md. --workspace MUST NOT be used; it would place a .memlog.md inside .what/, and no memlog is allowed to live in the corpus.",
