@@ -125,6 +125,34 @@ product:
 The brief at `.what/_product-brief/brief.md` uses that name. `constitution.md` Article 1 cites
 the field. Neither document is a second source of the name.
 
+## Language — two settings, and nothing else is a choice
+
+The TUI asks two questions; `install`/`update` write the answers to `.control/registry/index.yaml`:
+
+```yaml
+policy:
+  doc_language: en           # prose of working documents in .what/ .how/ .control/
+  doc_filename_language: en  # the slug part of a document filename
+```
+
+Non-interactive: `--doc-language <en|id> --doc-filename-language <en|id>`.
+
+**A setting that already exists is kept**, and the run says so. A language somebody already chose is
+not the installer's to change behind their back.
+
+Always English, and a skill MUST NOT ask about them:
+
+| | |
+|---|---|
+| Method terminology | `DEC` `SRS` `SDD` `UC` `FR` `AD`, the gate names, `mode` and `risk_accepted` values |
+| Document code prefixes | `UC-` `DEC-` `SRS-` — only the slug after them follows the setting |
+| Machine-facing markers | `[NEEDS CONFIRMATION]` `[MISSING]` `[ASSUMED]` `[PARTIAL]`, `yes`/`no` |
+| Code identifiers, DB columns, config keys | `language-guide.md` owns this |
+
+**A corpus written before these settings existed is not migrated for them.** `validate.py` accepts both
+languages — `yes|ya`, and V23's keyword set is the union of both — so existing documents keep working
+and only new writing follows the setting.
+
 ## Gitignore (optional)
 
 This package does not require method files to be committed or ignored. Each product repo decides.

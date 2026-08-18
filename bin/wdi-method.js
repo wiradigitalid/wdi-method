@@ -10,6 +10,9 @@ import {
 } from "../lib/agents-block.mjs";
 import {
   identityIsPlaceholder,
+  readLanguagePolicy,
+  writeLanguagePolicy,
+  DOC_LANGUAGES,
   readProductIdentity,
   writeProductIdentity,
 } from "../lib/identity.mjs";
@@ -90,6 +93,8 @@ function usage() {
   --agents a,b              claude,cursor,codex,antigravity
   --product NAME            written to index.yaml product.name
   --client NAME             written to index.yaml product.client (optional)
+  --doc-language <en|id>            prose of working documents; default en
+  --doc-filename-language <en|id>  slug part of document filenames; default en
   --skip-bmad-check
 
 BMad first, then this package. ${WDI_REPO}
@@ -105,6 +110,8 @@ function parseArgs(argv) {
     yes: false,
     product: null,
     client: null,
+    docLanguage: null,
+    docFilenameLanguage: null,
   };
   const rest = argv.slice(2);
   if (rest[0] === "-h" || rest[0] === "--help") {
@@ -137,6 +144,14 @@ function parseArgs(argv) {
       }
     } else if (t === "--product") args.product = rest.shift();
     else if (t === "--client") args.client = rest.shift();
+    else if (t === "--doc-language" || t === "--doc-filename-language") {
+      const raw = (rest.shift() || "").trim();
+      if (!DOC_LANGUAGES.includes(raw)) {
+        die(`${t} needs one of: ${DOC_LANGUAGES.join(", ")}`);
+      }
+      if (t === "--doc-language") args.docLanguage = raw;
+      else args.docFilenameLanguage = raw;
+    }
     else if (t.startsWith("-")) die(`unknown flag: ${t}`);
     else if (!args.dir) args.dir = t;
     else die(`unexpected argument: ${t}`);
@@ -432,6 +447,35 @@ function setProductIdentity(target, { name, client }) {
   note(`product.name = ${name}`);
 }
 
+// Bahasa dokumen milik PRODUK, jadi update MUST NOT menimpanya. Ia ditulis hanya ketika belum ada —
+// sama seperti kamar custom, dan dengan alasan yang sama: setelan yang pernah dipilih seseorang bukan
+// milik installer untuk diubah di belakangnya.
+function setLanguagePolicy(target, { docLanguage, docFilenameLanguage }) {
+  const file = path.join(target, ".control", "registry", "index.yaml");
+  if (!fs.existsSync(file)) return;
+  const text = fs.readFileSync(file, "utf8");
+  const existing = readLanguagePolicy(text);
+  if (existing.docLanguage && existing.docFilenameLanguage) {
+    note(`kept policy.doc_language = ${existing.docLanguage}, ` +
+         `doc_filename_language = ${existing.docFilenameLanguage}`);
+    return;
+  }
+  const next = writeLanguagePolicy(text, {
+    docLanguage: docLanguage || existing.docLanguage || "en",
+    docFilenameLanguage: docFilenameLanguage || existing.docFilenameLanguage || "en",
+  });
+  fs.writeFileSync(file, next.endsWith("\n") ? next : `${next}\n`);
+  const after = readLanguagePolicy(next);
+  note(`policy.doc_language = ${after.docLanguage}, ` +
+       `doc_filename_language = ${after.docFilenameLanguage}`);
+}
+
+function readIndexPolicy(target) {
+  const file = path.join(target, ".control", "registry", "index.yaml");
+  if (!fs.existsSync(file)) return { docLanguage: "", docFilenameLanguage: "" };
+  return readLanguagePolicy(fs.readFileSync(file, "utf8"));
+}
+
 function readIndexIdentity(target) {
   const file = path.join(target, ".control", "registry", "index.yaml");
   if (!fs.existsSync(file)) return { name: "", client: "" };
@@ -503,7 +547,7 @@ function printNextSteps({ first, productSet }) {
   }
 }
 
-function apply(target, agents, { first, product, client }) {
+function apply(target, agents, { first, product, client, docLanguage, docFilenameLanguage }) {
   requireKit();
   const { written, skipped } = syncConstitution(target);
   note(`constitution wrote ${written}, kept ${skipped}`);
@@ -514,6 +558,7 @@ function apply(target, agents, { first, product, client }) {
   if (first) seedControlIfMissing(target);
   seedEmptyLayers(target);
   setProductIdentity(target, { name: product, client });
+  setLanguagePolicy(target, { docLanguage, docFilenameLanguage });
   upsertAgentFiles(target, agents, product);
   writeStamp(target);
   ok(`${first ? "installed" : "updated"} into ${target}`);
@@ -741,6 +786,28 @@ async function runWizard(pre) {
     }),
   );
 
+  // Dua pertanyaan, dan hanya dua. Istilah metodologi, kode di depan nama berkas, penanda
+  // machine-facing, dan identifier kode selalu English — MUST NOT ditanyakan.
+  const policy = readIndexPolicy(target);
+  const askLanguage = async (message, current) =>
+    cancelIf(
+      await p.select({
+        message,
+        options: [
+          { value: "en", label: "English" },
+          { value: "id", label: "Bahasa Indonesia" },
+        ],
+        initialValue: current || "en",
+      }),
+    );
+  const docLanguage = policy.docLanguage
+    ? (note(`bahasa dokumen sudah disetel: ${policy.docLanguage}`), policy.docLanguage)
+    : await askLanguage("Bahasa isi dokumen kerja (.what/ .how/ .control/)", pre.docLanguage);
+  const docFilenameLanguage = policy.docFilenameLanguage
+    ? policy.docFilenameLanguage
+    : await askLanguage("Bahasa slug nama berkas dokumen — kode `UC-` `DEC-` tetap English",
+                        pre.docFilenameLanguage || docLanguage);
+
   const selected = cancelIf(
     await p.multiselect({
       message: "Agen mana yang kebagian skill? (spasi untuk pilih)",
@@ -777,6 +844,8 @@ async function runWizard(pre) {
   const spinner = p.spinner();
   spinner.start(first ? "Memasang…" : "Meng-update…");
   apply(target, selected, {
+    docLanguage,
+    docFilenameLanguage,
     first,
     product: String(product).trim(),
     client: String(client).trim(),
@@ -799,7 +868,13 @@ function runNonInteractive(args) {
   const product = args.product || existing.name;
   const client = args.client ?? existing.client;
   const first = args.cmd === "install" || (args.cmd === "wizard" && !wdiPresent(target));
-  apply(target, agents, { first: args.cmd === "update" ? false : first, product, client });
+  apply(target, agents, {
+    first: args.cmd === "update" ? false : first,
+    product,
+    client,
+    docLanguage: args.docLanguage,
+    docFilenameLanguage: args.docFilenameLanguage,
+  });
 }
 
 async function main() {
