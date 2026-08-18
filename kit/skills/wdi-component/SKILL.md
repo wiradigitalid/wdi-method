@@ -11,9 +11,15 @@ shape with `mode`, and the only one that runs more than once for a reason other 
 | `mode` | This skill |
 |---|---|
 | `catalog` | **Not run. G4 is skipped.** |
-| `outline` | intent `behaviour` |
+| `outline` | `behaviour` + `design` **as far as § Structure**, and no further |
 | `guarded` | `behaviour` + `design` |
 | `deep` | `behaviour` + `design` |
+
+This table said `outline` → `behaviour` only until 2026-08-18. It contradicted **Step 4 of this same
+skill**, which starts `Decision Summary` and `Structure` "from `outline`", and it contradicted
+`delivery-flow-guide.md`, which owns the mapping and lists both for `outline`. Read literally, it would
+have left every `outline` component with an SDD that is a template skeleton forever — and V13 would have
+been right to keep flagging it.
 
 Read the component's `mode` from its row in `components.yaml`, falling back to `mode:` in `index.yaml`. Read
 its `risk_accepted` from the same row; it decides the review lenses and nothing else.

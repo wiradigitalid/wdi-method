@@ -82,15 +82,6 @@ from, and every later gate inherits the guess.
   in `corpus-guide.md`, and that retirement is a `DEC-`. "Never deleted" was never the rule; needing them
   was.
 
-## Product name — one room
-
-The structured name lives at `.control/registry/index.yaml` `product.name`. G1 is when it is set.
-
-- `product.name` MUST be set before G1 closes, and MUST NOT remain the placeholder `{product}`.
-- The brief title MUST use that value. The brief MUST NOT invent a second name.
-- `product.client` MAY be empty. Empty means there is no client, not that the field was skipped.
-- `constitution.md` Article 1 cites the field. It MUST NOT restate the string as a competing source.
-
 ## Passing G1
 
 - Dying cheap is a pass. A brief concluding the idea is not worth building is a valid G1 outcome,

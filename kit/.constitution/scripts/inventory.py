@@ -58,6 +58,29 @@ RE_ROUTE = re.compile(
     r"\.\s*(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s*\(\s*[`\"]([^`\"]+)[`\"]", re.I)
 RE_GROUP = re.compile(r"\.\s*Group\s*\(\s*[`\"]([^`\"]+)[`\"]", re.I)
 
+# Sebuah route group DIBUAT di satu berkas dan DIPAKAI di berkas lain:
+#     portal.go:26   mountMemberAPI(engine.Group("/api"), ...)
+#     member_api.go  api.GET("/me", ...)
+# Karena itu prefiks TIDAK dapat disimpulkan per berkas. Ia harus mengikuti mount-nya, dan host-nya
+# ikut dari titik pasang di app.go. Pola di bawah yang membuat penelusuran itu mungkin.
+RE_FUNC_DEF = re.compile(r"^func\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)", re.M)
+# mux.Handle(cfg.HostPublic, routing.NewPublicWithStore(...)) -> host `public`, entry NewPublicWithStore
+RE_HOST_MOUNT = re.compile(
+    r"Handle\s*\(\s*[A-Za-z_][A-Za-z0-9_]*\.Host([A-Za-z0-9_]+)\s*,\s*"
+    r"(?:[A-Za-z_][A-Za-z0-9_]*\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+# mountX(engine.Group("/api"), ...)  |  mountX(api, ...)
+RE_CALL_GROUP = re.compile(
+    r"\b([a-z][A-Za-z0-9_]*)\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\.\s*Group\s*\(\s*[`\"]([^`\"]*)[`\"]\s*\)")
+RE_CALL_PLAIN = re.compile(r"\b([a-z][A-Za-z0-9_]*)\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*[,)]")
+# api := engine.Group("/x")  |  protected := api.Group("")
+RE_ASSIGN_GROUP = re.compile(
+    r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:?=\s*([A-Za-z_][A-Za-z0-9_]*)\s*\.\s*Group\s*\(\s*[`\"]([^`\"]*)[`\"]",
+    re.M)
+RE_ASSIGN_ENGINE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:?=\s*gin\.New\s*\(", re.M)
+RE_ROUTE_ON = re.compile(
+    r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\.\s*(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s*\(\s*[`\"]([^`\"]+)[`\"]",
+    re.I)
+
 # <Route path="/x" element={<Thing />} /> — react-router
 RE_ROUTE_TSX = re.compile(
     r"<Route\s[^>]*path\s*=\s*[{\"']+([^\"'}]+)[\"'}]+[^>]*?"
@@ -172,46 +195,99 @@ def derive_db(root: Path) -> Derived:
 # ------------------------------------------------------------------ endpoint
 
 
-def derive_api(root: Path) -> Derived:
-    out = Derived()
-    folder = root / "src"
-    if not folder.is_dir():
-        out.unread.append("src/ tidak ada — tidak ada registrasi route yang bisa dibaca")
-        return out
-
-    seen: dict[tuple[str, str], str] = {}
-    for path in sorted(folder.rglob("*.go")):
+def _go_funcs(root: Path) -> tuple[dict[str, str], list[str]]:
+    """Tiap fungsi Go di src/ dengan body-nya, plus daftar berkas yang dibaca."""
+    bodies: dict[str, str] = {}
+    files: list[str] = []
+    for path in sorted((root / "src").rglob("*.go")):
         if path.name.endswith("_test.go"):
             continue
         body = read(path)
-        rel = path.relative_to(root).as_posix()
-        prefixes = sorted({g for g in RE_GROUP.findall(body) if g.startswith("/")})
-        prefix = prefixes[0].rstrip("/") if len(prefixes) == 1 else ""
-        if len(prefixes) > 1:
-            out.unread.append(
-                f"{rel}: memakai {len(prefixes)} prefiks .Group() berbeda "
-                f"({', '.join(prefixes)}) — path di bawahnya MUST diperiksa tangan, karena mana "
-                f"yang berlaku tidak terbaca dari pola")
-        for method, raw in RE_ROUTE.findall(body):
-            if not raw.startswith("/"):
-                continue
-            full = f"{prefix}{raw}" if prefix and not raw.startswith(prefix + "/") else raw
-            seen.setdefault((method.upper(), full), rel)
+        files.append(body)
+        marks = [(m.start(), m.group(1), m.group(2)) for m in RE_FUNC_DEF.finditer(body)]
+        for i, (start, name, params) in enumerate(marks):
+            end = marks[i + 1][0] if i + 1 < len(marks) else len(body)
+            bodies[name] = body[start:end]
+            bodies[name + "\x00params"] = params
+    return bodies, files
+
+
+def _walk(fn: str, host: str, prefix: str, router_vars: dict[str, str],
+          bodies: dict[str, str], out: dict[tuple[str, str, str], str],
+          seen_calls: set[tuple[str, str, str]], depth: int = 0) -> None:
+    """Telusuri satu fungsi: catat route-nya, lalu ikuti mount yang ia pasang.
+
+    Sebuah fungsi MAY dipasang dari lebih dari satu host — `mountSharedPublicReads` dipanggil dari
+    `member_api.go` DAN `public_api.go` — jadi rekursi ini sengaja tidak memoisasi per fungsi,
+    hanya per (fungsi, host, prefiks). Tanpa itu, endpoint pada host kedua hilang tanpa jejak.
+    """
+    if depth > 8 or (fn, host, prefix) in seen_calls:
+        return
+    seen_calls.add((fn, host, prefix))
+    body = bodies.get(fn)
+    if body is None:
+        return
+
+    local = dict(router_vars)
+    params = bodies.get(fn + "\x00params", "")
+    for piece in params.split(","):
+        piece = piece.strip()
+        if "gin.RouterGroup" in piece or "gin.Engine" in piece:
+            local[piece.split()[0]] = prefix
+    for m in RE_ASSIGN_ENGINE.finditer(body):
+        local[m.group(1)] = prefix
+    for m in RE_ASSIGN_GROUP.finditer(body):
+        base = local.get(m.group(2))
+        if base is not None:
+            local[m.group(1)] = (base + m.group(3)).rstrip("/")
+
+    for var, method, raw in RE_ROUTE_ON.findall(body):
+        if not raw.startswith("/") or var not in local:
+            continue
+        full = (local[var] + raw).replace("//", "/")
+        out.setdefault((host, method.upper(), full), fn)
+
+    for callee, var, grp in RE_CALL_GROUP.findall(body):
+        if var in local and callee in bodies:
+            _walk(callee, host, (local[var] + grp).rstrip("/"), {}, bodies, out, seen_calls, depth + 1)
+    for callee, var in RE_CALL_PLAIN.findall(body):
+        if var in local and callee in bodies:
+            _walk(callee, host, local[var], {}, bodies, out, seen_calls, depth + 1)
+
+
+def derive_api(root: Path) -> Derived:
+    out = Derived()
+    if not (root / "src").is_dir():
+        out.unread.append("src/ tidak ada — tidak ada registrasi route yang bisa dibaca")
+        return out
+
+    bodies, files = _go_funcs(root)
+    entries: list[tuple[str, str]] = []
+    for body in files:
+        for host, fn in RE_HOST_MOUNT.findall(body):
+            entries.append((host.lower(), fn))
+    if not entries:
+        out.unread.append(
+            "tidak satu pun titik pasang host terbaca (pola `Handle(cfg.Host<X>, <Fn>(`) — "
+            "seluruh path di bawah ini MUST diperiksa tangan, sebab prefiks group tidak dapat "
+            "ditelusuri tanpa titik pasangnya")
+
+    found: dict[tuple[str, str, str], str] = {}
+    for host, fn in sorted(set(entries)):
+        _walk(fn, host, "", {}, bodies, found, set())
 
     _, plat = decisions(root / ".how/_platform/inventory-api.md")
-    for (method, path_str) in sorted(seen):
-        key = f"{method} {path_str}"
-        owner_cell = "`_platform`" if key in plat or path_str in plat else "[PERLU DIKONFIRMASI]"
-        out.rows.append(Row(key=key, source=seen[(method, path_str)],
-                            cells=[method, f"`{path_str}`", owner_cell,
+    for (host, method, path_str) in sorted(found):
+        key = f"{host} {method} {path_str}"
+        owner = "`_platform`" if (key in plat or f"{method} {path_str}" in plat
+                                 or path_str in plat) else "[PERLU DIKONFIRMASI]"
+        out.rows.append(Row(key=key, source=found[(host, method, path_str)],
+                            cells=[host, method, f"`{path_str}`", owner,
                                    "[PERLU DIKONFIRMASI]", "published"]))
-    if not seen:
+    if not found:
         out.unread.append("tidak satu pun registrasi route terbaca di src/**/*.go — "
                           "bila API-nya memang belum ada, `derived_from: plan` yang benar")
     return out
-
-
-# --------------------------------------------------------------------- layar
 
 
 def derive_screen(root: Path) -> Derived:
@@ -271,7 +347,7 @@ def derive_screen(root: Path) -> Derived:
 DERIVERS = {"db": derive_db, "api": derive_api, "screen": derive_screen}
 HEADERS = {
     "db": ("No", "Table", "Owning component", "What it holds", "Key columns", "Status"),
-    "api": ("No", "Method", "Path", "Owning component", "Description", "Status"),
+    "api": ("No", "Host", "Method", "Path", "Owning component", "Description", "Status"),
     "screen": ("No", "Screen", "Route", "States", "Owning component", "UC served"),
 }
 
@@ -337,8 +413,10 @@ def plan_keys(kind: str, rows: dict[int, list[str]]) -> dict[str, int]:
     for number, cells in sorted(rows.items()):
         if kind == "db" and cells:
             out[cells[0].strip("`")] = number
-        elif kind == "api" and len(cells) >= 2:
-            out[f"{cells[0].upper()} {cells[1].strip('`')}"] = number
+        elif kind == "api" and len(cells) >= 3:
+            # Host bagian identitas: satu fungsi mount MAY dipasang di lebih dari satu host, dan
+            # tanpa host di kunci kedua endpoint itu melebur jadi satu baris.
+            out[f"{cells[0]} {cells[1].upper()} {cells[2].strip('`')}"] = number
         elif kind == "screen" and len(cells) >= 2:
             # Screen ditulis `<spa>/<Component>`; spa-nya bagian identitas, sama seperti di derivasi.
             screen = cells[0].strip("`")

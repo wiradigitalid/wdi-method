@@ -3,7 +3,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""validate — V1..V25 plus generator .control/generated/.
+"""validate — V1..V26 plus generator .control/generated/.
 
 Dua mode:
     validate --check      keluar non-zero bila ada yang merah; tidak menulis apa pun
@@ -233,7 +233,15 @@ def listy(row: dict, key: str) -> list[str]:
 
 
 def v1(c: Corpus, r: Result) -> None:
-    """Tiap BG punya >=1 FR, ditelusuri lewat CAP-nya."""
+    """Tiap BG punya >=1 FR lewat CAP-nya, ATAU menyatakan alasannya di `no_fr`.
+
+    Sebuah sasaran MAY dipenuhi oleh **invarian**, bukan oleh fitur. `BG-6` — fondasi data dan
+    deployment dapat dilanjutkan tanpa dibongkar — diukur oleh dua sifat arsitektural yang `measure`-nya
+    sendiri sebut, dan tidak ada `FR` yang dapat memikulnya tanpa dikarang. Menuntut satu `FR` di sana
+    menghasilkan janji palsu, dan janji palsu lebih mahal daripada temuan.
+
+    Escape-nya MUST membawa alasan, bukan boolean — bentuk yang sama dengan `no_uc` pada `FR` (V2).
+    """
     cap_by_goal: dict[str, list[str]] = {}
     for cap in c.caps:
         cap_by_goal.setdefault(str(cap.get("goal", "")), []).append(str(cap.get("id")))
@@ -241,8 +249,11 @@ def v1(c: Corpus, r: Result) -> None:
     for goal in c.goals:
         gid = str(goal.get("id"))
         reachable = [cid for cid in cap_by_goal.get(gid, []) if cid in fr_caps]
-        if not reachable:
-            r.fail("V1", gid, "tidak punya FR mana pun lewat CAP-nya")
+        if reachable:
+            continue
+        if str(goal.get("no_fr") or "").strip():
+            continue
+        r.fail("V1", gid, "tidak punya FR lewat CAP-nya dan tidak menyatakan alasan di `no_fr`")
 
 
 def v2(c: Corpus, r: Result) -> None:
@@ -257,11 +268,30 @@ def v2(c: Corpus, r: Result) -> None:
 
 
 def v3(c: Corpus, r: Result) -> None:
+    """Sebuah UC pada komponen yang SUDAH disentuh sebuah wave MUST dijadwalkan story.
+
+    Bentuk lama menuntutnya atas SETIAP UC, kapan pun. Sebelum wave pertama itu berarti seluruh
+    katalog dilaporkan merah — 56 temuan dari 62, dan ke-56 itu keadaan yang benar, bukan drift:
+    story lahir di wave, dan belum ada wave. Sebuah validator yang menenggelamkan enam temuan nyata
+    di bawah lima puluh enam yang diharapkan berhenti dibaca, dan validator yang tidak dibaca tidak
+    menjaga apa pun.
+
+    Yang dijaga sekarang adalah kelalaian yang sebenarnya: sebuah wave menyentuh komponen, dan sebuah
+    UC komponen itu tertinggal tanpa story. Cakupan penuh atas seluruh katalog adalah pertanyaan G5,
+    dan `wdi-build` yang memilikinya — sama seperti V12 yang digeser ke penutupan wave.
+    """
     scheduled = {uc for _, _, s in c.stories() for uc in listy(s, "satisfies")}
+    touched = {str(s.get("component")) for _, _, s in c.stories() if s.get("component")}
+    if not c.wave_list:
+        r.skip("V3", "belum ada wave, jadi belum ada story — tiap UC tak terjadwal adalah keadaan "
+                     "yang benar. Cakupan penuh katalog diperiksa di G5")
+        return
     for uc in c.ucs:
         uid = str(uc.get("id"))
-        if uid not in scheduled:
-            r.fail("V3", uid, "tidak dijadwalkan story mana pun")
+        if uid in scheduled or str(uc.get("component")) not in touched:
+            continue
+        r.fail("V3", uid, f"komponen `{uc.get('component')}` sudah disentuh sebuah wave, "
+                          f"tetapi UC ini tidak dijadwalkan story mana pun")
 
 
 def v4(c: Corpus, r: Result) -> None:
@@ -271,9 +301,19 @@ def v4(c: Corpus, r: Result) -> None:
 
 
 def v5(c: Corpus, r: Result) -> None:
+    """Tiap NFR punya penegak, ATAU menyatakan alasannya di `no_enforcer`.
+
+    Dua NFR di repo ini tidak dapat punya penegak, dan keduanya sah: satu sudah **dicabut**, dan satu
+    lagi menyatakan sendiri bahwa ia **ukuran perancangan, bukan pagar**. Menuntut test untuk keduanya
+    menghasilkan test yang tidak mungkin gagal, dan test yang tidak mungkin gagal adalah teater.
+    """
     for nfr in c.nfrs:
-        if not [e for e in listy(nfr, "enforced_by") if e.strip()]:
-            r.fail("V5", str(nfr.get("id")), "tidak punya penegak di `enforced_by`")
+        if [e for e in listy(nfr, "enforced_by") if e.strip()]:
+            continue
+        if str(nfr.get("no_enforcer") or "").strip():
+            continue
+        r.fail("V5", str(nfr.get("id")),
+               "tidak punya penegak di `enforced_by` dan tidak menyatakan alasan di `no_enforcer`")
 
 
 def v6(c: Corpus, r: Result) -> None:
@@ -989,10 +1029,64 @@ def v25(c: Corpus, r: Result) -> None:
                 r.fail("V25", cid, f"memuat {len(pids)} PC, jadi `c4-l3-{cid}.md` MUST ada")
 
 
+UC_ROW_RE = re.compile(r"^\|\s*(UC-\d+)\s*\|([^\n]*)$", re.M)
+
+
+def v26(c: Corpus, r: Result) -> None:
+    """Katalog UC di tiap SRS MUST sepakat dengan `usecases.yaml` — id-nya DAN `critical`-nya.
+
+    Ini celah yang paling mahal dari semua yang ditutup lintasan ini, sebab ia satu-satunya yang
+    **sudah terjadi dan tidak satu pun validator melihatnya.** Step 16 menurunkan ulang `critical`
+    di registry dengan definisi yang dipersempit — uang, data pribadi, tindakan tak-terbalikkan — dan
+    ketujuh tabel katalog di SRS tidak ikut. Dua puluh enam baris berselisih, dan selisihnya baru
+    ketahuan ketika seorang manusia membaca kalimat "sembilan di antaranya critical" di SRS-admin
+    sementara registry menyimpan tiga.
+
+    Registry-nya SSOT. Tabel di SRS adalah rumah permanen katalog untuk seorang pembaca, dan dua rumah
+    untuk satu fakta hanya aman kalau ada yang mengadu keduanya. Ini yang mengadu.
+
+    Yang TIDAK diperiksa di sini: judul dan aktor. Keduanya prosa, dan prosa yang berbeda kata bukan
+    prosa yang berbeda arti — mengadunya akan melaporkan gaya sebagai cacat.
+    """
+    reg = {str(uc.get("id")): bool(uc.get("critical")) for uc in c.ucs}
+    reg_pc = {str(uc.get("id")): str(uc.get("component") or "") for uc in c.ucs}
+    checked = 0
+    for pc in c.pcs:
+        pid = str(pc.get("id"))
+        path = c.root / f".what/{pid}/SRS-{pid}.md"
+        if not path.exists():
+            continue
+        checked += 1
+        text = path.read_text(encoding="utf-8", errors="replace")
+        seen: set[str] = set()
+        for match in UC_ROW_RE.finditer(text):
+            uid = match.group(1)
+            cells = [x.strip() for x in match.group(2).split("|")]
+            if len(cells) < 4:
+                continue
+            seen.add(uid)
+            if uid not in reg:
+                r.fail("V26", f"{pid}/{uid}", "ada di katalog SRS tetapi tidak di `usecases.yaml`")
+                continue
+            if reg_pc[uid] != pid:
+                r.fail("V26", f"{pid}/{uid}",
+                       f"registry menaruhnya di `{reg_pc[uid]}`, bukan di komponen ini")
+            marked = "ya" in cells[3].lower()
+            if marked != reg[uid]:
+                r.fail("V26", f"{pid}/{uid}",
+                       f"`critical` di SRS {'ya' if marked else 'tidak'}, "
+                       f"di registry {'ya' if reg[uid] else 'tidak'}")
+        for uid, owner in sorted(reg_pc.items()):
+            if owner == pid and uid not in seen:
+                r.fail("V26", f"{pid}/{uid}", "ada di `usecases.yaml` tetapi tidak di katalog SRS")
+    if not checked:
+        r.skip("V26", "tidak ada SRS yang dapat dibaca")
+
+
 def run_checks(c: Corpus, asof: dt.date) -> Result:
     r = Result()
     for fn in (v1, v2, v3, v4, v5, v6, v7, v8, v9, v11, v12, v13, v15, v16, v17, v18, v19, v20,
-               v21, v22, v23, v24, v25):
+               v21, v22, v23, v24, v25, v26):
         fn(c, r)
     v14(c, r, asof)
     return r
@@ -1125,7 +1219,7 @@ def gen_status(c: Corpus, rtm: dict, result: Result) -> dict:
         per_wave.append({"wave": wid, "status": wave.get("status"),
                          "stories_done": done, "stories_total": len(items),
                          "progres_kerja": _pct(done, len(items))})
-    applicable = 24  # V1..V25 tanpa V10 yang gugur
+    applicable = 25  # V1..V26 tanpa V10 yang gugur
     return {
         "progres_janji": _pct(green, len(counted)),
         "baris_rtm": {"hijau": green, "dihitung": len(counted),
@@ -1378,7 +1472,7 @@ def generate(c: Corpus, result: Result) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="validate", description="V1..V25 dan generator .control/generated/")
+        prog="validate", description="V1..V26 dan generator .control/generated/")
     parser.add_argument("--check", action="store_true",
                         help="periksa saja; keluar non-zero bila ada yang merah")
     parser.add_argument("--generate", action="store_true",

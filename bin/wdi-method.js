@@ -144,13 +144,26 @@ function parseArgs(argv) {
   return args;
 }
 
+// Build output and editor droppings MUST NOT reach the kit. This repository is public, and a
+// __pycache__/*.pyc carries the ABSOLUTE PATH of the source it was compiled from — which means a
+// product name and a client folder leak into a public package through a file nobody wrote.
+// Found 2026-08-18 on the first real promote: inventory.cpython-314.pyc embedded the live repo path.
+const SKIP_DIRS = new Set(["__pycache__", "node_modules", ".git", ".pytest_cache", ".ruff_cache",
+                           ".mypy_cache", ".venv", "venv", "dist", "build", ".idea", ".vscode"]);
+const SKIP_FILE = /(\.pyc|\.pyo|\.pyd|\.log|\.tmp|\.swp|\.orig|\.rej|\.bak)$|^\.DS_Store$|^Thumbs\.db$/i;
+
 function walkFiles(dir) {
   const out = [];
   if (!fs.existsSync(dir)) return out;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walkFiles(p));
-    else if (entry.isFile()) out.push(p);
+    if (entry.isDirectory()) {
+      if (SKIP_DIRS.has(entry.name)) continue;
+      out.push(...walkFiles(p));
+    } else if (entry.isFile()) {
+      if (SKIP_FILE.test(entry.name)) continue;
+      out.push(p);
+    }
   }
   return out;
 }

@@ -22,7 +22,6 @@ hand-patched brief makes the memlog lie about how it got that way.
 | `.constitution/document/templates/brief.md` | The required shape |
 | `_bmad-output/brainstorming/` · `forge/` · `planning-artifacts/` | Raw material available to feed in |
 | `.control/product-glossary.md` | Terms already fixed, so the brief does not invent competing ones |
-| `.control/registry/index.yaml` | `product.name` / `product.client` — the one structured room for identity |
 
 ## Step 1 — Position
 
@@ -66,7 +65,6 @@ Check the returned brief against the guide. Report every failure; fix none of th
 | 7 | No raw material folded in | Research or brainstorming prose copied into the brief instead of cited |
 | 8 | No Product Component list | A slicing was written at G1; it belongs to `wdi-init` intent `component`, after G2 |
 | 9 | `bmad-review` structure + prose ran | `doc_standards` did not fire |
-| 10 | `product.name` in `index.yaml` is set and matches the brief title | Still `{product}`, empty, or a different string than the brief title |
 
 Check 6 MUST be fixed immediately rather than reported. A `.memlog.md` inside `.what/` is corpus pollution,
 and every later run compounds it.

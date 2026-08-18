@@ -31,11 +31,9 @@ of where things are.
    **Read-only.** You MUST NOT move one.
 2. Scaffold the registry files that carry no rows yet. A file that already has rows MUST NOT be
    rewritten.
-3. If `.control/registry/index.yaml` `product.name` is missing or still `{product}`, put it to the
-   owner. You MUST NOT invent the name. G1 later confirms it and writes the brief under that name.
-4. Put the global `mode` to the owner. The default is `catalog`; the four values and what each buys are
+3. Put the global `mode` to the owner. The default is `catalog`; the four values and what each buys are
    in `delivery-flow-guide.md`, and MUST NOT be restated here.
-5. Run intent `structure`.
+4. Run intent `structure`.
 
 ## Intent `component`
 
