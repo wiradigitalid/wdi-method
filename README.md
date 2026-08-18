@@ -14,24 +14,20 @@ BMad first, then WDI Method. The wrappers call BMad skills; without BMad they ca
 
 ```bash
 cd /path/to/your/product-repo
-
 npx bmad-method install
-# pick the agents you use (Claude Code, Cursor, …) in BMad's installer
-
-npx github:wiradigitalid/wdi-method install
-# optional: --agents cursor,claude
+npx github:wiradigitalid/wdi-method
 ```
 
-Then, in that repo:
+Tanpa subcommand, installer membuka **TUI**: cek BMad, deteksi install vs update, tanya nama
+produk / klien, pilih agen, tampilkan folder yang akan ditulis, lalu langkah sesudahnya.
 
-1. Set `product.name` (and `product.client` if there is a client) in `.control/registry/index.yaml`.
-2. Rewrite `.constitution/constitution.md` Articles 2 and 5 for this product. Article 1 points at `index.yaml` — do not invent a second name.
-3. Merge method routing into `AGENTS.md` if that file already existed.
-4. Run skill `wdi-init` intent `setup`.
-5. Sort existing documents. A file that is already the artifact one slot asks for goes into that slot through the skill that owns it; everything else goes to `_bmad-output/prior-knowledge/`.
+Folder korpus (`.constitution` `.control` `.what` `.how` `.work`) **bukan** opsi — namanya
+identitas metode. Yang dipilih di TUI adalah repo tujuan dan agennya.
+
+Non-interactive (CI):
 
 ```bash
-npx github:wiradigitalid/wdi-method verify
+npx github:wiradigitalid/wdi-method install --yes --agents cursor,claude --product "Nama Produk"
 ```
 
 ## Update
@@ -42,7 +38,12 @@ npx github:wiradigitalid/wdi-method update
 
 Update overwrites method files. It MUST NOT touch `.what/`, `.how/`, filled `.control/` state,
 existing `constitution.md` Articles 1–2 and 5, `codebase/*-guide.md` once `Accepted`, extra
-constitution files this repo added, `AGENTS.md` that already exists, or `_bmad/custom/*.user.toml`.
+constitution files this repo added, or `_bmad/custom/*.user.toml`.
+
+`AGENTS.md` has a marked method block (`<!-- BEGIN:wdi-method -->` … `<!-- END:wdi-method -->`).
+Update replaces **that block only** — including how to install and update. Product sections
+outside it (`## Code`, extra boundaries) stay. A file without the markers gets the block
+injected before `## Code`; existing product prose above `## Language` is kept.
 
 A stamp is written to `.control/wdi-method.yaml` (`wdi_method`, `bmad_method` if detectable).
 It is a trace, not a lockfile.
@@ -58,7 +59,8 @@ It is a trace, not a lockfile.
 | `codex` | `AGENTS.md` |
 | `antigravity` | `.agents/skills/wdi-*`, `.agents/AGENTS.md` |
 
-`AGENTS.md` is created on first install if missing (every agent reads it). It is never overwritten.
+`AGENTS.md` is created on first install if missing. On update, only the marked method block
+is replaced.
 
 ## What travels, what does not
 
@@ -126,6 +128,7 @@ tree. If the cleanliness test fails, fix the overlay or the source, never weaken
 
 | Command | Direction |
 |---|---|
+| `(no command)` | interactive TUI |
 | `install [dir]` | this package → product repo (first time) |
 | `update [dir]` | this package → product repo (again) |
 | `verify [dir]` | list missing method files |

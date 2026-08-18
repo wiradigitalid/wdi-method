@@ -30,6 +30,8 @@ describe("published kit stays generic", () => {
     assert.match(read("kit/.constitution/constitution.md"), /product\.name/);
     assert.match(read("kit-overlay/constitution.md"), /\{product\}/);
     assert.match(read("scaffold/.control/registry/index.yaml"), /name: "\{product\}"/);
+    assert.match(read("kit-overlay/AGENTS.md"), /BEGIN:wdi-method/);
+    assert.match(read("kit-overlay/AGENTS.md"), /END:wdi-method/);
   });
 
   it("does not tell consumers to install from a private kit path", () => {
@@ -43,7 +45,7 @@ describe("published kit stays generic", () => {
   });
 
   it("does not link other private repositories", () => {
-    const payload = ["kit", "kit-overlay", "scaffold", "bin", "README.md"].flatMap((d) => {
+    const payload = ["kit", "kit-overlay", "scaffold", "bin", "lib", "README.md"].flatMap((d) => {
       const p = path.join(ROOT, d);
       if (fs.statSync(p).isFile()) return [p];
       return walk(p);

@@ -1,12 +1,39 @@
 # Agent Rules — {product}
 
-The WDI method applies in this repo. Method files arrive from the public WDI
-Method package via `npx wdi-method install` / `update`. This file is loaded
-every session; everything else is loaded **lazily**, only when the task matches.
+<!-- BEGIN:wdi-method -->
+This repo uses **WDI Method**. It wraps BMad; it does not replace it. This marked
+block is owned by the WDI Method package and is **replaced on every update**.
+Product rules belong **outside** it (extra boundaries, `## Code`, stack notes).
+A fact written inside this block will be overwritten.
 
-Rewrite the product-specific sections (`## Code` downward, the application-roots
-row, and any extra boundary such as a public-repo rule). The tables above `## Code`
-are the method and travel with the snapshot.
+Product identity lives in `.control/registry/index.yaml` (`product.name`, optional
+`product.client`). G1 confirms it. This file MUST NOT become a second source of the name.
+
+## Install and update
+
+BMad first, then WDI Method. In the product repo:
+
+```bash
+npx bmad-method install
+npx github:wiradigitalid/wdi-method
+```
+
+No subcommand opens the installer TUI. It detects an existing install and offers
+**update**. Non-interactive:
+
+```bash
+npx github:wiradigitalid/wdi-method install --yes
+npx github:wiradigitalid/wdi-method update --yes
+```
+
+BMad: https://github.com/bmad-code-org/BMAD-METHOD
+WDI Method: https://github.com/wiradigitalid/wdi-method
+
+A method file MUST NOT be invented here. If a rule is wrong, fix it in the WDI
+Method package, then update.
+
+This file is loaded every session; everything else is loaded **lazily**, only when
+the task matches.
 
 ## Language
 
@@ -37,7 +64,7 @@ Read this instead of reasoning about what `.what/` and `.how/` mean.
 | The spine, C4, an inventory, an SDD, a contract — how it is built | `.how/` |
 | A skill run's working output, and documents that predate the method | `_bmad-output/` |
 | Scratch that empties when the task closes | `.work/` |
-| The application | *(name the code roots)* |
+| The application | named under `## Code` below |
 
 ## Layer boundaries
 
@@ -154,15 +181,16 @@ MUST anything in `.constitution/method/`; `status: Reference` forbids it.
 - A non-technical fact that constrains the build → skill `wdi-log` intent `fact` →
   `.control/project-non-technical-log.md`.
 
-## Code
-
-Rewrite this section for the product. Stack, how to run tests, and known pitfalls belong here.
-`wdi-init` intent `structure` derives `.control/structure-codebase.md`; do not duplicate that map.
-
-## Policy
+## Method policy
 
 - A skill MUST NOT be invoked automatically. Name the one that fits and wait for the owner's
   go-ahead — this holds even when the skill's own description says it must be used. Reading a
   skill as reference is fine.
 - `.work/` is not production code. It MUST NOT be imported by the application, and MUST be
   excluded when searching for code.
+<!-- END:wdi-method -->
+
+## Code
+
+Rewrite this section for the product. Stack, how to run tests, and known pitfalls belong here.
+`wdi-init` intent `structure` derives `.control/structure-codebase.md`; do not duplicate that map.
