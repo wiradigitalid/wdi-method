@@ -141,3 +141,49 @@ test("update MENGHAPUS wrapper yang dipensiunkan, dan membiarkan yang bukan mili
     fs.rmSync(target, { recursive: true, force: true });
   }
 });
+
+test("update keeps the product's initiative slug — promote scrubs it, update MUST NOT write it back", () => {
+  // Found on the first real install: promote replaces the slug with ISI-slug-inisiatif before publishing
+  // (right), and update then wrote that placeholder into the product repo (wrong). The slug lives in TWO
+  // places in bmad-prd.toml and the file itself says both MUST change together, so restoring only one
+  // produced exactly the inconsistency it forbids.
+  const pkg = isolatedPackage();
+  const target = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-slug-"));
+  const kitToml = path.join(pkg, "kit", "assets", "bmad-custom", "bmad-prd.toml");
+  const mine = path.join(target, "_bmad", "custom", "bmad-prd.toml");
+  fs.mkdirSync(path.dirname(mine), { recursive: true });
+
+  // what the package publishes: scrubbed in both spots, and one bare mention inside a comment
+  fs.mkdirSync(path.dirname(kitToml), { recursive: true });
+  fs.writeFileSync(kitToml, [
+    '# a PRD landing in the folder named ISI-slug-inisiatif',
+    'run_folder_pattern = "ISI-slug-inisiatif"',
+    'facts = ["--path {project-root}/.control/memlog/prd-ISI-slug-inisiatif.md"]',
+    '',
+  ].join("\n"));
+  // what the product actually has
+  fs.writeFileSync(mine, [
+    '# a PRD landing in the folder named ISI-slug-inisiatif',
+    'run_folder_pattern = "shop-without-account"',
+    'facts = ["--path {project-root}/.control/memlog/prd-shop-without-account.md"]',
+    '',
+  ].join("\n"));
+
+  try {
+    const out = execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+       "--agents", "claude"],
+      { cwd: pkg, encoding: "utf8" });
+    const after = fs.readFileSync(mine, "utf8");
+    assert.match(after, /run_folder_pattern = "shop-without-account"/,
+      "the placeholder overwrote a live run_folder_pattern");
+    assert.match(after, /prd-shop-without-account\.md/,
+      "the memlog path was left on the placeholder while the setting was restored — the two MUST agree");
+    assert.match(after, /folder named ISI-slug-inisiatif/,
+      "a bare mention in a comment was rewritten; that sentence explains the pattern");
+    assert.match(out, /kept run_folder_pattern in bmad-prd\.toml/, "keeping it silently is not enough");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});

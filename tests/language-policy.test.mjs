@@ -6,7 +6,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { readLanguagePolicy, writeLanguagePolicy, DOC_LANGUAGES } from "../lib/identity.mjs";
+import {
+  readLanguagePolicy,
+  writeLanguagePolicy,
+  readProductIdentity,
+  DOC_LANGUAGES,
+} from "../lib/identity.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const CLI = path.join(ROOT, "bin", "wdi-method.js");
@@ -82,4 +87,36 @@ test("an unknown language is refused, not silently accepted", () => {
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("CRLF: a Windows checkout is read and written without losing its endings", () => {
+  // Bug found 2026-08-18 on the first real install into a Windows product repo. Every regex in
+  // identity.mjs is anchored on a bare newline, so a CRLF file read as "" — and an empty name makes
+  // identityIsPlaceholder true, which makes the installer write NOTHING and report nothing. It printed
+  // `policy.doc_language = ` while the file plainly said `id`.
+  const lf = [
+    'product:',
+    '  name: "X"',
+    '  client: ""',
+    '',
+    'policy:',
+    '  doc_language: id',
+    '  doc_filename_language: id',
+    '',
+  ].join("\n");
+  const crlf = lf.split("\n").join("\r\n");
+
+  assert.deepEqual(readLanguagePolicy(crlf), { docLanguage: "id", docFilenameLanguage: "id" },
+    "policy unreadable in a CRLF file");
+  assert.equal(readProductIdentity(crlf).name, "X", "product name unreadable in a CRLF file");
+
+  const out = writeLanguagePolicy(crlf, { docLanguage: "en", docFilenameLanguage: "id" });
+  assert.ok(out.includes("\r\n"), "CRLF endings were flattened on write");
+  assert.equal(out.split("\n").length - 1, out.split("\r\n").length - 1,
+    "the file was left with mixed endings");
+  assert.deepEqual(readLanguagePolicy(out), { docLanguage: "en", docFilenameLanguage: "id" });
+  assert.equal((out.match(/^policy:/gm) || []).length, 1, "a second policy block appeared");
+
+  const lfOut = writeLanguagePolicy(lf, { docLanguage: "en", docFilenameLanguage: "id" });
+  assert.ok(!lfOut.includes("\r"), "an LF file was given CRLF endings");
 });

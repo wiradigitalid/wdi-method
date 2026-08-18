@@ -387,6 +387,32 @@ function pruneRetiredSkills(dests) {
   }
 }
 
+// `promote` scrubs a product's initiative slug out of bmad-prd.toml before publishing, which is right.
+// Writing the scrubbed PLACEHOLDER back into a product repo is not: the first real install replaced a
+// live `run_folder_pattern = "toko-tanpa-akun"` with `ISI-slug-inisiatif`, and nothing said so. A value
+// the product already chose is not the installer's to overwrite — same rule as the custom room and the
+// language policy.
+const PLACEHOLDER_SLUG = "ISI-slug-inisiatif";
+const RUN_FOLDER_LINE = /^(\s*run_folder_pattern\s*=\s*)(".*?"|'.*?')/m;
+
+// The slug appears MORE THAN ONCE — bmad-prd.toml carries it in `run_folder_pattern` and again inside a
+// memlog path, and the file itself says the two lines MUST change together. The first version of this
+// function restored only the first line and so produced exactly the inconsistency that file forbids.
+// So: read the product's slug once, then put it back everywhere the placeholder appears.
+function keepProductSlug(incoming, existing) {
+  const mineNow = existing.match(RUN_FOLDER_LINE);
+  if (!mineNow) return null;
+  const slug = mineNow[2].slice(1, -1);
+  if (!slug || slug === PLACEHOLDER_SLUG) return null;
+  if (!incoming.includes(PLACEHOLDER_SLUG)) return null;
+  // Only where the slug is a VALUE: the quoted setting, and the memlog path built from it. A bare
+  // mention inside a comment stays the placeholder — that sentence explains the pattern, and rewriting
+  // it would turn a generic explanation into a statement about one initiative.
+  return incoming
+    .replaceAll(`"${PLACEHOLDER_SLUG}"`, `"${slug}"`)
+    .replaceAll(`prd-${PLACEHOLDER_SLUG}`, `prd-${slug}`);
+}
+
 function syncTomls(target) {
   const src = path.join(KIT, "assets", "bmad-custom");
   const dest = path.join(target, "_bmad", "custom");
@@ -394,7 +420,17 @@ function syncTomls(target) {
   let n = 0;
   for (const file of walkFiles(src)) {
     if (!file.endsWith(".toml") || file.endsWith(".user.toml")) continue;
-    copyFile(file, path.join(dest, path.basename(file)));
+    const to = path.join(dest, path.basename(file));
+    if (fs.existsSync(to)) {
+      const merged = keepProductSlug(fs.readFileSync(file, "utf8"), fs.readFileSync(to, "utf8"));
+      if (merged !== null) {
+        fs.writeFileSync(to, merged);
+        note(`kept run_folder_pattern in ${path.basename(file)}`);
+        n += 1;
+        continue;
+      }
+    }
+    copyFile(file, to);
     n += 1;
   }
   return n;
