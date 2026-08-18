@@ -411,12 +411,25 @@ function seedControlIfMissing(target) {
   ok(`seeded empty .control/ (${n} files)`);
 }
 
-function seedEmptyLayers(target) {
-  for (const rel of [".what", path.join(".how", "_platform"), ".work", path.join("_bmad-output", "prior-knowledge")]) {
+// On a FIRST install these folders are the corpus taking shape. On an UPDATE their absence means
+// somebody removed them on purpose — `.work/` and `_bmad-output/prior-knowledge/` are exactly the two a
+// product retires once its migration is done, and one repo retired them through an applied decision.
+// Recreating them then is an installer overruling a decision it cannot read. Seed once, never resurrect.
+function seedEmptyLayers(target, { first }) {
+  const always = [".what", path.join(".how", "_platform")];
+  const firstOnly = [".work", path.join("_bmad-output", "prior-knowledge")];
+  for (const rel of first ? [...always, ...firstOnly] : always) {
     const dest = path.join(target, rel);
     if (!fs.existsSync(dest)) {
       fs.mkdirSync(dest, { recursive: true });
       note(`created ${rel.replaceAll(path.sep, "/")}/`);
+    }
+  }
+  if (!first) {
+    for (const rel of firstOnly) {
+      if (!fs.existsSync(path.join(target, rel))) {
+        note(`left ${rel.replaceAll(path.sep, "/")}/ absent — a product retires it, not the installer`);
+      }
     }
   }
 }
@@ -556,7 +569,7 @@ function apply(target, agents, { first, product, client, docLanguage, docFilenam
   const nToml = syncTomls(target);
   note(`bmad custom ${nToml} toml → _bmad/custom/`);
   if (first) seedControlIfMissing(target);
-  seedEmptyLayers(target);
+  seedEmptyLayers(target, { first });
   setProductIdentity(target, { name: product, client });
   setLanguagePolicy(target, { docLanguage, docFilenameLanguage });
   upsertAgentFiles(target, agents, product);

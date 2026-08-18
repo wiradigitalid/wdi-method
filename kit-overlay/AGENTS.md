@@ -58,6 +58,7 @@ Read this instead of reasoning about what `.what/` and `.how/` mean.
 | The thing in your hand | Its folder |
 |---|---|
 | A rule, a guide, a template — how we work | `.constitution/` |
+| A rule that binds **only this product** | `.constitution/project/` — `update` never writes over it, `promote` never publishes it |
 | The explanation of a rule, never a rule itself | `.constitution/method/` |
 | A decision, an open question, a registry, a structure map, minutes | `.control/` |
 | The brief, a PRD, a use case, a business rule — what is promised | `.what/` |
