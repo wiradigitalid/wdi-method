@@ -42,9 +42,22 @@ Patch releases are expected to be frequent. That is what a patch is for.
 ## Before you publish
 
 ```bash
-npm test            # also runs automatically via prepublishOnly
-npm pack --dry-run  # read the file list; tests/ and SOURCE MUST NOT be in it
+npm test                    # also runs automatically via prepublishOnly
+npm publish --dry-run       # the ONLY command that shows publish-time warnings
+npm pack --dry-run          # read the file list; tests/ and SOURCE MUST NOT be in it
 ```
+
+**`npm pack --dry-run` does not show publish-time warnings, and `--json` output has no `bin` field at
+all.** Use `npm publish --dry-run` for the manifest, or you will draw conclusions from a command that
+never had the answer. A warning worth acting on looks like this:
+
+```
+npm warn publish "bin[wdi-method]" script name bin/wdi-method.js was invalid and removed
+```
+
+npm auto-corrects that one and the published package still works — but a package whose manifest depends
+on the registry fixing it is a package one npm release away from breaking. `npm pkg fix` says what npm
+wants; in that case it was the `./` prefix on the `bin` path.
 
 This repository is **public**. It MUST NOT contain a client name, a product name, or a link to a private
 repository. Before publishing, check:
