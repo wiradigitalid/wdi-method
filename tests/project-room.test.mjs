@@ -69,7 +69,7 @@ test("promote MELEWATI kamar: aturan khusus produk tidak terbit, dan README pake
   const before = fs.readFileSync(path.join(room, "README.md"), "utf8");
   try {
     execFileSync(process.execPath, [path.join(pkg, "bin", "wdi-method.js"), "promote", live],
-                 { cwd: pkg, encoding: "utf8" });
+                 { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.ok(!fs.existsSync(path.join(room, "klien-rahasia.md")),
       "aturan khusus produk terbit ke kit — kebocoran yang tes ini ada untuk mencegahnya");
     assert.equal(fs.readFileSync(path.join(room, "README.md"), "utf8"), before,
@@ -92,7 +92,7 @@ test("update MENYEMAI kamar sekali dan tidak pernah menimpanya", () => {
   try {
     execFileSync(process.execPath,
       [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check"],
-      { cwd: pkg, encoding: "utf8" });
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.equal(fs.readFileSync(mine, "utf8"), "milik produk\n",
       "update menimpa aturan produk di kamarnya — itu yang kamar ini ada untuk mencegahnya");
     assert.equal(fs.readFileSync(path.join(target, ".constitution", "project", "README.md"), "utf8"),
@@ -129,7 +129,7 @@ test("update MENGHAPUS wrapper yang dipensiunkan, dan membiarkan yang bukan mili
     execFileSync(process.execPath,
       [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
        "--agents", "claude"],
-      { cwd: pkg, encoding: "utf8" });
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.ok(!fs.existsSync(path.join(skills, "wdi-apply")),
       "wrapper yang dipensiunkan tetap tinggal — agent akan memanggilnya dan guide-nya sudah tidak ada");
     assert.ok(fs.existsSync(path.join(skills, "wdi-punya-saya", "catatan.md")),
@@ -173,7 +173,7 @@ test("update keeps the product's initiative slug — promote scrubs it, update M
     const out = execFileSync(process.execPath,
       [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
        "--agents", "claude"],
-      { cwd: pkg, encoding: "utf8" });
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     const after = fs.readFileSync(mine, "utf8");
     assert.match(after, /run_folder_pattern = "shop-without-account"/,
       "the placeholder overwrote a live run_folder_pattern");

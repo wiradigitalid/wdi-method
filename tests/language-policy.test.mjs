@@ -29,7 +29,7 @@ function repoWithIndex(policy) {
 function run(args, dir) {
   return execFileSync(process.execPath,
     [CLI, "update", dir, "--yes", "--skip-bmad-check", "--agents", "claude", ...args],
-    { cwd: ROOT, encoding: "utf8" });
+    { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
 
 function policyOf(dir) {
