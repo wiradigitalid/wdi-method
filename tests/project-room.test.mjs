@@ -43,10 +43,13 @@ function isolatedPackage() {
 function fakeLiveRepo(pkg) {
   const live = tmp("live");
   fs.mkdirSync(path.join(live, ".constitution", "project"), { recursive: true });
+  fs.mkdirSync(path.join(live, ".constitution", "codebase"), { recursive: true });
   fs.writeFileSync(path.join(live, ".constitution", "generic-guide.md"), "# generic\n");
   fs.writeFileSync(path.join(live, ".constitution", "project", "secret-client.md"),
     "---\nscope: project\npurpose: \"a rule that MUST NOT be published\"\n---\nSecret Client Name\n");
   fs.writeFileSync(path.join(live, ".constitution", "project", "README.md"), "EDITED IN THE PRODUCT\n");
+  fs.writeFileSync(path.join(live, ".constitution", "codebase", "stack-guide.md"),
+    "---\nstatus: Accepted\n---\n# stack\n\nThis product runs on Elixir and a secret client's own conventions.\n");
   for (const name of fs.readdirSync(path.join(pkg, "kit", "skills"))) {
     const dst = path.join(live, ".claude", "skills", name);
     fs.mkdirSync(dst, { recursive: true });
@@ -76,6 +79,30 @@ test("promote SKIPS the room: a product's own rule is not published, and the pac
       "the room's README was overwritten by the product's copy; it MUST stay owned by the package");
     assert.ok(fs.existsSync(path.join(pkg, "kit", ".constitution", "generic-guide.md")),
       "a generic file failed to land — the filter is too wide");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(live, { recursive: true, force: true });
+  }
+});
+
+test("promote SKIPS codebase/ too: an Accepted stack guide is not published, and the empty template survives", () => {
+  const pkg = isolatedPackage();
+  const live = fakeLiveRepo(pkg);
+  const codebaseKit = path.join(pkg, "kit", ".constitution", "codebase");
+  const before = fs.existsSync(codebaseKit) ? fs.readdirSync(codebaseKit) : null;
+  try {
+    execFileSync(process.execPath, [path.join(pkg, "bin", "wdi-method.js"), "promote", live],
+                 { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    if (before !== null) {
+      for (const name of before) {
+        const content = fs.readFileSync(path.join(codebaseKit, name), "utf8");
+        assert.doesNotMatch(content, /Elixir|secret client/,
+          "a product's Accepted codebase guide reached the kit — codebase/ is a product-owned room, same as project/");
+      }
+    } else {
+      assert.ok(!fs.existsSync(codebaseKit) || fs.readdirSync(codebaseKit).length === 0,
+        "codebase/ appeared in the kit from nowhere — it MUST only ever hold the package's own empty template");
+    }
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(live, { recursive: true, force: true });

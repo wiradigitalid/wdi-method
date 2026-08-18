@@ -749,16 +749,37 @@ function promote(live) {
   const roomKit = path.join(KIT, ".constitution", PROJECT_ROOM, "README.md");
   const roomKept = fs.existsSync(roomKit) ? fs.readFileSync(roomKit, "utf8") : null;
 
+  // Same reasoning as the room README: the empty "born on purpose" codebase templates are
+  // authored in the package, skipped from copyTree below, and so MUST be read before the rmSync
+  // wipes them or they vanish on every promote — same failure the room README test already caught
+  // once, now in a second place.
+  const codebaseKit = path.join(KIT, ".constitution", "codebase");
+  const codebaseKept = fs.existsSync(codebaseKit)
+    ? Object.fromEntries(walkFiles(codebaseKit).map((f) => [posixRel(codebaseKit, f), fs.readFileSync(f, "utf8")]))
+    : {};
+
   fs.rmSync(KIT, { recursive: true, force: true });
   fs.mkdirSync(KIT, { recursive: true });
 
+  // `codebase/` is skipped unconditionally, not only once Accepted: this room is "born empty on
+  // purpose" and filled by a product's own first-wave distillation, so the kit's copy MUST stay
+  // that empty template forever. Promoting a filled-in guide would leak one product's stack and
+  // conventions — possibly written in its own `doc_language` — into the public package.
   const nConst = copyTree(path.join(live, ".constitution"), path.join(KIT, ".constitution"),
-                          (rel) => rel.startsWith(PROJECT_ROOM));
-  note(`constitution ${nConst} files (${PROJECT_ROOM} skipped — it is the product's)`);
+                          (rel) => rel.startsWith(PROJECT_ROOM) || rel.startsWith("codebase/"));
+  note(`constitution ${nConst} files (${PROJECT_ROOM} and codebase/ skipped — they are the product's)`);
   if (roomKept !== null) {
     fs.mkdirSync(path.dirname(roomKit), { recursive: true });
     fs.writeFileSync(roomKit, roomKept, "utf8");
     note(`${PROJECT_ROOM}README.md restored from the package — promote never carries it home`);
+  }
+  for (const [rel, text] of Object.entries(codebaseKept)) {
+    const dest = path.join(codebaseKit, rel);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, text, "utf8");
+  }
+  if (Object.keys(codebaseKept).length) {
+    note("codebase/ templates restored from the package — promote never carries them home");
   }
 
   let copiedSkills = 0;
