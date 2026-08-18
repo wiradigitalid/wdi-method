@@ -24,6 +24,15 @@ npx wdi-method
 The second command opens a TUI: it checks BMad, detects install versus update, asks the product name and
 the document language, lets you pick agents, shows what it will write, and prints what to do next.
 
+**Every field arrives with an answer already in it, and Enter accepts it.** On an update that answer is
+what the repo already says; on a first install the product name is the folder name made readable —
+`acme-billing-portal` offers `Acme Billing Portal`. Nothing is validated as required: a prompt that
+refuses an empty submission while already holding a sensible default is asking you to retype something
+the installer knows.
+
+A value only changes when you actually answer. A run that does not mention language keeps the language the
+repo already chose, and says so.
+
 ```bash
 npx wdi-method update      # later, to take a newer method
 npx wdi-method verify      # check the method files are all present

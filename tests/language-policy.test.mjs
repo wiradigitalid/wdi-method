@@ -11,6 +11,7 @@ import {
   writeLanguagePolicy,
   readProductIdentity,
   DEFAULT_DOC_LANGUAGE,
+  humaniseFolderName,
 } from "../lib/identity.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -56,14 +57,29 @@ test("the flags land in index.yaml", () => {
   }
 });
 
-test("a setting that already exists is KEPT — update MUST NOT change it behind the owner's back", () => {
+test("an existing setting survives a run that does not mention language", () => {
+  // The rule is about DEFAULTS, not about flags: a value nobody asked about MUST NOT be replaced by
+  // this installer's idea of a default.
   const dir = repoWithIndex({ docLanguage: "id", docFilenameLanguage: "id" });
   try {
-    const out = run(["--doc-language", "en", "--doc-filename-language", "en"], dir);
+    const out = run([], dir);
     assert.deepEqual(policyOf(dir), { docLanguage: "id", docFilenameLanguage: "id" },
-      "update overwrote a language the product had already chosen");
+      "a default overwrote a language the product had already chosen");
     assert.match(out, /kept policy\.doc_language = id/,
       "keeping it silently is not enough — the run MUST say so");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("an EXPLICIT flag does change it — being asked and answering is a choice, not a default", () => {
+  const dir = repoWithIndex({ docLanguage: "id", docFilenameLanguage: "id" });
+  try {
+    run(["--doc-language", "English"], dir);
+    assert.equal(policyOf(dir).docLanguage, "English",
+      "an explicit answer was ignored; the TUI asks with the old value prefilled, and changing it MUST land");
+    assert.equal(policyOf(dir).docFilenameLanguage, "id",
+      "the field nobody mentioned was changed too");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -144,4 +160,20 @@ test("CRLF: a Windows checkout is read and written without losing its endings", 
 
   const lfOut = writeLanguagePolicy(lf, { docLanguage: "en", docFilenameLanguage: "id" });
   assert.ok(!lfOut.includes("\r"), "an LF file was given CRLF endings");
+});
+
+test("the folder name becomes an Enter-ready suggestion, and an acronym stays one", () => {
+  // A first install has nowhere to read a product name from, so the folder is the best guess there is —
+  // and a guess the owner accepts with Enter beats a field they have to type.
+  const cases = [
+    ["worship-presenter-web", "Worship Presenter Web"],
+    ["acmeBillingPortal", "Acme Billing Portal"],
+    ["my_app.v2", "My App V2"],
+    ["API-gateway", "API Gateway"],
+    ["repo", "Repo"],
+    ["", ""],
+  ];
+  for (const [input, want] of cases) {
+    assert.equal(humaniseFolderName(input), want, `folder "${input}"`);
+  }
 });

@@ -10,6 +10,7 @@ import {
 } from "../lib/agents-block.mjs";
 import {
   identityIsPlaceholder,
+  humaniseFolderName,
   readLanguagePolicy,
   writeLanguagePolicy,
   DEFAULT_DOC_LANGUAGE,
@@ -505,12 +506,15 @@ function setProductIdentity(target, { name, client }) {
 // Bahasa dokumen milik PRODUK, jadi update MUST NOT menimpanya. Ia ditulis hanya ketika belum ada —
 // sama seperti kamar custom, dan dengan alasan yang sama: setelan yang pernah dipilih seseorang bukan
 // milik installer untuk diubah di belakangnya.
-function setLanguagePolicy(target, { docLanguage, docFilenameLanguage }) {
+function setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen }) {
   const file = path.join(target, ".control", "registry", "index.yaml");
   if (!fs.existsSync(file)) return;
   const text = fs.readFileSync(file, "utf8");
   const existing = readLanguagePolicy(text);
-  if (existing.docLanguage && existing.docFilenameLanguage) {
+  // `chosen` berarti seseorang benar-benar menjawab — di TUI, atau lewat flag eksplisit. Maka
+  // jawabannya berlaku. Tanpa itu nilai yang masuk hanyalah default, dan default MUST NOT menimpa
+  // pilihan yang sudah pernah diambil seseorang.
+  if (!chosen && existing.docLanguage && existing.docFilenameLanguage) {
     note(`kept policy.doc_language = ${existing.docLanguage}, ` +
          `doc_filename_language = ${existing.docFilenameLanguage}`);
     return;
@@ -658,7 +662,8 @@ function printNextSteps({ first, productSet }) {
   }
 }
 
-function apply(target, agents, { first, product, client, docLanguage, docFilenameLanguage }) {
+function apply(target, agents,
+               { first, product, client, docLanguage, docFilenameLanguage, languageChosen }) {
   requireKit();
   const was = readStampVersion(target);
   const { written, skipped } = syncConstitution(target);
@@ -670,7 +675,7 @@ function apply(target, agents, { first, product, client, docLanguage, docFilenam
   if (first) seedControlIfMissing(target);
   seedEmptyLayers(target, { first });
   setProductIdentity(target, { name: product, client });
-  setLanguagePolicy(target, { docLanguage, docFilenameLanguage });
+  setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen: languageChosen });
   upsertAgentFiles(target, agents, product);
   writeStamp(target);
   printSummary(target, agents, { first, was, written, skipped, skills, tomls });
@@ -881,22 +886,28 @@ async function runWizard(pre) {
     }
   }
 
+  // Every field arrives with an answer already in it, and Enter accepts it. On an update that answer is
+  // what the repo already says; on a first install it is the folder name made readable. Nothing here is
+  // validated as required: a prompt that refuses an empty submission when it already holds a sensible
+  // default is asking the owner to retype something the installer knows.
   const existing = readIndexIdentity(target);
+  const suggestedName = identityIsPlaceholder(existing.name)
+    ? humaniseFolderName(path.basename(target))
+    : existing.name;
   const product = cancelIf(
     await p.text({
       message: "Product name (one room: index.yaml product.name)",
-      placeholder: existing.name && !identityIsPlaceholder(existing.name) ? existing.name : "for example: Acme Billing Portal",
-      defaultValue: existing.name && !identityIsPlaceholder(existing.name) ? existing.name : "",
-      validate: (v) => (v && v.trim() && v.trim() !== "{product}" ? undefined : "Wajib. Ini diisi di G1 dan dipakai judul brief."),
+      placeholder: suggestedName,
+      defaultValue: suggestedName,
     }),
-  );
+  ).trim() || suggestedName;
   const client = cancelIf(
     await p.text({
-      message: "Client name (leave empty if there is none)",
-      placeholder: existing.client || "(optional)",
+      message: "Client name (Enter to leave it as it is)",
+      placeholder: existing.client || "(none)",
       defaultValue: existing.client || "",
     }),
-  );
+  ).trim();
 
   // Dua pertanyaan, dan hanya dua. Istilah metodologi, kode di depan nama berkas, penanda
   // machine-facing, dan identifier kode selalu English — MUST NOT ditanyakan.
@@ -911,14 +922,12 @@ async function runWizard(pre) {
         defaultValue: current || DEFAULT_DOC_LANGUAGE,
       }),
     ) || DEFAULT_DOC_LANGUAGE).trim();
-  const docLanguage = policy.docLanguage
-    ? (note(`document language already set: ${policy.docLanguage}`), policy.docLanguage)
-    : await askLanguage("Language of working-document prose (.what/ .how/ .control/) — free text",
-                        pre.docLanguage);
-  const docFilenameLanguage = policy.docFilenameLanguage
-    ? policy.docFilenameLanguage
-    : await askLanguage("Language of document filename slugs — the `UC-` `DEC-` codes stay English",
-                        pre.docFilenameLanguage || docLanguage);
+  const docLanguage = await askLanguage(
+    "Language of working-document prose (.what/ .how/ .control/) — free text",
+    policy.docLanguage || pre.docLanguage);
+  const docFilenameLanguage = await askLanguage(
+    "Language of document filename slugs — the `UC-` `DEC-` codes stay English",
+    policy.docFilenameLanguage || pre.docFilenameLanguage || docLanguage);
 
   const selected = cancelIf(
     await p.multiselect({
@@ -958,6 +967,7 @@ async function runWizard(pre) {
   apply(target, selected, {
     docLanguage,
     docFilenameLanguage,
+    languageChosen: true,
     first,
     product: String(product).trim(),
     client: String(client).trim(),
@@ -986,6 +996,7 @@ function runNonInteractive(args) {
     client,
     docLanguage: args.docLanguage,
     docFilenameLanguage: args.docFilenameLanguage,
+    languageChosen: Boolean(args.docLanguage || args.docFilenameLanguage),
   });
 }
 
