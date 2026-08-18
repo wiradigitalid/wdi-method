@@ -298,12 +298,12 @@ function skillDests(target, agents) {
 
 function bmadMissingMessage() {
   return [
-    "BMad Method belum terpasang di repo ini. Pasang dulu, lalu jalankan installer ini lagi.",
+    "BMad Method is not installed in this repo. Install it first, then run this installer again.",
     "",
     `  ${BMAD_INSTALL}`,
     "",
-    `Sumber: ${BMAD_REPO}`,
-    "Di installer BMad, pilih agen yang sama (Claude Code, Cursor, …).",
+    `Source: ${BMAD_REPO}`,
+    "In the BMad installer, pick the same agents (Claude Code, Cursor, …).",
   ].join("\n");
 }
 
@@ -606,8 +606,10 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
   const kept = [];
   if (skipped) kept.push(`${skipped} constitution file${skipped === 1 ? "" : "s"}`);
   if (tomls.slugsKept) kept.push(`${tomls.slugsKept} initiative slug${tomls.slugsKept === 1 ? "" : "s"}`);
+  // On a first install the language was just CHOSEN, not kept — saying "kept" there reads as if the
+  // installer had found something it decided to leave alone, which is the opposite of what happened.
   const policy = readIndexPolicy(target);
-  if (policy.docLanguage) kept.push(`language (${policy.docLanguage})`);
+  if (policy.docLanguage && !first) kept.push(`language (${policy.docLanguage})`);
   if (fs.existsSync(path.join(target, ".constitution", "project"))) kept.push(".constitution/project/");
 
   console.log("");
@@ -621,6 +623,9 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
   if (skills.removed) {
     summaryLine("removed", `${skills.removed} retired wrapper${skills.removed === 1 ? "" : "s"}`);
   }
+  if (first && policy.docLanguage) {
+    summaryLine("language", `${policy.docLanguage} · filenames ${policy.docFilenameLanguage}`);
+  }
   summaryLine("agents", agents.join(", ") || "none");
   console.log("");
   summaryLine("next", `invoke the ${HELP_SKILL} skill and ask what to do`);
@@ -630,26 +635,26 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
 
 function printNextSteps({ first, productSet }) {
   console.log("");
-  console.log(first ? "Sesudah install:" : "Sesudah update:");
+  console.log(first ? "After install:" : "After update:");
   if (first) {
     if (!productSet) {
-      console.log("  1. Isi product.name (dan product.client bila ada) di .control/registry/index.yaml.");
+      console.log("  1. Fill product.name (and product.client if there is one) in .control/registry/index.yaml.");
     } else {
-      console.log("  1. product.name sudah diisi. G1 nanti mengonfirmasinya di brief.");
+      console.log("  1. product.name is set. G1 confirms it in the brief.");
     }
-    console.log("  2. Tulis ulang .constitution/constitution.md Pasal 2 dan 5 untuk produk ini.");
-    console.log("     Pasal 1 mengutip index.yaml — jangan jadi sumber nama kedua.");
-    console.log("  3. Tulis ## Code di AGENTS.md (akar aplikasi). Blok BEGIN:wdi-method jangan diedit.");
-    console.log("  4. Jalankan skill wdi-init intent setup.");
-    console.log("  5. Pilah dokumen lama. Jangan dipindah di langkah ini.");
+    console.log("  2. Rewrite .constitution/constitution.md Articles 2 and 5 for this product.");
+    console.log("     Article 1 cites index.yaml — do not become a second source for the name.");
+    console.log("  3. Write ## Code in AGENTS.md (where the app lives). Leave the BEGIN:wdi-method block alone.");
+    console.log("  4. Run the wdi-init skill, intent setup.");
+    console.log("  5. Sort the documents you already have. Do not move any of them in this step.");
     console.log("");
-    console.log("Update berikutnya:");
+    console.log("Next update:");
     console.log("  npx wdi-method");
-    console.log("  (TUI akan menawarkan update)  atau:  npx wdi-method update --yes");
+    console.log("  (the TUI offers the update)  or:  npx wdi-method update --yes");
   } else {
-    console.log("  1. Blok <!-- BEGIN:wdi-method --> di AGENTS.md sudah diganti. Cek diff-nya.");
-    console.log("  2. Pasal 1–2–5 constitution.md, ## Code, dan *.user.toml tidak ditimpa.");
-    console.log("  3. Kalau ada skill BMad baru, pasang dulu lewat installer BMad, lalu update ini lagi.");
+    console.log("  1. The <!-- BEGIN:wdi-method --> block in AGENTS.md was replaced. Read the diff.");
+    console.log("  2. constitution.md Articles 1-2-5, ## Code, and *.user.toml were not overwritten.");
+    console.log("  3. If BMad has new skills, install those first, then run this update again.");
   }
 }
 
@@ -802,7 +807,7 @@ function promote(live) {
 
 function cancelIf(value) {
   if (p.isCancel(value)) {
-    p.cancel("Dibatalkan.");
+    p.cancel("Cancelled.");
     process.exit(0);
   }
   return value;
@@ -813,7 +818,7 @@ async function runWizard(pre) {
 
   const dirValue = cancelIf(
     await p.text({
-      message: "Repo tujuan (folder produk)",
+      message: "Target repo (the product folder)",
       placeholder: process.cwd(),
       defaultValue: pre.dir || process.cwd(),
     }),
@@ -822,10 +827,10 @@ async function runWizard(pre) {
 
   if (!fs.existsSync(target)) {
     const create = cancelIf(
-      await p.confirm({ message: `${target} belum ada. Buat folder?`, initialValue: true }),
+      await p.confirm({ message: `${target} does not exist. Create it?`, initialValue: true }),
     );
     if (!create) {
-      p.cancel("Tidak ada folder tujuan.");
+      p.cancel("No target folder.");
       process.exit(1);
     }
     fs.mkdirSync(target, { recursive: true });
@@ -845,8 +850,8 @@ async function runWizard(pre) {
   p.note(facts, "Deteksi");
 
   if (!hasBmad && !pre.skipBmad) {
-    p.note(bmadMissingMessage(), "BMad dulu");
-    p.outro("Pasang BMad, lalu jalankan lagi: npx wdi-method");
+    p.note(bmadMissingMessage(), "BMad first");
+    p.outro("Install BMad, then run this again: npx wdi-method");
     process.exit(1);
   }
 
@@ -854,24 +859,24 @@ async function runWizard(pre) {
   if (hasWdi) {
     const update = cancelIf(
       await p.confirm({
-        message: "WDI Method sudah terpasang. Update sekarang?",
+        message: "WDI Method is already installed. Update it now?",
         initialValue: true,
       }),
     );
     first = !update;
     if (first) {
-      p.cancel("Tidak jadi meng-update.");
+      p.cancel("Update declined.");
       process.exit(0);
     }
   } else {
     const go = cancelIf(
       await p.confirm({
-        message: `Pasang WDI Method ke ${target}?`,
+        message: `Install WDI Method into ${target}?`,
         initialValue: true,
       }),
     );
     if (!go) {
-      p.cancel("Tidak jadi memasang.");
+      p.cancel("Install declined.");
       process.exit(0);
     }
   }
@@ -879,16 +884,16 @@ async function runWizard(pre) {
   const existing = readIndexIdentity(target);
   const product = cancelIf(
     await p.text({
-      message: "Nama produk (satu kamar: index.yaml product.name)",
-      placeholder: existing.name && !identityIsPlaceholder(existing.name) ? existing.name : "contoh: Worship Presenter Web",
+      message: "Product name (one room: index.yaml product.name)",
+      placeholder: existing.name && !identityIsPlaceholder(existing.name) ? existing.name : "for example: Acme Billing Portal",
       defaultValue: existing.name && !identityIsPlaceholder(existing.name) ? existing.name : "",
       validate: (v) => (v && v.trim() && v.trim() !== "{product}" ? undefined : "Wajib. Ini diisi di G1 dan dipakai judul brief."),
     }),
   );
   const client = cancelIf(
     await p.text({
-      message: "Nama klien (kosongkan kalau tidak ada)",
-      placeholder: existing.client || "(opsional)",
+      message: "Client name (leave empty if there is none)",
+      placeholder: existing.client || "(optional)",
       defaultValue: existing.client || "",
     }),
   );
@@ -907,17 +912,17 @@ async function runWizard(pre) {
       }),
     ) || DEFAULT_DOC_LANGUAGE).trim();
   const docLanguage = policy.docLanguage
-    ? (note(`bahasa dokumen sudah disetel: ${policy.docLanguage}`), policy.docLanguage)
-    : await askLanguage("Bahasa isi dokumen kerja (.what/ .how/ .control/) — tulis bebas",
+    ? (note(`document language already set: ${policy.docLanguage}`), policy.docLanguage)
+    : await askLanguage("Language of working-document prose (.what/ .how/ .control/) — free text",
                         pre.docLanguage);
   const docFilenameLanguage = policy.docFilenameLanguage
     ? policy.docFilenameLanguage
-    : await askLanguage("Bahasa slug nama berkas — kode `UC-` `DEC-` tetap English",
+    : await askLanguage("Language of document filename slugs — the `UC-` `DEC-` codes stay English",
                         pre.docFilenameLanguage || docLanguage);
 
   const selected = cancelIf(
     await p.multiselect({
-      message: "Agen mana yang kebagian skill? (spasi untuk pilih)",
+      message: "Which agents get the skills? (space to select)",
       options: ALL_AGENTS.map((id) => ({ value: id, label: AGENT_LABELS[id] })),
       initialValues: pre.agents || detectAgents(target),
       required: true,
@@ -926,23 +931,23 @@ async function runWizard(pre) {
 
   p.note(
     [
-      "Nama folder korpus tetap — bukan opsi instal:",
+      "The corpus folder names are fixed — they are not an install option:",
       "  .constitution  .control  .what  .how  .work  _bmad-output",
       "",
-      "Yang ditulis untuk agen yang dipilih:",
+      "What gets written for the agents you picked:",
       selected.includes("claude") ? "  .claude/skills/wdi-*  CLAUDE.md" : "",
       selected.includes("cursor") ? "  .agents/skills/wdi-*  .cursorrules" : "",
       selected.includes("codex") || selected.includes("cursor") || selected.includes("antigravity")
-        ? "  AGENTS.md  (blok BEGIN:wdi-method)"
+        ? "  AGENTS.md  (the BEGIN:wdi-method block)"
         : "",
       selected.includes("antigravity") ? "  .agents/AGENTS.md" : "",
     ]
       .filter(Boolean)
       .join("\n"),
-    "Tujuan tulis",
+    "Write targets",
   );
 
-  const okGo = cancelIf(await p.confirm({ message: first ? "Jalankan install?" : "Jalankan update?", initialValue: true }));
+  const okGo = cancelIf(await p.confirm({ message: first ? "Run the install?" : "Run the update?", initialValue: true }));
   if (!okGo) {
     p.cancel("Dibatalkan.");
     process.exit(0);
@@ -958,7 +963,7 @@ async function runWizard(pre) {
     client: String(client).trim(),
   });
   spinner.stop(first ? "Terpasang" : "Ter-update");
-  p.outro(first ? "Siap. Lanjut ke langkah sesudah install di atas." : "Siap. Cek diff blok metode di AGENTS.md.");
+  p.outro(first ? "Done. Take the after-install steps above." : "Done. Read the method-block diff in AGENTS.md.");
 }
 
 function runNonInteractive(args) {
