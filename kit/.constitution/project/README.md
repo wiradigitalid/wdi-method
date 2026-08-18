@@ -3,65 +3,66 @@ status: Accepted
 scope: project-room
 ---
 
-# `.constitution/project/` — kamar aturan khusus produk ini
+# `.constitution/project/` — this product's custom rules
 
-**Folder ini milik produk, bukan milik metode.** Ia disemai sekali saat install, dan sesudah itu
-`wdi-method update` **tidak pernah** menulis ke dalamnya. `wdi-method promote` **melewatinya**
-seluruhnya, jadi apa pun yang Anda tulis di sini tidak mungkin terbit ke paket publik.
+**This folder belongs to the product, not to the method.** It is seeded once at install, and after
+that `wdi-method update` **never** writes over a file in it. `wdi-method promote` **skips it entirely**,
+so nothing you write here can reach the public package.
 
-Satu-satunya pengecualian adalah berkas ini: README kamar dikarang di paket dan tidak pernah pulang
-lewat `promote`. Menyuntingnya MAY dilakukan, tetapi suntingannya akan hilang pada install berikutnya
-di repo lain — jadi aturan produk Anda MUST ditulis sebagai berkas **lain** di folder ini.
+This README is the one exception: it is authored in the package and `promote` never carries it home.
+You MAY edit it, but the edit will not survive the next install elsewhere — so **your rules MUST be
+other files.**
 
-## Apa yang masuk ke sini
+## What goes here
 
-Aturan normatif yang berlaku **hanya di produk ini** dan bukan konvensi kode:
+Normative rules that hold **only in this product**, and are not code conventions:
 
-- kebijakan review yang diminta klien
-- aturan proses yang lahir dari kontrak
-- kebijakan penamaan atau bahasa yang beda dari default metode
-- larangan atau kewajiban khusus domain ini
+- a review policy a client requires
+- a process rule that came out of a contract
+- a naming or language policy that differs from the method default
+- a prohibition or obligation specific to this domain
 
-## Apa yang TIDAK masuk ke sini
+## What does not
 
-| Yang | Rumahnya |
+| The thing | Its home |
 |---|---|
-| Nama produk atau klien | `.control/registry/index.yaml` → `product:` |
-| Konvensi kode, stack, pola brownfield | `.constitution/codebase/*-guide.md` — sudah dilindungi sesudah `Accepted` |
-| Lingkup, kepemilikan metode, checklist repo | `constitution.md` Article 1, 2, 5 — sudah dilindungi |
-| Instruksi agent khusus produk | `AGENTS.md`, **di luar** blok bertanda `wdi-method` |
-| Override BMad khusus produk | `_bmad/custom/*.user.toml` |
-| Keadaan, janji, rancangan | `.control/` · `.what/` · `.how/` |
+| Product or client name | `.control/registry/index.yaml` → `product:` |
+| Code conventions, stack, brownfield patterns | `.constitution/codebase/*-guide.md` — already protected once `Accepted` |
+| Scope, method ownership, repo checklist | `constitution.md` Articles 1, 2, 5 — already protected |
+| Agent instructions for this product | `AGENTS.md`, **outside** the marked `wdi-method` block |
+| BMad overrides for this product | `_bmad/custom/*.user.toml` |
+| State, promises, design | `.control/` · `.what/` · `.how/` |
 
-**Sebuah aturan yang generic MUST NOT dipindahkan ke sini.** Kalau ia berlaku di proyek mana pun, ia
-milik paket — perbaiki di sana, lalu `promote`. Kamar ini untuk yang **tidak** generic, dan memakainya
-sebagai jalan memintas paket adalah cara metode berhenti generic tanpa ada yang memutuskannya.
+**A generic rule MUST NOT be moved here.** If it holds in any project, it belongs to the package — fix
+it there, then `promote`. Using this room to bypass the package is how a method stops being generic
+with nobody deciding it, and **an empty room is a valid state**: filling it so that it gets used is the
+very failure this rule prevents.
 
-## Bentuk berkasnya
+## The shape of a file here
 
-Frontmatter wajib, dan `V27` memeriksanya:
+Frontmatter is required, and `V27` checks it:
 
 ```yaml
 ---
-scope: project              # WAJIB, dan nilainya persis ini
-purpose: ""                 # WAJIB, satu baris: aturan ini menjaga apa
-overrides: null             # opsional; path berkas kit yang ia persempit atau bantah
-decision: null              # WAJIB bila `overrides:` terisi — DEC- yang memutuskannya
+scope: project              # REQUIRED, and exactly this value
+purpose: ""                 # REQUIRED, one line: what this rule protects
+overrides: null             # optional: the kit file it narrows or contradicts
+decision: null              # REQUIRED when `overrides:` is set — the DEC- that decided it
 ---
 ```
 
-- Sebuah berkas di sini MAY **mempersempit** atau **menambah** aturan generic tanpa `overrides:`.
-- Untuk **membantah** aturan generic ia MUST menyebutnya di `overrides:` dan membawa `decision:`.
-  Tanpa keduanya, kamar ini jadi tempat aturan generic dilanggar tanpa jejak — dan itu justru yang
-  membuat sebuah metode berhenti dapat dipercaya di repo berikutnya.
-- `overrides:` yang menunjuk berkas yang tidak ada adalah temuan, bukan salah tulis: ia berarti
-  aturan yang dibantah sudah hilang, dan pembantahannya mungkin sudah tidak punya alasan.
+- A file here MAY **narrow** or **add to** a generic rule with no `overrides:` at all.
+- To **contradict** a generic rule it MUST name that rule in `overrides:` and carry `decision:`.
+  Without both, this room becomes the place where generic rules are broken with no trace — and that is
+  what stops a method being trustworthy in the next repo.
+- An `overrides:` pointing at a file that does not exist is a finding, not a typo: it means the rule
+  being contradicted is gone, and the contradiction may no longer have a reason.
 
-## Kenapa berkas utuh, bukan blok bertanda di dalam guide
+## Why whole files, and not marked blocks
 
-`AGENTS.md` memakai blok bertanda karena ia **satu** berkas. `.constitution/` punya lima puluhan, dan
-blok bertanda di dalamnya menuntut `update` melakukan operasi bedah di tiap berkas — satu marker yang
-rusak berarti aturan produk terhapus, atau aturan generic membeku selamanya.
+`AGENTS.md` uses a marked block because it is **one** file. `.constitution/` has fifty-odd, and marked
+blocks inside them would make `update` perform surgery in every file — one broken marker and either
+the product's rule is erased, or the generic rule freezes forever.
 
-Berkas utuh di kamar sendiri menghindari keduanya, dan ia membuat aturan produk **terbaca di satu
-tempat** alih-alih tersebar di dalam lima puluh berkas milik orang lain.
+Whole files in their own room avoid both, and they keep a product's rules **readable in one place**
+instead of scattered inside fifty files that belong to somebody else.

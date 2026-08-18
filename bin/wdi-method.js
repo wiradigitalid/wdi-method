@@ -344,7 +344,32 @@ function syncSkills(target, agents) {
       n += copyTree(src, dest);
     }
   }
+  pruneRetiredSkills(dests);
   return n;
+}
+
+// A wrapper the method RETIRED is worse than a wrapper missing: the folder is still there, its
+// SKILL.md still reads like an instruction, and an agent will invoke it — while the guide it points
+// at is gone. Renaming five wrappers (wdi-apply, wdi-analysis, wdi-structure, …) left exactly that
+// in every repo installed before the rename, because update only ever touched the names it knows.
+//
+// `wdi-` is the method's namespace, so a `wdi-*` folder carrying a SKILL.md and not in WDI_SKILLS is
+// ours and retired. Each removal is PRINTED: silent deletion in someone else's repo is not a fix.
+function pruneRetiredSkills(dests) {
+  const keep = new Set(WDI_SKILLS);
+  for (const root of dests) {
+    if (!fs.existsSync(root)) continue;
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+      if (!entry.isDirectory() || !entry.name.startsWith("wdi-") || keep.has(entry.name)) continue;
+      const dir = path.join(root, entry.name);
+      if (!fs.existsSync(path.join(dir, "SKILL.md"))) {
+        note(`kept ${entry.name} (no SKILL.md — not one of ours)`);
+        continue;
+      }
+      fs.rmSync(dir, { recursive: true, force: true });
+      note(`removed retired skill ${entry.name}`);
+    }
+  }
 }
 
 function syncTomls(target) {

@@ -114,3 +114,30 @@ test("walkFiles menolak keluaran build — sebuah .pyc membawa path absolut bern
   assert.match("inventory.cpython-314.pyc", re);
   assert.doesNotMatch("keep.md", re);
 });
+
+test("update MENGHAPUS wrapper yang dipensiunkan, dan membiarkan yang bukan milik kita", () => {
+  const pkg = isolatedPackage();
+  const target = tmp("target");
+  const skills = path.join(target, ".claude", "skills");
+  // dipensiunkan: nama lama yang masih membawa SKILL.md
+  fs.mkdirSync(path.join(skills, "wdi-apply"), { recursive: true });
+  fs.writeFileSync(path.join(skills, "wdi-apply", "SKILL.md"), "# wrapper lama");
+  // bukan milik kita: berawalan wdi- tetapi tanpa SKILL.md
+  fs.mkdirSync(path.join(skills, "wdi-punya-saya"), { recursive: true });
+  fs.writeFileSync(path.join(skills, "wdi-punya-saya", "catatan.md"), "milik pengguna");
+  try {
+    execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+       "--agents", "claude"],
+      { cwd: pkg, encoding: "utf8" });
+    assert.ok(!fs.existsSync(path.join(skills, "wdi-apply")),
+      "wrapper yang dipensiunkan tetap tinggal — agent akan memanggilnya dan guide-nya sudah tidak ada");
+    assert.ok(fs.existsSync(path.join(skills, "wdi-punya-saya", "catatan.md")),
+      "folder wdi-* tanpa SKILL.md dihapus; itu milik pengguna, bukan milik metode");
+    assert.ok(fs.existsSync(path.join(skills, "wdi-decision", "SKILL.md")),
+      "wrapper yang berlaku tidak terpasang");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});

@@ -259,32 +259,33 @@ the same three dozen historical files and the diff stops carrying information.
 
 File naming that must survive every OS is governed by `structure-guide.md` and MUST NOT be restated here.
 
-## `.constitution/project/` — kamar aturan khusus produk
+## `.constitution/project/` — this product's custom rules
 
-Sisa `.constitution/` **milik metode**, dikirim paket `wdi-method` dan **ditimpa** tiap `update`.
-Folder ini satu-satunya yang tidak: `update` menyemainya sekali lalu tidak pernah menulis lagi, dan
-`promote` **melewatinya**, jadi aturan khusus produk tidak mungkin terbit ke paket publik.
+The rest of `.constitution/` **belongs to the method**: it ships in the `wdi-method` package and is
+**overwritten** on every `update`. This folder is the only one that is not. `update` seeds it once and
+never writes over it again, and `promote` **skips it**, so a rule that names a client cannot reach the
+public package.
 
-| Yang masuk | Yang TIDAK, dan rumahnya |
+| Goes here | Does not, and its home |
 |---|---|
-| Kebijakan review yang diminta klien | Nama produk/klien → `index.yaml` `product:` |
-| Aturan proses yang lahir dari kontrak | Konvensi kode → `codebase/*-guide.md` |
-| Kebijakan yang beda dari default metode | Lingkup & kepemilikan → `constitution.md` Article 1, 2, 5 |
-| Larangan atau kewajiban khusus domain ini | Instruksi agent → `AGENTS.md`, di luar blok bertanda |
+| A review policy a client requires | product / client name → `index.yaml` `product:` |
+| A process rule that came from a contract | code conventions → `codebase/*-guide.md` |
+| A policy that differs from the method default | scope and ownership → `constitution.md` Art. 1, 2, 5 |
+| A prohibition specific to this domain | agent instructions → `AGENTS.md`, outside the marked block |
 
-**Sebuah aturan yang generic MUST NOT dipindahkan ke sini.** Kalau ia berlaku di proyek mana pun ia
-milik paket — perbaiki di sana, lalu `promote`. Memakai kamar ini sebagai jalan memintas paket adalah
-cara metode berhenti generic tanpa ada yang memutuskannya, dan **kamar yang kosong adalah keadaan yang
-sah**: mengisinya supaya terpakai justru kegagalan yang aturan ini cegah.
+**A generic rule MUST NOT be moved here.** If it holds in any project it belongs to the package — fix
+it there, then `promote`. Using this room to bypass the package is how a method stops being generic
+with nobody deciding it, and **an empty room is a valid state**: filling it so that it gets used is the
+very failure this rule prevents.
 
-Frontmatter wajib, dan **V27** memeriksanya: `scope: project` · `purpose:` satu baris. Sebuah berkas
-MAY mempersempit atau menambah tanpa menyebut apa pun; untuk **membantah** aturan generic ia MUST
-menyebutnya di `overrides:` dan membawa `decision:` berisi `DEC-` yang memutuskannya. Metode yang boleh
-dibantah tanpa keputusan berhenti dapat dipercaya di repo berikutnya.
+Frontmatter is required and **V27** checks it: `scope: project` · a one-line `purpose:`. A file MAY
+narrow or add with nothing further; to **contradict** a generic rule it MUST name that rule in
+`overrides:` and carry `decision:` naming the `DEC-` that decided it. A method that can be contradicted
+without a decision stops being trustworthy in the next repo.
 
-**Berkas utuh, bukan blok bertanda di dalam guide.** `AGENTS.md` memakai blok bertanda karena ia satu
-berkas; `.constitution/` punya lima puluhan, dan blok di dalamnya menuntut `update` melakukan operasi
-bedah di tiap berkas — satu marker rusak berarti aturan produk terhapus atau aturan generic membeku.
+**Whole files, not marked blocks.** `AGENTS.md` uses a marked block because it is one file;
+`.constitution/` has fifty-odd, and blocks inside them would make `update` perform surgery in every
+file — one broken marker and either the product's rule is erased or the generic rule freezes.
 
 ## Documents that predate the method
 

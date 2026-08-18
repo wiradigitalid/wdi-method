@@ -56,24 +56,23 @@ Committing it makes citation by path stable, so a `DEC-` or a PRD MAY point into
 - A run folder MUST NOT be deleted. The `update` intents re-read the original inputs in place, and
   `bmad-deep-recon` refresh operates on the existing folder.
 
-## `_bmad/custom/*.toml` adalah aturan aktif, bukan dokumentasi
+## `_bmad/custom/*.toml` are live rules, not documentation
 
-`persistent_facts` di dalamnya **disuntikkan ke setiap run BMad sejak aktivasi**. Sebuah nama skill
-yang sudah dihapus atau folder yang sudah tidak ada, tertinggal di sana, bukan sekadar basi — ia
-perintah aktif yang akan dijalankan seorang worker.
+The `persistent_facts` inside them are **injected into every BMad run from activation onward**. A skill
+name that has been deleted, or a folder that no longer exists, left sitting in there is not merely
+stale — it is a live instruction that a worker will carry out.
 
-Karena itu, setiap kali sebuah skill `wdi-*` diganti nama atau dilebur, sebuah folder dihapus, atau
-sebuah kode dokumen dicabut, `_bmad/custom/*.toml` MUST ikut disapu **dalam lintasan yang sama**. Ia
-tidak dijaga validator mana pun — tidak ada V yang membaca TOML — jadi yang menjaganya hanyalah aturan
-ini dan sapuan yang menyertakannya.
+So every time a `wdi-*` skill is renamed or merged, a folder is deleted, or a document code is
+repealed, `_bmad/custom/*.toml` MUST be swept **in the same pass**. No validator guards it — no `V`
+reads TOML — so the only things guarding it are this rule and a sweep that includes it.
 
-Pelajaran ini dibayar: sapuan konsistensi 2026-08-18 memakai daftar path yang tidak memuat
-`_bmad/custom/`, dan lima TOML tetap menyuruh worker mendaratkan `SCP-` ke `.control/supplements/`
-lewat `wdi-correct-course` — tiga hal yang ketiganya sudah tidak ada. Sebuah daftar path verifikasi
-MUST diperlakukan sebagai batas minimum, bukan batas maksimum.
+This lesson was paid for: the consistency sweep of 2026-08-18 used a path list that did not include
+`_bmad/custom/`, and five TOML files went on telling workers to land `SCP-` into
+`.control/supplements/` through `wdi-correct-course` — three things that no longer exist. **A
+verification path list MUST be treated as a minimum, never as a boundary.**
 
-`.claude/skills/bmad-*/customize.toml` adalah hal yang berbeda dan MUST NOT disunting — ia ditimpa
-setiap kali BMad diperbarui. Yang disapu adalah `_bmad/custom/`.
+`.claude/skills/bmad-*/customize.toml` is a different thing and MUST NOT be edited — it is overwritten
+on every BMad update. What gets swept is `_bmad/custom/`.
 
 ## Memlog
 
