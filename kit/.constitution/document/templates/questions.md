@@ -6,7 +6,7 @@ created: '{YYYY-MM-DD}'
 updated: '{YYYY-MM-DD}'
 ---
 
-# {Pertanyaan yang Memblokir | Asumsi | Menunggu Pihak Luar | Terjawab}
+# {Blocking Questions | Assumptions | Waiting on an Outside Party | Answered}
 
 <!-- TEMPLATE GUIDE — act on these comments, then delete them.
 
@@ -30,8 +30,9 @@ updated: '{YYYY-MM-DD}'
      A ROW MOVES BETWEEN FILES WHEN ITS CLASS CHANGES, and it MUST NOT be copied into a second one.
 
      Ids stay OQ-, allocated from the highest ever used including closed ones. An id MUST NOT be
-     reused. The literal values inside the tables stay Bahasa Indonesia — [BELUM DITETAPKAN] and the
-     rest — wherever they appear, including inside an English template. -->
+     reused. The prose inside the tables follows the product's `doc_language`; a machine-facing
+     marker such as `[NEEDS CONFIRMATION]` stays English wherever it appears — `language-guide.md`
+     owns that split. -->
 
 ## The class test
 
@@ -47,26 +48,26 @@ updated: '{YYYY-MM-DD}'
 
      A question MUST NOT be filed as blocking "to be safe". That habit is what produced 146 ids. -->
 
-## Terbuka
+## Open
 
 <!-- list: blocking · external -->
 
-| id | Pertanyaan | Memblokir | Owner | Sebelum |
+| id | Question | Blocks | Owner | Before |
 |---|---|---|---|---|
 
 <!-- list: assumptions — keep this shape instead
-| id | Asumsi | Akibat kalau salah | Diambil | Oleh |
-|---|---|---|---|---|
+| id | Assumption | Cost if wrong | Taken | By |
+|---|---|---|---|---|---|
 -->
 
 <!-- An empty list is a legitimate state and MUST be written as one, with the date and one line
      saying why. An empty table with no sentence reads as an unfinished file. -->
 
-## Terjawab
+## Answered
 
 <!-- list: answered only.
 
-     | id | Pertanyaan | Jawaban | Tanggal | Oleh |
+     | id | Question | Answer | Date | By |
 
      The answer is written beside the question, not in place of it. The record of what was once
      uncertain is what stops the same question being asked again in three months.

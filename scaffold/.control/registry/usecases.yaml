@@ -1,6 +1,6 @@
-# usecases.yaml — SSOT untuk UC
+# usecases.yaml — SSOT for UC
 #
-# `critical: true` bila UC itu menyentuh UANG, DATA PRIBADI, atau TINDAKAN TAK-TERBALIKKAN.
-# Label ini menentukan sesuatu HANYA pada `mode: deep`.
+# `critical: true` when the UC touches MONEY, PERSONAL DATA, or an IRREVERSIBLE ACTION.
+# This label decides something ONLY at `mode: deep`.
 
 usecases: []

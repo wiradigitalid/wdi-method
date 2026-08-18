@@ -32,8 +32,8 @@ updated: '{YYYY-MM-DD}'
 
 ## Relationships
 
-<!-- Direction and cardinality. State them as sentences a person would say: "satu member punya nol
-     atau satu sponsor". -->
+<!-- Direction and cardinality. State them as sentences a person would say: "one member has zero
+     or one sponsor". -->
 
 ## State Lifecycle
 

@@ -66,7 +66,7 @@ reviewed:                # V13. Diisi hanya setelah bmad-review benar-benar dija
 
 | id | Use case | Actor | Satisfies | critical |
 | --- | --- | --- | --- | --- |
-| UC-{n} | {a sentence a user would say} | {from the Actor Register} | {FR-n} | tidak |
+| UC-{n} | {a sentence a user would say} | {from the Actor Register} | {FR-n} | no |
 
 ## Constraints · [G3]
 
@@ -106,7 +106,7 @@ reviewed:                # V13. Diisi hanya setelah bmad-review benar-benar dija
 
 ## Gate Checklist · [G3]
 
-<!-- The gate questions as they apply to THIS component, answered ya / tidak / ubah. The full list
+<!-- The gate questions as they apply to THIS component, answered yes / no / change. The full list
      lives in delivery-flow-guide.md and MUST NOT be copied here. At mode: catalog only the starred
      questions are asked. -->
 

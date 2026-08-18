@@ -1,16 +1,16 @@
-# components.yaml — SSOT untuk Product Component, container, dan Logical Component
+# components.yaml — SSOT for Product Components, containers, and Logical Components
 #
-# Tiga hal berbeda, dua di antaranya berbagi kata "component":
-#   Product Component (PC) — irisan DOMAIN, permukaan yang bisa disebut pengguna
-#   Container              — unit yang berjalan atau dideploy sendiri; C4 L2 memilikinya
-#   Logical Component (LC) — satu unit build yang bisa ditunjuk
+# Three different things, two of which share the word "component":
+#   Product Component (PC) — a DOMAIN slice, a surface a user could name
+#   Container              — a unit that runs or deploys on its own; owned by C4 L2
+#   Logical Component (LC) — one nameable build unit
 #
-# `mode` — KEDALAMAN DOKUMEN. Ditulis HANYA pada komponen yang memang perlu beda dari global.
-# `risk_accepted` — INTENSITAS REVIEW, bukan kedalaman. low · medium · high
-# `owns` — entitas domain yang komponen ini BERWENANG MENULIS.
-# `g4_passed` — hanya berarti pada komponen ber-mode di atas catalog.
+# `mode` — DOCUMENT DEPTH. Written ONLY on a component that genuinely needs to differ from global.
+# `risk_accepted` — REVIEW INTENSITY, not depth. low · medium · high
+# `owns` — the domain entities this component is AUTHORISED TO WRITE.
+# `g4_passed` — only means something on a component at a mode above catalog.
 #
-# Komponen lahir lewat wdi-init intent `component` di ekor G2. Berkas ini lahir kosong.
+# A component is born through wdi-init intent `component` at the tail of G2. This file is born empty.
 
 product_components: []
 

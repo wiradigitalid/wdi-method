@@ -44,11 +44,11 @@ it prints before reading anything else:
 
 | What it says | What you MUST do |
 |---|---|
-| `rtm/status belum ada` (exit 3) | Stop. The tables cannot be built, so there is nothing honest to report |
-| `git tidak menjawab` (exit 3) | Stop. Every actual date comes from git; without it there is no time dimension |
-| `registry punya perubahan yang belum dicommit` | Say so in the report header. The numbers describe a working tree, not `main` |
-| `story tanpa riwayat git` | Name those stories. They count toward progres janji but cannot appear under Proven |
-| `n temuan validator` | Report the count and, if any are red, say which gate they block |
+| `rtm/status not yet generated` (exit 3) | Stop. The tables cannot be built, so there is nothing honest to report |
+| `git did not respond` (exit 3) | Stop. Every actual date comes from git; without it there is no time dimension |
+| `the registry has uncommitted changes` | Say so in the report header. The numbers describe a working tree, not `main` |
+| `story with no git history` | Name those stories. They count toward promise progress but cannot appear under Proven |
+| `n findings` | Report the count and, if any are red, say which gate they block |
 
 A report built on stale tables is worse than no report: it looks authoritative and is not.
 

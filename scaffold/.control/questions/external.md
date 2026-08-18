@@ -1,11 +1,11 @@
-# Menunggu Pihak Luar
+# Waiting on an Outside Party
 
-**Dimuat saat:** ada jawaban yang hanya bisa datang dari luar sesi ini.
+**Loaded when:** an answer can only come from outside this session.
 
-Berkas ini **tidak menahan gate** kecuali barisnya juga ditunjuk dari `blocking.md`.
+This file **does not hold a gate** unless its row is also pointed to from `blocking.md`.
 
-## Terbuka
+## Open
 
-| id | Pertanyaan | Menunggu | Sejak |
+| id | Question | Waiting on | Since |
 |---|---|---|---|
 | — | — | — | — |

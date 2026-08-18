@@ -1,11 +1,11 @@
-# Terjawab
+# Answered
 
-**Dimuat saat:** mencari keputusan yang sudah diambil lewat pertanyaan, bukan lewat `DEC-`.
+**Loaded when:** looking for a decision that was reached through a question, not through a `DEC-`.
 
-Baris pindah ke sini dari ketiga daftar lain. MUST NOT dihapus.
+Rows move here from the other three lists. MUST NOT be deleted.
 
-## Terjawab
+## Answered
 
-| id | Pertanyaan | Jawaban | Ditutup |
+| id | Question | Answer | Closed |
 |---|---|---|---|
 | — | — | — | — |

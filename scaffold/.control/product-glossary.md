@@ -1,21 +1,21 @@
 # Product Glossary
 
-**Dimuat saat:** menulis dokumen apa pun di korpus.
+**Loaded when:** writing any document in the corpus.
 
-SSOT kosakata **produk** — apa yang produk ini bicarakan. Tiap istilah didefinisikan **sekali** di
-sini, lalu dipakai apa adanya di seluruh korpus.
+The SSOT for **product** vocabulary — what this product talks about. Every term is defined **once**
+here, then used as-is across the corpus.
 
-Kosakata **metode** tinggal di `.constitution/method-glossary.md` dan MUST NOT didefinisikan ulang di
-sini. Tes pemisahnya: apakah istilah ini tetap berlaku kalau dipakai di produk lain? Ya →
-`method-glossary.md`, tidak → sini.
+**Method** vocabulary lives in `.constitution/method-glossary.md` and MUST NOT be redefined here. The
+split test: does this term still hold if used in another product? Yes → `method-glossary.md`, no →
+here.
 
-## Aturan
+## Rules
 
-- Istilah baru yang muncul di dokumen mana pun MUST ditambahkan ke sini **dalam lintasan yang sama**.
-- Definisi MUST menyebut hubungan ke istilah lain dan kardinalitasnya bila relevan.
-- Satu istilah MUST NOT punya dua entri.
-- Berkas ini lahir **kosong** dan diisi dari produknya. Entri pertamanya lahir bersama brief di G1.
+- A new term appearing in any document MUST be added here **in the same pass**.
+- A definition MUST name its relationship to other terms and its cardinality where relevant.
+- One term MUST NOT have two entries.
+- This file is born **empty** and filled from the product. Its first entries are born with the brief at G1.
 
-## Entri
+## Entries
 
-<!-- Urut abjad. Format: **Istilah** — definisi. Hubungan. Kardinalitas bila relevan. -->
+<!-- Alphabetical. Format: **Term** — definition. Relationship. Cardinality where relevant. -->

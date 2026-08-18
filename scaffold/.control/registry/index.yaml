@@ -1,26 +1,26 @@
-# index.yaml — peta kendali
+# index.yaml — the control map
 #
-# Memuat yang tidak punya rumah di registry lain: identitas produk, kedalaman global, peran, jatah
-# waktu gate, jatah pertanyaan terbuka, dan kosakata `touches`.
+# Holds what has no home in another registry: product identity, global depth, roles, gate time
+# budgets, the open-question budget, and the `touches` vocabulary.
 
-# IDENTITAS PRODUK. Satu-satunya tempat terstruktur. Diisi di G1.
-# constitution.md Pasal 1 dan judul brief mengutip nilai ini — mereka MUST NOT menjadi sumber kedua.
+# PRODUCT IDENTITY. The one structured place for it. Filled at G1.
+# constitution.md Article 1 and the brief's title quote this value — they MUST NOT become a second source.
 product:
   name: "{product}"
   client: ""
 
-# KEDALAMAN GLOBAL. Satu-satunya knob kedalaman dokumen, dan ia MUST NOT ikut mengendalikan intensitas
-# review — itu `risk_accepted` per komponen di components.yaml.
-#   catalog  daftar UC + tiga inventaris + C4; nol berkas tambahan per komponen. G4 dilewati
-#   outline  + alur penuh maks 3 UC, business rule lokal, Decision Summary, daftar LC
-#   guarded  + Failure Behaviour seluruh boundary, Inherited Constraints, dokumen integrasi
-#   deep     + ABCE, spec kontrak per endpoint, data dictionary, flow, state machine, skenario
-# Default `catalog` bila baris ini tidak ada. Baris per komponen di components.yaml MENANG atas ini.
-# Tidak ada scope ketiga: `mode` MUST NOT di-override per wave maupun per SPEC.md.
+# GLOBAL DEPTH. The only document-depth knob, and it MUST NOT also govern review intensity —
+# that is `risk_accepted` per component in components.yaml.
+#   catalog  UC list + three inventories + C4; zero extra files per component. G4 is skipped
+#   outline  + full flows for at most 3 UC, local business rules, Decision Summary, LC list
+#   guarded  + Failure Behaviour for every boundary, Inherited Constraints, integration documents
+#   deep     + ABCE, a contract spec per endpoint, data dictionary, flow, state machine, scenarios
+# Defaults to `catalog` when this line is absent. A component's own row in components.yaml WINS over this.
+# There is no third scope: `mode` MUST NOT be overridden per wave or per SPEC.md.
 mode: catalog
 
-# GATE YANG SUDAH LULUS. Ditulis hanya atas keputusan pemilik repo di gate-nya sendiri, dan MUST NOT
-# diisi agent untuk membuka jalan bagi dirinya.
+# GATES ALREADY PASSED. Written only by the repo owner's own decision at their own gate, and MUST NOT
+# be filled by an agent to clear its own way forward.
 gates_passed: []
 
 roles: []
@@ -39,8 +39,8 @@ question_budget:
   assumptions_per_gate: 15
 
 wave_sizes:
-  S: { stories: "<=3", note: "tanpa FR baru; G4 dan G5 digabung satu sesi 20 menit" }
-  M: { stories: "4-12", note: "seperti biasa" }
-  L: { stories: ">12",  note: "atau container baru; retrospektif dijalankan" }
+  S: { stories: "<=3", note: "no new FR; G4 and G5 merge into one 20-minute session" }
+  M: { stories: "4-12", note: "as usual" }
+  L: { stories: ">12",  note: "or a new container; a retrospective runs" }
 
 touches_vocabulary: []

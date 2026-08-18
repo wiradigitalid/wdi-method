@@ -1,21 +1,21 @@
-# Pertanyaan yang Memblokir
+# Blocking Questions
 
-**Dimuat saat:** setiap gate.
+**Loaded when:** every gate.
 
-Hanya berkas ini yang menahan sebuah gate. Ditulis lewat `wdi-question`, tidak pernah dengan tangan
-langsung; bentuk barisnya di `.constitution/document/templates/questions.md`.
+Only this file holds a gate. Written through `wdi-question`, never by hand directly; the row shape
+lives in `.constitution/document/templates/questions.md`.
 
-Sasarannya **≤3 baris per Product Component**. Sebuah pertanyaan naik ke sini hanya lewat tiga tes,
-salah satu cukup:
+Target **<=3 rows per Product Component**. A question rises to here only through three tests, one is
+enough:
 
-1. Menyentuh uang, data pribadi, atau kewajiban legal.
-2. Mengubah bunyi janji sebuah `FR`.
-3. Salah menjawab memaksa tulis ulang lebih dari satu komponen.
+1. It touches money, personal data, or a legal obligation.
+2. It changes the wording of an `FR`'s promise.
+3. Answering it wrong forces a rewrite of more than one component.
 
-Gagal ketiganya → `assumptions.md`. Sebuah pertanyaan MUST NOT didaftarkan di sini "untuk aman".
+Failing all three → `assumptions.md`. A question MUST NOT be filed here "to be safe".
 
-## Terbuka
+## Open
 
-| id | Pertanyaan | Memblokir | Owner | Sebelum |
+| id | Question | Blocks | Owner | Before |
 |---|---|---|---|---|
 | — | — | — | — | — |

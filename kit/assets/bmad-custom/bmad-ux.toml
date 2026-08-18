@@ -1,9 +1,9 @@
-# Kelas B — path bisa dikonfigurasi, granularitas per-PC tidak.
+# Class B — the path is configurable, per-PC granularity is not.
 #
-# bmad-ux hanya mengenal {project_name} dan {date}, tidak ada {slug}, jadi ia tidak bisa mendarat
-# sendiri ke .how/<pc>/. Landing zone-nya dibuat NETRAL di _bmad-output/ karena keluarannya
-# membelah dua lapisan: DESIGN.md milik .how/, EXPERIENCE.md milik .what/. Mendarat lebih dulu di
-# salah satunya adalah pelanggaran lapisan yang hidup selama satu run.
+# bmad-ux only knows {project_name} and {date}, no {slug}, so it cannot land directly into
+# .how/<pc>/. Its landing zone is made NEUTRAL in _bmad-output/ because its output splits across
+# two layers: DESIGN.md belongs to .how/, EXPERIENCE.md belongs to .what/. Landing in either one
+# first would be a layer violation that lives for the length of one run.
 
 [workflow]
 
@@ -13,7 +13,7 @@ run_folder_pattern = "ux"
 doc_standards = ["file:{project-root}/.constitution/document/ux-guide.md"]
 
 persistent_facts = [
-  "Seluruh panggilan memlog.py MUST memakai --path {project-root}/.control/memlog/ux.md. --workspace MUST NOT dipakai.",
+  "Every memlog.py call MUST use --path {project-root}/.control/memlog/ux.md. --workspace MUST NOT be used.",
 ]
 
-on_complete = "Serahkan pendaratan ke wdi-ux: DESIGN.md ke .how/<pc>/01-ux/, token dan komponen dasar ke .how/_platform/design-system.md, EXPERIENCE.md ke .what/<pc>/04-usecases/, tiap layar didaftarkan sebagai LC ui-screen di components.yaml. MUST NOT menempatkan sendiri."
+on_complete = "Hand the landing to wdi-ux: DESIGN.md to .how/<pc>/01-ux/, tokens and base components to .how/_platform/design-system.md, EXPERIENCE.md to .what/<pc>/04-usecases/, every screen registered as an LC ui-screen in components.yaml. MUST NOT land itself."

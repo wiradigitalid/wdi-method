@@ -1,13 +1,11 @@
 # WDI Method
 
-A software delivery method for agent-driven work. It **wraps [BMad](https://github.com/bmad-code-org/BMAD-METHOD); it does not replace it.**
+**The review layer BMad leaves thin — documents a human reads to check a decision before code gets written, sized to what the change actually deserves.**
 
-BMad decides *what to build* and *how to build it* well. What it leaves thin is the middle: the
-documents a **human** reads to check that the decision is right before anybody writes code. WDI Method
-adds that middle, and a way to choose how much of it you want.
+[BMad](https://github.com/bmad-code-org/BMAD-METHOD) decides *what* to build and *how* to build it well. WDI Method wraps it — it does not replace it — and adds the part between those two decisions and the code: inventories, a use case catalogue, a component design record, and a way to choose how much of that a given change actually needs.
 
-This repository is **public** and generic. It MUST NOT contain a client name, a product name, or a link
-to a private repository. Product identity lives in the consuming repo.
+> This repository is **public and generic**. It MUST NOT carry a client name, a product name, or a
+> link to a private repository — product identity lives entirely in the repo that installs it.
 
 ---
 
@@ -47,6 +45,25 @@ npx wdi-method install --yes --agents claude,codex --product "Your Product" \
 
 Then invoke the **`wdi-help`** skill and ask what to do next. It reads where the project actually is and
 answers with the gate you are at, not with a menu.
+
+---
+
+## Why WDI Method?
+
+- **Depth separate from scrutiny.** `mode` sets how much gets written; `risk_accepted` sets how hard it
+  gets reviewed. Neither is derived from the other, so a component MAY be thin on purpose and reviewed the
+  hardest.
+- **Ground truth over plan.** Once code exists, the tables, endpoints, and screens are **derived from it**
+  — the gap between plan and reality is a finding to resolve, not an argument to have.
+- **Containers that match what actually ships.** C4's containers follow deployability, not folders, and a
+  component view is drawn for every container that carries more than one Product Component.
+- **A gate that can be skipped honestly.** `mode: catalog` skips the component gate entirely — a fast
+  default is fast because the work is genuinely gone, not nominally trimmed.
+- **Decisions that don't rot.** A `DEC-` is recorded only when the reason would not survive reading the
+  code, and it freezes the moment it is applied — a change of mind writes a new one rather than editing
+  the old.
+- **Wraps BMad, never forks it.** Every `wdi-*` skill is a wrapper around a BMad skill. Upgrading BMad
+  does not strand you, and no BMad skill is meant to be invoked directly.
 
 ---
 
@@ -181,7 +198,8 @@ Write whatever names the language — `English`, `Bahasa Indonesia`, `id`. What 
 and a model does not need a lookup table.
 
 Always English, and never asked: method terminology, document code prefixes (`UC-`, `DEC-`), machine
-markers (`[NEEDS CONFIRMATION]`, `[MISSING]`), and code identifiers.
+markers (`[NEEDS CONFIRMATION]`, `[MISSING]`), and code identifiers. `.constitution/` itself is always
+English, whatever the settings say — it travels to every repo through this package.
 
 ---
 
@@ -219,4 +237,16 @@ carefully to read the diff. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the detail,
 
 ---
 
-MIT. Requires Node 20+ and [uv](https://docs.astral.sh/uv/) for the Python scripts.
+## Support and Contributing
+
+Open an [issue](https://github.com/wiradigitalid/wdi-method/issues) for a bug or a proposal. Read
+[`CONTRIBUTING.md`](CONTRIBUTING.md) before sending a pull request — it explains where a change belongs,
+how versioning works here, and what to check before publishing.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Requires Node 20+ and [uv](https://docs.astral.sh/uv/) for the Python
+scripts.
+
+[![Version](https://img.shields.io/npm/v/wdi-method?color=blue&label=version)](https://www.npmjs.com/package/wdi-method)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

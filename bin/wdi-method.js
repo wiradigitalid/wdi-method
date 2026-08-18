@@ -43,7 +43,7 @@ const WDI_SKILLS = [
 ];
 
 const PRODUCT_CONSTITUTION = "constitution.md";
-const PRD_SLUG_PLACEHOLDER = "ISI-slug-inisiatif";
+const PRD_SLUG_PLACEHOLDER = "FILL-initiative-slug";
 const GENERIC_FOLDER_PATTERNS = new Set([
   "_product-brief",
   "ux",
@@ -308,11 +308,12 @@ function bmadMissingMessage() {
   ].join("\n");
 }
 
-// Kamar custom milik produk. Tiga sifatnya, dan ketiganya harus dipegang bersama:
-//   install/update  menyemai isinya HANYA bila belum ada — sesudah itu ia tak pernah ditulis lagi
-//   promote         MELEWATINYA seluruhnya, jadi aturan khusus produk tidak mungkin terbit ke repo publik
-//   agent           memuatnya seperti guide lain, jadi ia MENGIKAT
-// Konsekuensi yang disengaja: README kamar ini diarang di paket dan tidak pernah pulang lewat promote.
+// The product's custom room. Three properties, and all three MUST hold together:
+//   install/update  seeds its content ONLY when absent — never written again after that
+//   promote         SKIPS it entirely, so a product's own rules can never reach the public repo
+//   agent           loads it like any other guide, so it BINDS
+// The deliberate consequence: this room's README is authored in the package and never comes home
+// through promote.
 const PROJECT_ROOM = "project/";
 
 function syncConstitution(target) {
@@ -394,10 +395,10 @@ function pruneRetiredSkills(dests) {
 
 // `promote` scrubs a product's initiative slug out of bmad-prd.toml before publishing, which is right.
 // Writing the scrubbed PLACEHOLDER back into a product repo is not: the first real install replaced a
-// live `run_folder_pattern = "toko-tanpa-akun"` with `ISI-slug-inisiatif`, and nothing said so. A value
+// live `run_folder_pattern = "some-real-slug"` with `FILL-initiative-slug`, and nothing said so. A value
 // the product already chose is not the installer's to overwrite — same rule as the custom room and the
 // language policy.
-const PLACEHOLDER_SLUG = "ISI-slug-inisiatif";
+const PLACEHOLDER_SLUG = "FILL-initiative-slug";
 const RUN_FOLDER_LINE = /^(\s*run_folder_pattern\s*=\s*)(".*?"|'.*?')/m;
 
 // The slug appears MORE THAN ONCE — bmad-prd.toml carries it in `run_folder_pattern` and again inside a
@@ -503,17 +504,17 @@ function setProductIdentity(target, { name, client }) {
   note(`product.name = ${name}`);
 }
 
-// Bahasa dokumen milik PRODUK, jadi update MUST NOT menimpanya. Ia ditulis hanya ketika belum ada —
-// sama seperti kamar custom, dan dengan alasan yang sama: setelan yang pernah dipilih seseorang bukan
-// milik installer untuk diubah di belakangnya.
+// The document language belongs to the PRODUCT, so update MUST NOT overwrite it. It is written only
+// when absent — same as the custom room, and for the same reason: a setting somebody already chose
+// is not the installer's to change behind their back.
 function setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen }) {
   const file = path.join(target, ".control", "registry", "index.yaml");
   if (!fs.existsSync(file)) return;
   const text = fs.readFileSync(file, "utf8");
   const existing = readLanguagePolicy(text);
-  // `chosen` berarti seseorang benar-benar menjawab — di TUI, atau lewat flag eksplisit. Maka
-  // jawabannya berlaku. Tanpa itu nilai yang masuk hanyalah default, dan default MUST NOT menimpa
-  // pilihan yang sudah pernah diambil seseorang.
+  // `chosen` means somebody actually answered — in the TUI, or through an explicit flag. Only then
+  // does the answer take effect. Without it the incoming value is just a default, and a default
+  // MUST NOT overwrite a choice somebody already made.
   if (!chosen && existing.docLanguage && existing.docFilenameLanguage) {
     note(`kept policy.doc_language = ${existing.docLanguage}, ` +
          `doc_filename_language = ${existing.docFilenameLanguage}`);
@@ -530,8 +531,8 @@ function setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen })
        `doc_filename_language = ${after.docFilenameLanguage}`);
 }
 
-// Dibaca SEBELUM writeStamp menimpanya. Tanpa ini tidak ada transisi versi yang bisa dicetak, dan
-// "updated" tanpa dari-ke tidak memberi tahu apa pun yang bisa dipakai.
+// Read BEFORE writeStamp overwrites it. Without this there is no version transition to print, and
+// an "updated" with no from-to tells the reader nothing they can use.
 function readStampVersion(target) {
   const file = path.join(target, ".control", "wdi-method.yaml");
   if (!fs.existsSync(file)) return "";
@@ -742,9 +743,9 @@ function promote(live) {
   if (!fs.existsSync(path.join(live, ".constitution"))) {
     die(`${live} has no .constitution/ — is this a method-carrying repo?`);
   }
-  // README kamar custom dikarang di paket dan MUST bertahan melewati rmSync di bawah. Dibaca di
-  // sini, bukan sesudahnya — versi pertama patch ini membacanya sesudah kit dihapus, sehingga
-  // nilainya selalu null dan README-nya hilang tiap promote. Tes project-room yang menemukannya.
+  // The custom room's README is authored in the package and MUST survive the rmSync below. Read
+  // here, not after — the first version of this fix read it after the kit was deleted, so it was
+  // always null and the README vanished on every promote. The project-room test caught it.
   const roomKit = path.join(KIT, ".constitution", PROJECT_ROOM, "README.md");
   const roomKept = fs.existsSync(roomKit) ? fs.readFileSync(roomKit, "utf8") : null;
 
@@ -847,12 +848,12 @@ async function runWizard(pre) {
 
   const facts = [
     hasBmad
-      ? `BMad Method: terpasang${readBmadVersion(target) ? ` (${readBmadVersion(target)})` : ""}`
-      : "BMad Method: belum terpasang",
-    hasWdi ? "WDI Method: sudah ada — installer akan menawarkan update" : "WDI Method: belum ada",
-    nonempty ? "Folder tidak kosong (repo produk yang sudah jalan itu biasa)" : "Folder masih kosong",
+      ? `BMad Method: installed${readBmadVersion(target) ? ` (${readBmadVersion(target)})` : ""}`
+      : "BMad Method: not installed",
+    hasWdi ? "WDI Method: already present — the installer will offer an update" : "WDI Method: not present",
+    nonempty ? "Folder is not empty (normal for a product repo already under way)" : "Folder is empty",
   ].join("\n");
-  p.note(facts, "Deteksi");
+  p.note(facts, "Detected");
 
   if (!hasBmad && !pre.skipBmad) {
     p.note(bmadMissingMessage(), "BMad first");
@@ -909,11 +910,11 @@ async function runWizard(pre) {
     }),
   ).trim();
 
-  // Dua pertanyaan, dan hanya dua. Istilah metodologi, kode di depan nama berkas, penanda
-  // machine-facing, dan identifier kode selalu English — MUST NOT ditanyakan.
+  // Two questions, and only two. Method terminology, document code prefixes, machine-facing
+  // markers, and code identifiers are always English — MUST NOT be asked about.
   const policy = readIndexPolicy(target);
-  // Teks bebas, bukan daftar. Tulis apa saja yang dimengerti sebuah model — "English",
-  // "Bahasa Indonesia", "id". Yang ditolak hanya kosong.
+  // Free text, not a list. Write whatever a model understands — "English", "Bahasa Indonesia",
+  // "id". The only value refused is empty.
   const askLanguage = async (message, current) =>
     (cancelIf(
       await p.text({
@@ -1017,7 +1018,7 @@ async function main() {
     return;
   }
   if (args.cmd === "wizard" && !args.yes) {
-    die("bukan TTY. Pakai `install --yes` / `update --yes`, atau jalankan di terminal.");
+    die("not a TTY. Use `install --yes` / `update --yes`, or run this in a terminal.");
   }
   if (args.cmd === "wizard") args.cmd = wdiPresent(requireTarget(args.dir)) ? "update" : "install";
   runNonInteractive(args);

@@ -1,6 +1,6 @@
-# Dipasang di langkah 1 runbook — MUST lebih dulu dari yang lain.
+# Installed at runbook step 1 — MUST come before anything else.
 #
-# bmad-help dan bmad-correct-course membaca {project_knowledge}. Selama ia menunjuk docs/,
-# keduanya membaca folder yang sudah dibubarkan.
+# bmad-help and bmad-correct-course read {project_knowledge}. As long as it points at docs/,
+# both read a folder that has already been dissolved.
 
 project_knowledge = "{project-root}/.control"

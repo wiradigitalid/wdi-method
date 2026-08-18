@@ -1,8 +1,9 @@
-# Kelas A — altitude initiative saja.
-# Spine memuat invariant yang mencegah unit yang dibangun terpisah jadi divergen.
-# Struktur (stack, tree, data shape) diperlakukan sebagai seed, bukan kontrak.
+# Class A — initiative altitude only.
+# The spine holds the invariants that keep separately built units from diverging.
+# Structure (stack, tree, data shapes) is treated as a seed, not a contract.
 #
-# Urutan mengikat: spine lebih dulu, bmad-spec membacanya sebagai companion — bukan sebaliknya.
+# Order binds: the spine comes first, and bmad-spec reads it as a companion — never the other
+# way round.
 
 [workflow]
 
@@ -10,22 +11,23 @@ spine_template     = "{project-root}/.constitution/document/templates/architectu
 spine_output_path  = "{project-root}/.how/_platform"
 run_folder_pattern = "architecture"
 
-# architecture-guide.md MUST NOT dipasang sebagai doc_standards, meski itu tempat lazimnya
-# bagi guide dokumen. Skill ini mengecualikan spine dari doc_standards secara sengaja —
-# customize.toml bawaannya menyebut "never to the spine", dan langkah 5 SKILL.md mengulanginya:
+# architecture-guide.md MUST NOT be installed as doc_standards, even though that is the usual
+# place for a document guide. This skill deliberately excludes the spine from doc_standards —
+# its own default customize.toml says "never to the spine", and SKILL.md step 5 repeats it:
 # "apply {workflow.doc_standards} polish to that prose only, never to the spine".
-# Dipasang di sana, aturan AD-N cuma memoles deck dan C4 — dokumen yang tidak punya AD-N —
-# sementara spine ditulis tanpa guide-nya. Karena itu ia jadi fakta yang dipegang sejak
-# aktivasi, bukan poles di akhir.
+# Installed there, the AD-N rule would only polish the deck and C4 — documents that carry no
+# AD-N — while the spine itself gets written with no guide at all. So it is installed as a
+# persistent fact, held from activation, rather than as end-of-run polish.
 #
-# doc_standards sengaja tidak diisi. Default BMad `skill:bmad-review lenses=structure,prose`
-# tetap berlaku untuk rendering, dan array ini append — mengosongkannya tidak mencabut default.
+# doc_standards is deliberately left empty. BMad's own default
+# `skill:bmad-review lenses=structure,prose` still applies to rendering, and this array appends —
+# emptying it does not remove the default.
 #
-# Akibatnya spine tidak punya review otomatis. `bmad-review` atasnya MUST dipanggil manual
-# sebelum G4 — lihat tabel "Siapa memanggil bmad-review" di 05-gates.md.
+# The consequence is that the spine gets no automatic review. `bmad-review` on it MUST be called
+# manually before G4 — see the "Who calls bmad-review" table in 05-gates.md.
 
 persistent_facts = [
   "file:{project-root}/.constitution/document/architecture-guide.md",
   "file:{project-root}/.constitution/document/decision-guide.md",
-  "Seluruh panggilan memlog.py MUST memakai --path {project-root}/.control/memlog/spine.md. --workspace MUST NOT dipakai.",
+  "Every memlog.py call MUST use --path {project-root}/.control/memlog/spine.md. --workspace MUST NOT be used.",
 ]

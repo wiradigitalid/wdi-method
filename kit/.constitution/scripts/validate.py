@@ -3,18 +3,18 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""validate — V1..V27 plus generator .control/generated/.
+"""validate — V1..V27 plus the .control/generated/ generator.
 
-Dua mode:
-    validate --check      keluar non-zero bila ada yang merah; tidak menulis apa pun
-    validate --generate   tulis ulang .control/generated/ (dan tetap menjalankan --check)
+Two modes:
+    validate --check      exit non-zero if anything is red; writes nothing
+    validate --generate   rewrite .control/generated/ (and still runs --check)
 
-Determinisme adalah kontraknya: dua run atas data yang sama MUST memberi hasil yang sama.
-Karena itu tidak ada iterasi tak berurut, dan satu-satunya masukan yang bergantung waktu
-(--asof, dipakai V14) dinyatakan eksplisit alih-alih diambil diam-diam dari jam dinding.
+Determinism is the contract: two runs over the same data MUST produce the same result.
+That is why there is no unordered iteration, and the one time-dependent input
+(--asof, used by V14) is stated explicitly instead of being taken silently from the wall clock.
 
-Yang TIDAK dikerjakan di sini: dimensi waktu dari git. `generated/timeline` dan
-`generated/report` milik wdi-report. Lihat 08-project-management.md.
+What is NOT done here: the time dimension from git. `generated/timeline` and
+`generated/report` belong to wdi-report. See 08-project-management.md.
 """
 
 from __future__ import annotations
@@ -29,11 +29,11 @@ from pathlib import Path
 
 import yaml
 
-REGISTRY = "control/registry"  # dirapikan di resolve(); '.control' dipakai sebenarnya
+REGISTRY = "control/registry"  # tidied up in resolve(); '.control' is what is actually used
 GENERATED_ORDER = ["components", "risks", "dag", "rtm", "status"]
 
-# Halaman yang dibaca MANUSIA, bukan mesin: ditulis sebagai tabel markdown sungguhan, bukan yaml
-# dalam fence. Ketiganya disebut §22 dan masing-masing punya satu pembaca yang jelas.
+# Pages read by HUMANS, not machines: written as real markdown tables, not yaml
+# in a fence. All three are named in §22 and each has one clear reader.
 GENERATED_PAGES = ["decisions", "blueprint", "estimate"]
 
 MODES = ("catalog", "outline", "guarded", "deep")
@@ -53,7 +53,7 @@ SENSITIVE_MARKERS = (
 )
 
 
-# ---------------------------------------------------------------- infrastruktur
+# ---------------------------------------------------------------- infrastructure
 
 
 @dataclass(frozen=True)
@@ -92,7 +92,7 @@ def load_yaml(path: Path) -> dict:
 
 
 def rows(data: dict, key: str) -> list[dict]:
-    """Registry list, selalu terurut menurut id supaya keluaran deterministik."""
+    """Registry list, always sorted by id so the output is deterministic."""
     value = data.get(key) or []
     if not isinstance(value, list):
         return []
@@ -104,7 +104,7 @@ FM = re.compile(r"\A---\s*\n(.*?)\n---\s*(\n|\Z)", re.S)
 
 
 class Dumper(yaml.SafeDumper):
-    """Tanpa anchor/alias: keluaran MUST bisa dibaca dan di-diff baris demi baris."""
+    """No anchors/aliases: output MUST be readable and diffable line by line."""
 
     def ignore_aliases(self, data) -> bool:  # noqa: ARG002
         return True
@@ -116,7 +116,7 @@ def dump(payload: dict) -> str:
 
 
 def frontmatter(path: Path) -> dict | None:
-    """None bila berkasnya tidak ada; {} bila ada tetapi tanpa frontmatter."""
+    """None if the file does not exist; {} if it exists but has no frontmatter."""
     if not path.exists():
         return None
     match = FM.match(path.read_text(encoding="utf-8", errors="replace"))
@@ -137,7 +137,7 @@ def git(root: Path, *args: str) -> str | None:
     return out.stdout.strip() if out.returncode == 0 else None
 
 
-# ------------------------------------------------------------------- pemuatan
+# ------------------------------------------------------------------- loading
 
 
 @dataclass
@@ -167,7 +167,7 @@ class Corpus:
             index=load_yaml(reg / "index.yaml"),
         )
 
-    # --- pintasan yang dipakai berulang
+    # --- shortcuts used repeatedly
     @property
     def goals(self) -> list[dict]:
         return rows(self.requirements, "goals")
@@ -193,7 +193,7 @@ class Corpus:
         return rows(self.decisions, "decisions")
 
     def mode_of(self, pc: dict) -> str:
-        """`mode` per komponen menang atas global; tanpa keduanya, default `catalog`."""
+        """Per-component `mode` wins over the global one; with neither, default `catalog`."""
         own = str(pc.get("mode") or "").strip()
         if own:
             return own
@@ -216,7 +216,7 @@ class Corpus:
         return rows(self.defects, "defects")
 
     def stories(self) -> list[tuple[dict, dict, dict]]:
-        """(wave, epic, story) — urut menurut id di tiap tingkat."""
+        """(wave, epic, story) — sorted by id at each level."""
         out = []
         for wave in self.wave_list:
             for epic in sorted(wave.get("epics") or [], key=lambda e: str(e.get("id", ""))):
@@ -235,18 +235,18 @@ def listy(row: dict, key: str) -> list[str]:
     return [str(v) for v in value if v is not None]
 
 
-# ------------------------------------------------------------------ validator
+# ------------------------------------------------------------------ validators
 
 
 def v1(c: Corpus, r: Result) -> None:
-    """Tiap BG punya >=1 FR lewat CAP-nya, ATAU menyatakan alasannya di `no_fr`.
+    """Every BG has >=1 FR through its CAP, OR states its reason in `no_fr`.
 
-    Sebuah sasaran MAY dipenuhi oleh **invarian**, bukan oleh fitur. `BG-6` — fondasi data dan
-    deployment dapat dilanjutkan tanpa dibongkar — diukur oleh dua sifat arsitektural yang `measure`-nya
-    sendiri sebut, dan tidak ada `FR` yang dapat memikulnya tanpa dikarang. Menuntut satu `FR` di sana
-    menghasilkan janji palsu, dan janji palsu lebih mahal daripada temuan.
+    A goal MAY be satisfied by an **invariant** rather than a feature. `BG-6` — the data and
+    deployment foundation can be extended without being torn down — is measured by two architectural
+    properties that its own `measure` names, and no `FR` can carry it without being invented. Demanding
+    one `FR` there produces a false promise, and a false promise is more expensive than a finding.
 
-    Escape-nya MUST membawa alasan, bukan boolean — bentuk yang sama dengan `no_uc` pada `FR` (V2).
+    The escape MUST carry a reason, not a boolean — the same shape as `no_uc` on `FR` (V2).
     """
     cap_by_goal: dict[str, list[str]] = {}
     for cap in c.caps:
@@ -259,7 +259,7 @@ def v1(c: Corpus, r: Result) -> None:
             continue
         if str(goal.get("no_fr") or "").strip():
             continue
-        r.fail("V1", gid, "tidak punya FR lewat CAP-nya dan tidak menyatakan alasan di `no_fr`")
+        r.fail("V1", gid, "has no FR through its CAP and states no reason in `no_fr`")
 
 
 def v2(c: Corpus, r: Result) -> None:
@@ -270,48 +270,48 @@ def v2(c: Corpus, r: Result) -> None:
             continue
         if str(fr.get("no_uc") or "").strip():
             continue
-        r.fail("V2", fid, "tidak punya UC dan tidak menyatakan alasan di `no_uc`")
+        r.fail("V2", fid, "has no UC and states no reason in `no_uc`")
 
 
 def v3(c: Corpus, r: Result) -> None:
-    """Sebuah UC pada komponen yang SUDAH disentuh sebuah wave MUST dijadwalkan story.
+    """A UC on a component that a wave has ALREADY touched MUST be scheduled to a story.
 
-    Bentuk lama menuntutnya atas SETIAP UC, kapan pun. Sebelum wave pertama itu berarti seluruh
-    katalog dilaporkan merah — 56 temuan dari 62, dan ke-56 itu keadaan yang benar, bukan drift:
-    story lahir di wave, dan belum ada wave. Sebuah validator yang menenggelamkan enam temuan nyata
-    di bawah lima puluh enam yang diharapkan berhenti dibaca, dan validator yang tidak dibaca tidak
-    menjaga apa pun.
+    The old shape demanded this of EVERY UC, at any time. Before the first wave that meant the
+    entire catalogue was reported red — 56 findings out of 62, and those 56 were the correct state,
+    not drift: a story is born in a wave, and there was no wave yet. A validator that drowns six real
+    findings under fifty-six expected ones stops being read, and a validator that is not read
+    guards nothing.
 
-    Yang dijaga sekarang adalah kelalaian yang sebenarnya: sebuah wave menyentuh komponen, dan sebuah
-    UC komponen itu tertinggal tanpa story. Cakupan penuh atas seluruh katalog adalah pertanyaan G5,
-    dan `wdi-build` yang memilikinya — sama seperti V12 yang digeser ke penutupan wave.
+    What is guarded now is the actual omission: a wave touches a component, and a UC of that
+    component is left behind without a story. Full coverage of the whole catalogue is a G5 question,
+    and `wdi-build` owns it — the same way V12 was shifted to wave closing.
     """
     scheduled = {uc for _, _, s in c.stories() for uc in listy(s, "satisfies")}
     touched = {str(s.get("component")) for _, _, s in c.stories() if s.get("component")}
     if not c.wave_list:
-        r.skip("V3", "belum ada wave, jadi belum ada story — tiap UC tak terjadwal adalah keadaan "
-                     "yang benar. Cakupan penuh katalog diperiksa di G5")
+        r.skip("V3", "no wave yet, so no story yet — every unscheduled UC is the correct "
+                     "state. Full catalogue coverage is checked at G5")
         return
     for uc in c.ucs:
         uid = str(uc.get("id"))
         if uid in scheduled or str(uc.get("component")) not in touched:
             continue
-        r.fail("V3", uid, f"komponen `{uc.get('component')}` sudah disentuh sebuah wave, "
-                          f"tetapi UC ini tidak dijadwalkan story mana pun")
+        r.fail("V3", uid, f"component `{uc.get('component')}` has already been touched by a wave, "
+                          f"but this UC is not scheduled to any story")
 
 
 def v4(c: Corpus, r: Result) -> None:
     for _, _, story in c.stories():
         if not [t for t in listy(story, "tests") if t.strip()]:
-            r.fail("V4", str(story.get("id")), "tidak punya satu pun test bernama")
+            r.fail("V4", str(story.get("id")), "has not one named test")
 
 
 def v5(c: Corpus, r: Result) -> None:
-    """Tiap NFR punya penegak, ATAU menyatakan alasannya di `no_enforcer`.
+    """Every NFR has an enforcer, OR states its reason in `no_enforcer`.
 
-    Dua NFR di repo ini tidak dapat punya penegak, dan keduanya sah: satu sudah **dicabut**, dan satu
-    lagi menyatakan sendiri bahwa ia **ukuran perancangan, bukan pagar**. Menuntut test untuk keduanya
-    menghasilkan test yang tidak mungkin gagal, dan test yang tidak mungkin gagal adalah teater.
+    Two NFRs in this repo cannot have an enforcer, and both are valid: one has already been
+    **retired**, and the other states of itself that it is a **design measure, not a gate**. Demanding
+    a test for both produces a test that cannot fail, and a test that cannot fail is theater.
     """
     for nfr in c.nfrs:
         if [e for e in listy(nfr, "enforced_by") if e.strip()]:
@@ -319,7 +319,7 @@ def v5(c: Corpus, r: Result) -> None:
         if str(nfr.get("no_enforcer") or "").strip():
             continue
         r.fail("V5", str(nfr.get("id")),
-               "tidak punya penegak di `enforced_by` dan tidak menyatakan alasan di `no_enforcer`")
+               "has no enforcer in `enforced_by` and states no reason in `no_enforcer`")
 
 
 def v6(c: Corpus, r: Result) -> None:
@@ -353,7 +353,7 @@ def v6(c: Corpus, r: Result) -> None:
 
     for owner, target in sorted(set(refs)):
         if target and target not in defined:
-            r.fail("V6", owner, f"menunjuk `{target}` yang tidak ada di registry mana pun")
+            r.fail("V6", owner, f"points to `{target}` which does not exist in any registry")
 
 
 def _cycles(graph: dict[str, list[str]]) -> list[str]:
@@ -378,25 +378,25 @@ def _cycles(graph: dict[str, list[str]]) -> list[str]:
 def v7(c: Corpus, r: Result) -> None:
     caps = {str(x.get("id")): listy(x, "depends_on") for x in c.caps}
     for node in _cycles(caps):
-        r.fail("V7", node, "ikut dalam siklus `depends_on` antar-CAP")
+        r.fail("V7", node, "is part of a `depends_on` cycle among CAPs")
     stories = {str(s.get("id")): listy(s, "depends_on") for _, _, s in c.stories()}
     for node in _cycles(stories):
-        r.fail("V7", node, "ikut dalam siklus `depends_on` antar-story")
+        r.fail("V7", node, "is part of a `depends_on` cycle among stories")
 
 
 def v8(c: Corpus, r: Result) -> None:
-    """Tiap keputusan `applied` menyebut `touches` yang tidak kosong.
+    """Every `applied` decision names a non-empty `touches`.
 
-    Menggantikan bentuk lama "tiap keputusan accepted melayani >=1 FR/NFR". Keputusan seperti
-    "filter harus begini" tidak melayani FR mana pun, dan itu SAH — justru keputusan seperti itu
-    yang paling perlu diingat, dan aturan lama menyingkirkannya.
+    Replaces the old shape "every accepted decision serves >=1 FR/NFR". A decision like
+    "the filter MUST work like this" serves no FR at all, and that is VALID — it is exactly
+    decisions like that which most need remembering, and the old rule discarded them.
     """
     for dec in c.decs:
         if str(dec.get("status")) != "applied":
             continue
         if not [x for x in listy(dec, "touches") if str(x).strip()]:
             r.fail("V8", str(dec.get("id")),
-                   "berstatus applied tetapi `touches` kosong — penerapan tanpa jejak berkas")
+                   "is applied but `touches` is empty — an application with no file trace")
 
 
 def v9(c: Corpus, r: Result) -> None:
@@ -408,7 +408,7 @@ def v9(c: Corpus, r: Result) -> None:
         gate = str(fm.get("locked_at_gate") or "")
         if gate not in passed:
             rel = path.relative_to(c.root).as_posix()
-            r.fail("V9", rel, f"berstatus locked tetapi gate `{gate or '?'}` tidak tercatat lulus")
+            r.fail("V9", rel, f"is locked but gate `{gate or '?'}` is not recorded as passed")
 
 
 def v11(c: Corpus, r: Result) -> None:
@@ -438,14 +438,14 @@ def v11(c: Corpus, r: Result) -> None:
                 if reaches(lid, rid) or reaches(rid, lid):
                     continue
                 r.fail("V11", f"{lid} + {rid}",
-                       f"berbagi touches {shared} tanpa relasi depends_on — MUST NOT paralel")
+                       f"share touches {shared} with no depends_on relation — MUST NOT run in parallel")
 
 
 def v12(c: Corpus, r: Result) -> None:
-    """Pendaftaran LC diperiksa saat wave DITUTUP, bukan sebelum story `ready-for-dev`.
+    """LC registration is checked when a wave CLOSES, not before a story goes `ready-for-dev`.
 
-    Bentuk lama menuntut jawabannya pada saat informasinya paling tipis. Di penutupan wave,
-    tiap `touches` sudah punya wilayah dan tiap boundary sudah punya nama.
+    The old shape demanded the answer when the information was thinnest. At wave closing,
+    every `touches` already has an area and every boundary already has a name.
     """
     areas = {str(lc.get("area")) for lc in c.lcs if lc.get("area")}
     lcs_per_pc: dict[str, int] = {}
@@ -460,8 +460,8 @@ def v12(c: Corpus, r: Result) -> None:
         for area in listy(story, "touches"):
             if area not in areas:
                 r.fail("V12", str(story.get("id")),
-                       f"wave-nya sudah ditutup, tetapi `{area}` tidak terdaftar sebagai `area` "
-                       f"di components.yaml")
+                       f"its wave is already closed, but `{area}` is not registered as an `area` "
+                       f"in components.yaml")
         pid = str(story.get("component") or "")
         row = pc_by_id.get(pid)
         if row is None or (str(wave.get("id")), pid) in seen:
@@ -469,8 +469,8 @@ def v12(c: Corpus, r: Result) -> None:
         seen.add((str(wave.get("id")), pid))
         if c.mode_of(row) in ("guarded", "deep") and not lcs_per_pc.get(pid):
             r.fail("V12", f"{wave.get('id')} / {pid}",
-                   f"wave tertutup dan komponen ber-mode `{c.mode_of(row)}` belum punya satu pun "
-                   f"`LC` terdaftar")
+                   f"wave closed and component with mode `{c.mode_of(row)}` has not one "
+                   f"`LC` registered")
 
 
 LENS_BY_RISK = {
@@ -483,24 +483,24 @@ FRONTMATTER_KEYS = ("reviewed:", "date:", "sha:", "lenses:", "updated:")
 
 def _reviewed_ok(r: Result, rel: str, block: object, need: set[str]) -> None:
     if not isinstance(block, dict) or not block.get("sha") or not block.get("date"):
-        r.fail("V13", rel, "tidak membawa jejak `reviewed` berisi date dan sha")
+        r.fail("V13", rel, "carries no `reviewed` trace with a date and sha")
         return
     lenses = {str(x) for x in (block.get("lenses") or [])}
     if not lenses:
-        r.fail("V13", rel, "jejak `reviewed` tidak menyebut satu lensa pun")
+        r.fail("V13", rel, "the `reviewed` trace names not one lens")
     missing = sorted(need - lenses)
     if missing:
         r.fail("V13", rel,
-               f"lensa {missing} MUST ikut — itu yang dituntut `risk_accepted` komponennya")
+               f"lenses {missing} MUST be included — that is what the component's `risk_accepted` demands")
 
 
 def _only_reviewed_block(diff: str) -> bool:
-    """True bila diff sebuah commit atas satu berkas HANYA menyentuh blok `reviewed:`.
+    """True if a commit's diff on one file ONLY touches the `reviewed:` block.
 
-    Inilah perbaikan OQ-146. V13 lama membandingkan `sha` dengan commit terakhir yang mengubah
-    berkasnya — tetapi commit yang MENULISKAN blok `reviewed:` selalu mengubah berkasnya, dan
-    menulis hash diri sendiri ke dalam sebuah commit git mustahil secara kriptografis. Akibatnya
-    setiap artefak yang baru distempel langsung terbaca "review basi", selamanya.
+    This is the OQ-146 fix. The old V13 compared `sha` against the last commit that changed
+    the file — but the commit that WRITES the `reviewed:` block always changes the file, and
+    writing its own hash into a git commit is cryptographically impossible. As a result every
+    artifact that had just been stamped immediately read as "stale review", forever.
     """
     touched = [ln for ln in diff.splitlines()
                if ln[:1] in "+-" and not ln.startswith("+++") and not ln.startswith("---")]
@@ -516,7 +516,7 @@ def _only_reviewed_block(diff: str) -> bool:
 
 
 def _stale_since(c: Corpus, rel: str, sha: str) -> str | None:
-    """Commit pertama sesudah `sha` yang mengubah berkas ini karena alasan selain stempel review."""
+    """First commit after `sha` that changes this file for a reason other than a review stamp."""
     log = git(c.root, "log", "--format=%H", f"{sha}..HEAD", "--", rel)
     if not log:
         return None
@@ -534,31 +534,31 @@ def _stale_since(c: Corpus, rel: str, sha: str) -> str | None:
 
 
 def v13(c: Corpus, r: Result) -> None:
-    """Jejak review mengikuti INTENSITAS review, bukan kedalaman dokumen.
+    """Review trace follows review INTENSITY, not document depth.
 
-    Dipersempit ke komponen ber-`risk_accepted` `low` atau `medium`. Pada `high` pemilik sudah
-    menyatakan menerima risikonya, dan menuntut jejak di situ adalah pembukuan tanpa pembeli.
+    Narrowed to components with `risk_accepted` `low` or `medium`. At `high` the owner has already
+    stated they accept the risk, and demanding a trace there is bookkeeping with no buyer.
     """
     watched = [pc for pc in c.pcs
                if str(pc.get("risk_accepted") or "").strip() in ("low", "medium")]
     if not watched:
-        r.skip("V13", "tidak ada komponen ber-risk_accepted low atau medium — tidak ada yang dijaga")
+        r.skip("V13", "no component with risk_accepted low or medium — nothing to guard")
     targets: list[tuple[Path, set[str]]] = []
     if watched:
         targets.append((c.root / ".how/_platform/ARCHITECTURE-SPINE.md", set()))
     for pc in watched:
         pid = str(pc.get("id"))
         need = LENS_BY_RISK.get(str(pc.get("risk_accepted")).strip(), set())
-        # SRS ada dan bermakna pada SETIAP mode: ia membawa Actor Register dan UC Catalogue, dan
-        # keduanya lahir di G3 yang tidak disentuh knob kedalaman.
+        # The SRS exists and is meaningful at EVERY mode: it carries the Actor Register and UC
+        # Catalogue, and both are born at G3, which the depth knob does not touch.
         targets.append((c.root / f".what/{pid}/SRS-{pid}.md", need))
-        # SDD hanya dijaga ketika ia PUNYA ISI untuk dijaga. Dua keadaan mengecualikannya, dan
-        # keduanya keadaan SELESAI bukan keadaan tertinggal:
-        #   mode: catalog        skeleton adalah bentuk akhirnya; G4 dilewati di situ
-        #   g4_passed belum ada  G4 belum dijalankan, jadi tidak ada satu bagian pun yang tertulis
-        # Menuntut jejak review atas berkas yang isinya 13 baris komentar template adalah teater —
-        # persis upacara yang rancang ulang ini cabut, dan review yang tidak mungkin gagal tidak
-        # membuktikan apa pun. Begitu G4 lewat, tuntutannya kembali dan ia bermakna.
+        # The SDD is guarded only when it HAS content worth guarding. Two states exempt it, and
+        # both are FINISHED states, not neglected ones:
+        #   mode: catalog        the skeleton is its final form; G4 is skipped there
+        #   g4_passed not set    G4 has not run yet, so not one section is written
+        # Demanding a review trace on a file whose content is 13 lines of template comments is
+        # theater — exactly the ceremony this redesign cut, and a review that cannot fail proves
+        # nothing. Once G4 passes, the demand comes back and it is meaningful.
         passed = str(pc.get("g4_passed") or "").strip().lower()
         if c.mode_of(pc) != "catalog" and passed not in ("", "false", "no", "belum"):
             targets.append((c.root / f".how/{pid}/SDD-{pid}.md", need))
@@ -566,7 +566,7 @@ def v13(c: Corpus, r: Result) -> None:
     for path, need in targets:
         fm = frontmatter(path)
         if fm is None:
-            continue  # belum lahir — bukan urusan V13
+            continue  # not born yet — not V13's business
         rel = path.relative_to(c.root).as_posix()
         _reviewed_ok(r, rel, fm.get("reviewed"), need)
         block = fm.get("reviewed")
@@ -574,8 +574,8 @@ def v13(c: Corpus, r: Result) -> None:
             stale = _stale_since(c, rel, str(block["sha"]))
             if stale:
                 r.fail("V13", rel,
-                       f"berubah di {stale[:7]} sesudah direview di {str(block['sha'])[:7]} — "
-                       f"review basi")
+                       f"changed at {stale[:7]} after being reviewed at {str(block['sha'])[:7]} — "
+                       f"stale review")
 
     for wave in c.wave_list:
         if not wave.get("epics"):
@@ -585,7 +585,7 @@ def v13(c: Corpus, r: Result) -> None:
 
 
 def cap_stories(c: Corpus) -> dict[str, list[dict]]:
-    """CAP -> story, ditelusuri CAP -> FR -> UC -> story. Tanpa git, tanpa timeline."""
+    """CAP -> story, traced through CAP -> FR -> UC -> story. No git, no timeline."""
     frs_of: dict[str, list[str]] = {}
     for fr in c.frs:
         frs_of.setdefault(str(fr.get("capability", "")), []).append(str(fr.get("id")))
@@ -603,14 +603,14 @@ def cap_stories(c: Corpus) -> dict[str, list[dict]]:
 
 
 def v14(c: Corpus, r: Result, asof: dt.date) -> None:
-    """Keterlambatan dihitung dari registry sendiri — timeline hanya memperkuat, bukan syarat."""
+    """Overdue-ness is computed from the registry itself — the timeline only reinforces, never gates."""
     by_cap = cap_stories(c)
     timeline = load_yaml(c.root / ".control/generated/timeline.yaml")
     listed = {str(row.get("id")) for row in rows(timeline, "capabilities")
               if str(row.get("state")) == "overdue"} if timeline else None
     if listed is None:
-        r.skip("V14", "generated/timeline.yaml belum ada — keterlambatan tetap dihitung "
-                      "dari registry, tetapi kehadirannya di generated/report tidak diperiksa")
+        r.skip("V14", "generated/timeline.yaml does not exist yet — overdue-ness is still computed "
+                      "from the registry, but its presence in generated/report is not checked")
 
     for cap in c.caps:
         cid = str(cap.get("id"))
@@ -620,7 +620,7 @@ def v14(c: Corpus, r: Result, asof: dt.date) -> None:
         try:
             due = dt.date.fromisoformat(end)
         except ValueError:
-            r.fail("V14", cid, f"`planned_end` `{end}` bukan tanggal ISO")
+            r.fail("V14", cid, f"`planned_end` `{end}` is not an ISO date")
             continue
         items = by_cap.get(cid, [])
         closed = bool(items) and all(_story_status(c, s) == "done" for s in items)
@@ -628,19 +628,19 @@ def v14(c: Corpus, r: Result, asof: dt.date) -> None:
             continue
         late = (asof - due).days
         if listed is not None and cid not in listed:
-            r.fail("V14", cid, f"lewat {late} hari tanpa realisasi, dan tidak disebut "
-                               f"`overdue` di generated/timeline")
+            r.fail("V14", cid, f"{late} days overdue with nothing delivered, and not flagged "
+                               f"`overdue` in generated/timeline")
         else:
-            r.fail("V14", cid, f"lewat {late} hari tanpa realisasi tertutup")
+            r.fail("V14", cid, f"{late} days overdue with nothing closed")
 
 
 def v15(c: Corpus, r: Result) -> None:
     for cap in c.caps:
         if not str(cap.get("goal") or "").strip():
-            r.fail("V15", str(cap.get("id")), "tidak menunjuk `goal`")
+            r.fail("V15", str(cap.get("id")), "does not point to a `goal`")
     for fr in c.frs:
         if not str(fr.get("capability") or "").strip():
-            r.fail("V15", str(fr.get("id")), "tidak menunjuk `capability`")
+            r.fail("V15", str(fr.get("id")), "does not point to a `capability`")
 
 
 def v16(c: Corpus, r: Result) -> None:
@@ -649,26 +649,26 @@ def v16(c: Corpus, r: Result) -> None:
         rel = path.relative_to(c.root).as_posix()
         artifact = str(fm.get("artifact") or "")
         if not artifact:
-            r.fail("V16", rel, "tidak punya `artifact:` di frontmatter")
+            r.fail("V16", rel, "has no `artifact:` in frontmatter")
         elif not (c.root / artifact).exists():
-            r.fail("V16", rel, f"`artifact:` menunjuk `{artifact}` yang tidak ada")
+            r.fail("V16", rel, f"`artifact:` points to `{artifact}` which does not exist")
     for layer in (".what", ".how"):
         for stray in sorted(c.root.glob(f"{layer}/**/.memlog.md")):
             r.fail("V16", stray.relative_to(c.root).as_posix(),
-                   "memlog MUST NOT tinggal di dalam korpus")
+                   "a memlog MUST NOT live inside the corpus")
 
 
 def v17(c: Corpus, r: Result) -> None:
     for wave in c.wave_list:
         wid = str(wave.get("id"))
         if not str(wave.get("release") or "").strip():
-            r.fail("V17", wid, "tidak menyebut `release`")
+            r.fail("V17", wid, "does not name a `release`")
         slugs = listy(wave, "prd")
         if not slugs:
-            r.fail("V17", wid, "tidak menyebut `prd`")
+            r.fail("V17", wid, "does not name a `prd`")
         for slug in slugs:
             if not (c.root / ".what/_prd" / slug).is_dir():
-                r.fail("V17", wid, f"`prd: {slug}` tidak punya folder .what/_prd/{slug}/")
+                r.fail("V17", wid, f"`prd: {slug}` has no folder .what/_prd/{slug}/")
 
 
 def v18(c: Corpus, r: Result) -> None:
@@ -676,22 +676,22 @@ def v18(c: Corpus, r: Result) -> None:
         sid = str(story.get("id"))
         folder = str(story.get("spec_folder") or "").strip()
         if not folder:
-            r.fail("V18", sid, "tidak menyebut `spec_folder`")
+            r.fail("V18", sid, "does not name a `spec_folder`")
             continue
         matches = sorted((c.root / folder / "stories").glob(f"{sid}-*.md"))
         if not matches:
-            r.fail("V18", sid, f"tidak punya story file di {folder}stories/")
+            r.fail("V18", sid, f"has no story file in {folder}stories/")
             continue
         fm = frontmatter(matches[0]) or {}
         if not str(fm.get("status") or "").strip():
-            r.fail("V18", sid, "story file tidak punya `status` di frontmatter")
+            r.fail("V18", sid, "story file has no `status` in frontmatter")
 
 
 def v19(c: Corpus, r: Result) -> None:
-    """Arsip retrospektif diikatkan ke UKURAN WAVE, bukan ke `mode`.
+    """The retrospective archive is tied to WAVE SIZE, not to `mode`.
 
-    Wajib pada wave `L`; advisory pada `S` dan `M`. Kedalaman dokumen dan volume kerja adalah dua
-    hal berbeda, dan menuntut retrospektif atas wave tiga story adalah upacara.
+    Mandatory on wave `L`; advisory on `S` and `M`. Document depth and volume of work are two
+    different things, and demanding a retrospective for a three-story wave is ceremony.
     """
     names = [x.name for x in sorted((c.root / ".control/reports").glob("RTR-*"))]
     advisory: list[str] = []
@@ -702,13 +702,13 @@ def v19(c: Corpus, r: Result) -> None:
         if any(wid in name for name in names):
             continue
         if str(wave.get("size")).upper() == "L":
-            r.fail("V19", wid, "wave `L` tertutup tanpa `RTR-` di .control/reports/")
+            r.fail("V19", wid, "wave `L` closed without an `RTR-` in .control/reports/")
         else:
             advisory.append(wid)
     if advisory:
-        r.skip("V19", "advisory — wave S/M tertutup tanpa RTR-: " + ", ".join(sorted(advisory)))
+        r.skip("V19", "advisory — wave S/M closed without an RTR-: " + ", ".join(sorted(advisory)))
     else:
-        r.skip("V19", "hanya baris RTR- yang diperiksa mekanis; sisa distilasi dijaga wdi-build")
+        r.skip("V19", "only the RTR- line item is checked mechanically; the rest of the distillation is guarded by wdi-build")
 
 
 PLATFORM = "_platform"
@@ -717,18 +717,18 @@ PLATFORM_DATA_HEADING = "Milik platform"
 
 
 def v21(c: Corpus, r: Result) -> None:
-    """Satu entitas domain punya TEPAT SATU pemilik yang berwenang menulisnya.
+    """One domain entity has EXACTLY ONE owner authorized to write it.
 
-    Pemiliknya sebuah Product Component, ATAU `_platform` untuk entitas yang tidak ada satu pun
-    janji komponen di belakangnya. Bentrokan semantik antar-PRD sudah pernah terjadi sungguhan: satu
-    komponen mengambil rentang penomoran business rule dari deret global milik bersama. Dua `FR`
-    yang mengklaim wewenang tulis atas entitas yang sama, tanpa salah satunya menunjuk yang lain,
-    adalah defect saat ditulis.
+    The owner is a Product Component, OR `_platform` for an entity with no single component
+    promise behind it. Semantic collisions across PRDs have already happened for real: one
+    component took a business-rule numbering range from a shared global sequence. Two `FR`s
+    that both claim write authority over the same entity, with neither pointing at the other,
+    are a defect the moment they are written.
 
-    `_platform` BUKAN Product Component dan karena itu tidak punya `mode`, `risk_accepted`, SRS,
-    maupun G4. Ia rumah kepemilikan, bukan irisan domain — dan supaya ia tidak jadi tempat
-    pembuangan, tiap entitas yang ia klaim MUST dijelaskan di `cross-cutting.md`: kalau platform
-    memiliki data, platform yang mendokumentasikannya.
+    `_platform` is NOT a Product Component and therefore has no `mode`, `risk_accepted`, SRS,
+    or G4. It is a home for ownership, not a domain slice — and so it does not become a dumping
+    ground, every entity it claims MUST be explained in `cross-cutting.md`: if the platform
+    owns the data, the platform documents it.
     """
     owner: dict[str, str] = {}
     for pc in c.pcs:
@@ -736,8 +736,8 @@ def v21(c: Corpus, r: Result) -> None:
         for entity in listy(pc, "owns"):
             if entity in owner and owner[entity] != pid:
                 r.fail("V21", entity,
-                       f"diklaim `owns` oleh `{owner[entity]}` dan `{pid}` — satu entitas MUST "
-                       f"punya tepat satu pemilik")
+                       f"claimed as `owns` by both `{owner[entity]}` and `{pid}` — one entity MUST "
+                       f"have exactly one owner")
             else:
                 owner.setdefault(entity, pid)
 
@@ -745,8 +745,8 @@ def v21(c: Corpus, r: Result) -> None:
     for entity in platform:
         if entity in owner:
             r.fail("V21", entity,
-                   f"diklaim `platform_owns` dan juga `owns` milik `{owner[entity]}` — "
-                   f"`{PLATFORM}` bukan jalan kedua bagi entitas yang sudah punya pemilik")
+                   f"claimed as `platform_owns` and also as `owns` by `{owner[entity]}` — "
+                   f"`{PLATFORM}` is not a second path for an entity that already has an owner")
         else:
             owner[entity] = PLATFORM
 
@@ -761,21 +761,21 @@ def v21(c: Corpus, r: Result) -> None:
             if not own or not home or own == home:
                 continue
             if own == PLATFORM:
-                # Platform tidak punya `FR`, jadi tidak ada yang bisa ditunjuk `defers_to`. Yang
-                # menggantikan "satu penulis" di sini adalah SATU BENTUK YANG TERDOKUMENTASI, dan
-                # itu diperiksa _platform_documented di atas.
+                # The platform has no `FR`, so there is nothing a `defers_to` could point to. What
+                # stands in for "one writer" here is ONE DOCUMENTED FORM, and that is what
+                # _platform_documented checks above.
                 continue
             if not [d for d in listy(fr, "defers_to") if str(d).strip()]:
                 r.fail("V21", fid,
-                       f"menjanjikan penulisan `{entity}` yang dimiliki `{own}`, tanpa `defers_to` "
-                       f"menunjuk `FR` milik pemiliknya")
+                       f"promises to write `{entity}` which `{own}` owns, without `defers_to` "
+                       f"pointing to an `FR` owned by that owner")
 
 
 def _platform_inventory_rows(c: Corpus) -> list[str]:
-    """Baris inventaris yang dimiliki `_platform`, dibaca dari `platform_rows:` tiap inventaris.
+    """Inventory rows owned by `_platform`, read from `platform_rows:` in each inventory.
 
-    `_platform` adalah nilai sah di SETIAP posisi kepemilikan, jadi penjaganya berlaku di setiap
-    posisi juga: apa pun yang ia miliki MUST terdokumentasi di `cross-cutting.md`.
+    `_platform` is a valid value at EVERY ownership position, so the guard applies at every
+    position too: whatever it owns MUST be documented in `cross-cutting.md`.
     """
     out: list[str] = []
     for kind in ("db", "api", "screen"):
@@ -788,31 +788,31 @@ def _platform_inventory_rows(c: Corpus) -> list[str]:
 
 
 def _platform_documented(c: Corpus, r: Result, entities: list[str]) -> None:
-    """Tiap entitas ber-`platform_owns` MUST disebut di `cross-cutting.md`.
+    """Every entity with `platform_owns` MUST be named in `cross-cutting.md`.
 
-    Dilewati selama berkasnya belum memuat bagian itu: `cross-cutting.md` adalah keluaran G3, dan
-    artefak yang gate berikutnya lahirkan MUST NOT dilaporkan hilang.
+    Skipped while the file does not yet carry that section: `cross-cutting.md` is a G3 output, and
+    an artifact the next gate will produce MUST NOT be reported missing.
     """
     if not entities:
         return
     path = c.root / CROSS_CUTTING
     text = path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
     if PLATFORM_DATA_HEADING.lower() not in text.lower():
-        r.skip("V21", f"`{CROSS_CUTTING}` belum punya bagian `{PLATFORM_DATA_HEADING}` — "
-                      f"{len(entities)} entitas ber-platform_owns belum terdokumentasi: "
+        r.skip("V21", f"`{CROSS_CUTTING}` has no `{PLATFORM_DATA_HEADING}` section yet — "
+                      f"{len(entities)} entities with platform_owns are not documented yet: "
                       + ", ".join(sorted(entities)))
         return
     for entity in sorted(entities):
         if entity not in text:
             r.fail("V21", entity,
-                   f"diklaim `platform_owns` tetapi tidak disebut di `{CROSS_CUTTING}` — "
-                   f"platform yang memiliki data MUST mendokumentasikannya")
+                   f"claimed as `platform_owns` but not named in `{CROSS_CUTTING}` — "
+                   f"a platform that owns data MUST document it")
 
 
 def v22(c: Corpus, r: Result) -> None:
-    """Sebuah wave MUST NOT menyentuh komponen yang G4-nya belum lewat dan mode-nya bukan catalog.
+    """A wave MUST NOT touch a component whose G4 has not passed and whose mode is not catalog.
 
-    `catalog` melewati G4 dengan sengaja, jadi ia bukan pengecualian — ia bagian aturannya.
+    `catalog` skips G4 on purpose, so it is not an exception — it is part of the rule.
     """
     pc_by_id = {str(x.get("id")): x for x in c.pcs}
     seen: set[tuple[str, str]] = set()
@@ -829,20 +829,20 @@ def v22(c: Corpus, r: Result) -> None:
         if mode == "catalog":
             continue
         if mode not in MODES:
-            r.fail("V22", pid, f"`mode: {mode}` bukan salah satu dari {list(MODES)}")
+            r.fail("V22", pid, f"`mode: {mode}` is not one of {list(MODES)}")
             continue
         passed = row.get("g4_passed")
         if not passed or str(passed).strip().lower() in ("false", "no", "belum"):
             r.fail("V22", f"{wave.get('id')} / {pid}",
-                   f"wave menyentuh komponen ber-mode `{mode}` yang `g4_passed`-nya belum diisi")
+                   f"wave touches a component with mode `{mode}` whose `g4_passed` has not been set")
 
 
 def v23(c: Corpus, r: Result) -> None:
-    """`risk_accepted: high` pada komponen sensitif menuntut sebuah `DEC-` di `risk_accepted_by`.
+    """`risk_accepted: high` on a sensitive component demands a `DEC-` in `risk_accepted_by`.
 
-    Pada komponen yang tidak menyentuh apa pun dari daftar itu, `high` GRATIS. Kontrolnya
-    pengungkapan, bukan veto — pemilik tetap boleh memilih cepat, tapi tidak tanpa tahu apa yang ia
-    taruhkan.
+    On a component that touches nothing on that list, `high` is FREE. The control is
+    disclosure, not veto — the owner may still choose quickly, just not without knowing what
+    they are wagering.
     """
     known = {str(x.get("id")) for x in c.decs}
     for pc in c.pcs:
@@ -856,10 +856,10 @@ def v23(c: Corpus, r: Result) -> None:
         ref = str(pc.get("risk_accepted_by") or "").strip()
         if not ref:
             r.fail("V23", pid,
-                   f"`risk_accepted: high` sementara `risk_note` menyebut {hits}, tanpa "
-                   f"`risk_accepted_by` menunjuk sebuah `DEC-` bertipe risk-acceptance")
+                   f"`risk_accepted: high` while `risk_note` mentions {hits}, without "
+                   f"`risk_accepted_by` pointing to a risk-acceptance `DEC-`")
         elif ref not in known:
-            r.fail("V23", pid, f"`risk_accepted_by: {ref}` tidak ada di decisions.yaml")
+            r.fail("V23", pid, f"`risk_accepted_by: {ref}` does not exist in decisions.yaml")
 
 
 def v20(c: Corpus, r: Result) -> None:
@@ -870,24 +870,25 @@ def v20(c: Corpus, r: Result) -> None:
         if cause not in needs_link:
             continue
         if not listy(defect, "violates"):
-            r.fail("V20", did, f"ber-root_cause `{cause}` tetapi `violates` kosong")
+            r.fail("V20", did, f"has `root_cause` `{cause}` but `violates` is empty")
         if str(defect.get("status")) == "fixed" and not str(defect.get("decision") or "").strip():
             r.fail("V20", did,
-                   f"ditutup sebagai fixed dengan root_cause `{cause}` tanpa `DEC-` yang menyertainya")
+                   f"closed as fixed with root_cause `{cause}` without an accompanying `DEC-`")
 
 
-# Berkas yang MENGGAMBARKAN masa lalu, bukan MENYATAKAN apa yang berlaku. Kutipan menggantung di sini
-# bukan temuan — corpus-guide.md memiliki aturannya, dan menulisnya ulang akan memalsukan riwayat.
+# Files that DESCRIBE the past, not STATE what currently holds. A dangling citation here is
+# not a finding — corpus-guide.md owns that rule, and rewriting it would falsify history.
 PAST_RECORD = (
     ".control/memlog/",
     ".control/decisions/",
     ".control/questions/answered.md",
     ".control/reports/",
 )
-# Korpus yang §25 bekukan apa adanya. Kutipannya ke prototipe yang sudah dipensiunkan disahkan DEC-016.
+# Corpus that §25 freezes as-is. Its citation of a now-retired prototype is authorized by DEC-016.
 FROZEN = (".what/",)
-# Path yang sebuah run LAHIRKAN, bukan yang sebuah dokumen kutip. Aturan yang menyatakan "memlog pass
-# ini mendarat di X" menyebut TUJUAN; menuntut X sudah ada berarti menuntut run-nya sudah jalan.
+# A path a run WILL PRODUCE, not one a document cites as existing. A rule stating "this pass's
+# memlog lands at X" names a DESTINATION; demanding X already exist would demand the run has already
+# happened.
 DESTINATION = (
     ".control/memlog/",
     ".control/meetings/",
@@ -901,16 +902,16 @@ CITE_RE = re.compile(
 
 
 def v24(c: Corpus, r: Result) -> None:
-    """Kutipan path di dalam dokumen yang MENYATAKAN apa yang berlaku MUST resolve.
+    """A path citation inside a document that STATES what currently holds MUST resolve.
 
-    Ini paruh mekanis dari Evidence check `wdi-reconcile`, dan ia satu-satunya cara mengetahui bahwa
-    sebuah migrasi tetap tuntas. Kelas kegagalannya khas: sebuah berkas dihapus atau dipindahkan,
-    sementara baris routing yang menunjuk ke arahnya tinggal — tidak ada satu pun validator lain yang
-    melihatnya, sebab tidak ada id yang bergerak.
+    This is the mechanical half of `wdi-reconcile`'s Evidence check, and it is the only way to know
+    that a migration stayed complete. Its failure class is distinctive: a file gets deleted or moved,
+    while the routing line that points at it stays behind — no other validator sees it, because no
+    id moved.
 
-    Yang DILEWATI dengan sengaja: berkas yang menggambarkan masa lalu, dan korpus yang dibekukan.
-    Sebuah Trace `DEC-` yang menyebut bahan yang sudah dipensiunkan menggambarkan apa yang dibaca pada
-    tanggal itu; melaporkannya akan menuntut riwayat ditulis ulang agar cocok dengan masa kini.
+    Deliberately SKIPPED: files that describe the past, and corpus that has been frozen. A `DEC-`
+    Trace that names material that has since been retired describes what was read on that date;
+    reporting it would demand history be rewritten to match the present.
     """
     scanned = 0
     for path in sorted(c.root.rglob("*.md")) + sorted(c.root.rglob("*.yaml")):
@@ -923,20 +924,20 @@ def v24(c: Corpus, r: Result) -> None:
         text = path.read_text(encoding="utf-8", errors="replace")
         for cited in sorted(set(CITE_RE.findall(text))):
             if "<" in cited or "{" in cited:
-                continue  # placeholder, bukan path
+                continue  # placeholder, not a path
             if cited.startswith(DESTINATION):
                 continue
             if not (c.root / cited).exists():
-                r.fail("V24", rel, f"mengutip `{cited}` yang tidak ada")
+                r.fail("V24", rel, f"cites `{cited}` which does not exist")
     if not scanned:
-        r.skip("V24", "tidak ada berkas yang dipindai")
+        r.skip("V24", "no file was scanned")
 
 
 CTR_HEADING = re.compile(r"^###\s+(.+?)\s*$", re.M)
 
 
 def map_container_headings(root: Path) -> list[str] | None:
-    """Heading `### x` di bawah `## Containers` pada peta kode. None bila petanya tidak ada."""
+    """Heading `### x` under `## Containers` in the code map. None if the map does not exist."""
     path = root / ".control" / "structure-codebase.md"
     if not path.exists():
         return None
@@ -952,70 +953,70 @@ def map_container_headings(root: Path) -> list[str] | None:
 
 
 def v25(c: Corpus, r: Result) -> None:
-    """`built` sebuah container dan keempat konsekuensinya, plus matriks PC x container.
+    """A container's `built` and its four consequences, plus the PC x container matrix.
 
-    Sebuah container ADA di dalam boundary entah kita yang menulis isinya atau bukan, dan itulah yang
-    dulu membuat aturannya tak bisa dipenuhi: `structure-guide.md` menuntut tiap heading peta kode cocok
-    dengan registry, sementara basis data dan web server MUST terdaftar dan MUST NOT punya heading.
-    `built` memisahkan keduanya, dan pemeriksaan ini yang membuat pemisahan itu berlaku alih-alih
-    diulang argumennya tiap proyek. `DEC-017` merekam definisinya.
+    A container EXISTS inside the boundary whether or not we write its content, and that is what
+    used to make the rule unsatisfiable: `structure-guide.md` demands every code-map heading match
+    the registry, while a database or web server MUST be registered and MUST NOT have a heading.
+    `built` separates the two, and this check is what makes that separation hold instead of the
+    argument being repeated on every project. `DEC-017` records its definition.
 
-    Yang runtime-nya bukan kita yang deploy adalah external system: ia hidup di C4 L1 dan MUST NOT
-    terdaftar di sini sama sekali — ketiadaannya di registry itulah pemeriksaannya.
+    Anything whose runtime we do not deploy is an external system: it lives in C4 L1 and MUST NOT
+    be registered here at all — its absence from the registry is the check.
     """
     containers = rows(c.components, "containers")
     if not containers:
-        r.skip("V25", "`containers:` belum terdaftar")
+        r.skip("V25", "`containers:` is not registered yet")
         return
 
     built: dict[str, bool] = {}
     for ctr in containers:
         cid = str(ctr.get("id") or "").strip()
         if not cid:
-            r.fail("V25", "containers", "ada container tanpa `id`")
+            r.fail("V25", "containers", "a container has no `id`")
             continue
         flag = ctr.get("built")
         if not isinstance(flag, bool):
-            r.fail("V25", cid, "`built` MUST bool — true bila isinya kita tulis, false bila implementasinya orang lain")
+            r.fail("V25", cid, "`built` MUST be a bool — true if we write its content, false if someone else implements it")
             continue
         built[cid] = flag
 
-    # (1) heading peta kode = TEPAT container `built: true`
+    # (1) code-map heading = EXACTLY a container with `built: true`
     headings = map_container_headings(c.root)
     if headings is None:
-        r.fail("V25", ".control/structure-codebase.md", "peta kode tidak ada, jadi heading container tidak dapat diadu")
+        r.fail("V25", ".control/structure-codebase.md", "the code map does not exist, so container headings cannot be compared")
     else:
         for h in headings:
             if h not in built:
-                r.fail("V25", f"peta kode §{h}", "heading bukan container terdaftar — daftarkan, atau ia bukan container")
+                r.fail("V25", f"code map §{h}", "heading is not a registered container — register it, or it is not a container")
             elif not built[h]:
-                r.fail("V25", f"peta kode §{h}", "`built: false` MUST NOT punya heading — tidak ada kode kita di dalamnya")
+                r.fail("V25", f"code map §{h}", "`built: false` MUST NOT have a heading — there is no code of ours inside it")
         for cid, flag in sorted(built.items()):
             if flag and cid not in headings:
-                r.fail("V25", cid, "`built: true` MUST punya heading di peta kode")
+                r.fail("V25", cid, "`built: true` MUST have a heading in the code map")
 
-    # (2) `built: false` MUST NOT dipakai sebuah LC, dan (3) MUST NOT muncul di `containers:` sebuah PC
+    # (2) `built: false` MUST NOT be used by an LC, and (3) MUST NOT appear in a PC's `containers:`
     for lc in c.lcs:
         ctr = str(lc.get("container") or "").strip()
         if ctr and built.get(ctr) is False:
-            r.fail("V25", str(lc.get("id") or "LC-?"), f"menyebut container `{ctr}` yang `built: false`")
+            r.fail("V25", str(lc.get("id") or "LC-?"), f"names container `{ctr}` which is `built: false`")
         elif ctr and ctr not in built:
-            r.fail("V25", str(lc.get("id") or "LC-?"), f"menyebut container `{ctr}` yang tidak terdaftar")
+            r.fail("V25", str(lc.get("id") or "LC-?"), f"names container `{ctr}` which is not registered")
 
-    # (4) matriks PC x container — SSOT-nya field ini, dan ia MUST lengkap di G3
+    # (4) PC x container matrix — this field is its SSOT, and it MUST be complete at G3
     for pc in c.pcs:
         pid = str(pc.get("id") or "?")
         listed = listy(pc, "containers")
         if not listed:
-            r.fail("V25", pid, "`containers:` kosong — tiap PC MUST hidup di setidaknya satu container (utang G3)")
+            r.fail("V25", pid, "`containers:` is empty — every PC MUST live in at least one container (a G3 debt)")
             continue
         for ctr in listed:
             if ctr not in built:
-                r.fail("V25", pid, f"`containers:` menyebut `{ctr}` yang tidak terdaftar")
+                r.fail("V25", pid, f"`containers:` names `{ctr}` which is not registered")
             elif not built[ctr]:
-                r.fail("V25", pid, f"`containers:` menyebut `{ctr}` yang `built: false` — data hidup di sana menurut definisi, jadi barisnya tidak memberi tahu apa pun")
+                r.fail("V25", pid, f"`containers:` names `{ctr}` which is `built: false` — the data lives there by definition, so the row tells us nothing")
 
-    # (5) L3 — hanya untuk `built: true`, dan hanya yang memuat lebih dari satu PC
+    # (5) L3 — only for `built: true`, and only ones that hold more than one PC
     pcs_per: dict[str, list[str]] = {}
     for pc in c.pcs:
         for ctr in listy(pc, "containers"):
@@ -1024,40 +1025,41 @@ def v25(c: Corpus, r: Result) -> None:
         cid = path.name[len("c4-l3-"):-len(".md")]
         if cid not in built:
             r.fail("V25", path.relative_to(c.root).as_posix(),
-                   f"L3 untuk `{cid}` yang bukan container terdaftar")
+                   f"L3 for `{cid}` which is not a registered container")
         elif not built[cid]:
             r.fail("V25", path.relative_to(c.root).as_posix(),
-                   f"`{cid}` `built: false` MUST NOT punya L3 — tak satu kotak di dalamnya kita yang gambar")
+                   f"`{cid}` `built: false` MUST NOT have an L3 — not one box inside it is ours to draw")
     for cid, pids in sorted(pcs_per.items()):
         if built.get(cid) and len(pids) > 1:
             l3 = c.root / ".how" / "_platform" / f"c4-l3-{cid}.md"
             if not l3.exists():
-                r.fail("V25", cid, f"memuat {len(pids)} PC, jadi `c4-l3-{cid}.md` MUST ada")
+                r.fail("V25", cid, f"holds {len(pids)} PCs, so `c4-l3-{cid}.md` MUST exist")
 
 
 UC_ROW_RE = re.compile(r"^\|\s*(UC-\d+)\s*\|([^\n]*)$", re.M)
 
-# Nilai kolom `critical` dicocokkan mesin, jadi ia machine-facing dan bentuk kanoniknya English `yes`.
-# `ya` tetap diterima: sebuah korpus yang menulisnya sebelum aturan ini berlaku MUST NOT dipaksa migrasi
-# hanya supaya sebuah regex lebih rapi. Batas kata mencegah `ya` mencocoki kata lain.
+# The `critical` column value is machine-matched, so it is machine-facing and its canonical form
+# is English `yes`. `ya` is still accepted: a corpus that wrote it before this rule took effect
+# MUST NOT be forced to migrate just so a regex can be tidier. The word boundary keeps `ya` from
+# matching inside other words.
 CRITICAL_YES = re.compile(r"\b(yes|ya)\b", re.I)
 
 
 def v26(c: Corpus, r: Result) -> None:
-    """Katalog UC di tiap SRS MUST sepakat dengan `usecases.yaml` — id-nya DAN `critical`-nya.
+    """The UC catalogue in every SRS MUST agree with `usecases.yaml` — both its id AND its `critical`.
 
-    Ini celah yang paling mahal dari semua yang ditutup lintasan ini, sebab ia satu-satunya yang
-    **sudah terjadi dan tidak satu pun validator melihatnya.** Step 16 menurunkan ulang `critical`
-    di registry dengan definisi yang dipersempit — uang, data pribadi, tindakan tak-terbalikkan — dan
-    ketujuh tabel katalog di SRS tidak ikut. Dua puluh enam baris berselisih, dan selisihnya baru
-    ketahuan ketika seorang manusia membaca kalimat "sembilan di antaranya critical" di SRS-admin
-    sementara registry menyimpan tiga.
+    This is the most expensive gap this pass closes, because it is the only one that **had already
+    happened and no validator saw it.** Step 16 re-derived `critical` in the registry with a
+    narrowed definition — money, personal data, irreversible action — and the seven catalogue tables
+    in the SRS did not follow along. Twenty-six rows disagreed, and the disagreement was only
+    discovered when a human read the sentence "nine of these are critical" in SRS-admin while the
+    registry held three.
 
-    Registry-nya SSOT. Tabel di SRS adalah rumah permanen katalog untuk seorang pembaca, dan dua rumah
-    untuk satu fakta hanya aman kalau ada yang mengadu keduanya. Ini yang mengadu.
+    The registry is the SSOT. The table in the SRS is the catalogue's permanent home for a reader,
+    and two homes for one fact are only safe if something compares them. This is what compares them.
 
-    Yang TIDAK diperiksa di sini: judul dan aktor. Keduanya prosa, dan prosa yang berbeda kata bukan
-    prosa yang berbeda arti — mengadunya akan melaporkan gaya sebagai cacat.
+    What is NOT checked here: title and actor. Both are prose, and prose with different words is
+    not prose with a different meaning — comparing them would report style as a defect.
     """
     reg = {str(uc.get("id")): bool(uc.get("critical")) for uc in c.ucs}
     reg_pc = {str(uc.get("id")): str(uc.get("component") or "") for uc in c.ucs}
@@ -1077,11 +1079,11 @@ def v26(c: Corpus, r: Result) -> None:
                 continue
             seen.add(uid)
             if uid not in reg:
-                r.fail("V26", f"{pid}/{uid}", "ada di katalog SRS tetapi tidak di `usecases.yaml`")
+                r.fail("V26", f"{pid}/{uid}", "is in the SRS catalogue but not in `usecases.yaml`")
                 continue
             if reg_pc[uid] != pid:
                 r.fail("V26", f"{pid}/{uid}",
-                       f"registry menaruhnya di `{reg_pc[uid]}`, bukan di komponen ini")
+                       f"the registry places it in `{reg_pc[uid]}`, not in this component")
             marked = CRITICAL_YES.search(cells[3]) is not None
             if marked != reg[uid]:
                 r.fail("V26", f"{pid}/{uid}",
@@ -1089,58 +1091,58 @@ def v26(c: Corpus, r: Result) -> None:
                        f"in the registry {'yes' if reg[uid] else 'no'}")
         for uid, owner in sorted(reg_pc.items()):
             if owner == pid and uid not in seen:
-                r.fail("V26", f"{pid}/{uid}", "ada di `usecases.yaml` tetapi tidak di katalog SRS")
+                r.fail("V26", f"{pid}/{uid}", "is in `usecases.yaml` but not in the SRS catalogue")
     if not checked:
-        r.skip("V26", "tidak ada SRS yang dapat dibaca")
+        r.skip("V26", "no SRS could be read")
 
 
 def v27(c: Corpus, r: Result) -> None:
-    """Tiap berkas di kamar custom MUST menyatakan dirinya, dan pembantahan MUST punya keputusan.
+    """Every file in the custom room MUST declare itself, and a rebuttal MUST have a decision.
 
-    Kamar `.constitution/project/` ada supaya aturan khusus produk punya rumah yang `update` tidak
-    timpa dan `promote` tidak terbitkan. Ongkos yang datang bersamanya: ia juga tempat paling mudah
-    untuk melanggar aturan generic tanpa jejak. Frontmatter-nya yang menahan itu.
+    The `.constitution/project/` room exists so product-specific rules have a home that `update`
+    does not overwrite and `promote` does not publish. The cost that comes with it: it is also the
+    easiest place to break a generic rule without a trace. Its frontmatter is what holds that back.
 
-    Sebuah berkas di sini MAY mempersempit atau menambah tanpa menyebut apa pun. Untuk MEMBANTAH
-    aturan generic ia MUST menyebutnya di `overrides:` dan membawa `decision:` — sebab metode yang
-    boleh dibantah tanpa keputusan berhenti dapat dipercaya di repo berikutnya.
+    A file here MAY narrow or add without naming anything. To REBUT a generic rule it MUST name it
+    in `overrides:` and carry a `decision:` — because a method that can be rebutted without a
+    decision stops being trustworthy in the next repo.
 
-    `README.md` kamar dilewati: ia dikarang di paket, bukan di produk.
+    The room's `README.md` is skipped: it is authored in the package, not in the product.
     """
     room = c.root / ".constitution" / "project"
     if not room.is_dir():
-        r.skip("V27", "kamar `.constitution/project/` belum ada — ia disemai saat install")
+        r.skip("V27", "the `.constitution/project/` room does not exist yet — it is seeded at install")
         return
     files = [p for p in sorted(room.rglob("*.md")) if p.name != "README.md"]
     if not files:
-        r.skip("V27", "kamar `.constitution/project/` kosong, dan itu keadaan yang sah — "
-                      "aturan generic MUST NOT dipindahkan ke sini supaya kamarnya terpakai")
+        r.skip("V27", "the `.constitution/project/` room is empty, and that is a valid state — "
+                      "a generic rule MUST NOT be moved here just to give the room content")
         return
     dec_ids = {str(d.get("id")) for d in c.decs}
     for path in files:
         rel = path.relative_to(c.root).as_posix()
         fm = frontmatter(path)
         if fm is None:
-            r.fail("V27", rel, "tidak punya frontmatter")
+            r.fail("V27", rel, "has no frontmatter")
             continue
         if str(fm.get("scope") or "").strip() != "project":
-            r.fail("V27", rel, "`scope:` MUST berisi tepat `project`")
+            r.fail("V27", rel, "`scope:` MUST contain exactly `project`")
         if not str(fm.get("purpose") or "").strip():
-            r.fail("V27", rel, "`purpose:` kosong — satu baris: aturan ini menjaga apa")
+            r.fail("V27", rel, "`purpose:` is empty — one line: what this rule guards")
         over = str(fm.get("overrides") or "").strip()
         dec = str(fm.get("decision") or "").strip()
         if over:
             if not (c.root / over).exists():
-                r.fail("V27", rel, f"`overrides:` menunjuk `{over}` yang tidak ada — "
-                                   f"aturan yang dibantah mungkin sudah hilang")
+                r.fail("V27", rel, f"`overrides:` points to `{over}` which does not exist — "
+                                   f"the rebutted rule may already be gone")
             if not dec:
-                r.fail("V27", rel, "membantah aturan generic tanpa `decision:` — "
-                                   "pembantahan MUST punya `DEC-` yang memutuskannya")
+                r.fail("V27", rel, "rebuts a generic rule without `decision:` — "
+                                   "a rebuttal MUST have a `DEC-` that decided it")
             elif dec not in dec_ids:
-                r.fail("V27", rel, f"`decision: {dec}` tidak terdaftar di decisions.yaml")
+                r.fail("V27", rel, f"`decision: {dec}` is not registered in decisions.yaml")
         elif dec:
-            r.fail("V27", rel, "`decision:` terisi tanpa `overrides:` — "
-                               "sebutkan aturan mana yang dibantah, atau cabut `decision:`")
+            r.fail("V27", rel, "`decision:` is set without `overrides:` — "
+                               "name which rule is rebutted, or drop `decision:`")
 
 
 def run_checks(c: Corpus, asof: dt.date) -> Result:
@@ -1204,7 +1206,7 @@ def gen_dag(c: Corpus) -> dict:
         waves_out = []
         while pending:
             ready = sorted(k for k, deps in pending.items() if not (deps - done))
-            if not ready:  # siklus — V7 sudah melaporkannya
+            if not ready:  # cycle — V7 has already reported it
                 waves_out.append({"blocked": sorted(pending)})
                 break
             waves_out.append({"parallel": ready})
@@ -1278,25 +1280,25 @@ def gen_status(c: Corpus, rtm: dict, result: Result) -> dict:
         done = sum(1 for s in items if _story_status(c, s) == "done")
         per_wave.append({"wave": wid, "status": wave.get("status"),
                          "stories_done": done, "stories_total": len(items),
-                         "progres_kerja": _pct(done, len(items))})
-    applicable = 26  # V1..V27 tanpa V10 yang gugur
+                         "work_progress": _pct(done, len(items))})
+    applicable = 26  # V1..V27 minus V10, which was retired
     return {
-        "progres_janji": _pct(green, len(counted)),
-        "baris_rtm": {"hijau": green, "dihitung": len(counted),
-                      "dikecualikan_no_uc": exempt},
-        "progres_kerja": per_wave,
-        "kesiapan_gate": _pct(applicable - len(result.red), applicable),
-        "validator_merah": result.red,
-        "validator_dilewati": dict(sorted(result.skipped.items())),
-        "pertanyaan_terbuka": _question_budget(c),
+        "promise_progress": _pct(green, len(counted)),
+        "rtm_rows": {"green": green, "counted": len(counted),
+                      "excluded_no_uc": exempt},
+        "work_progress": per_wave,
+        "gate_readiness": _pct(applicable - len(result.red), applicable),
+        "validators_red": result.red,
+        "validators_skipped": dict(sorted(result.skipped.items())),
+        "open_questions": _question_budget(c),
     }
 
 
 def _question_budget(c: Corpus) -> dict:
-    """Hitungan keempat daftar pertanyaan, diadu dengan jatah di index.yaml.
+    """Counts of all four question lists, compared against the budget in index.yaml.
 
-    Jatahnya BUKAN pagar keras. Ia yang dilaporkan ketika sebuah batch melewatinya, karena batch
-    yang lebih besar adalah sinyal tentang lintasannya, bukan tentang korpus.
+    The budget is NOT a hard gate. It is reported when a batch exceeds it, because a larger
+    batch is a signal about the pass, not about the corpus.
     """
     budget = c.index.get("question_budget") or {}
     out: dict[str, object] = {}
@@ -1310,11 +1312,11 @@ def _question_budget(c: Corpus) -> dict:
     cap_block = budget.get("blocking_per_component")
     if cap_block and c.pcs:
         allowed = int(cap_block) * len(c.pcs)
-        out["blocking_jatah"] = allowed
-        out["blocking_lewat_jatah"] = out["blocking"] > allowed
+        out["blocking_budget"] = allowed
+        out["blocking_over_budget"] = out["blocking"] > allowed
     cap_assume = budget.get("assumptions_per_gate")
     if cap_assume:
-        out["assumptions_jatah_per_gate"] = int(cap_assume)
+        out["assumptions_budget_per_gate"] = int(cap_assume)
     return out
 
 
@@ -1325,19 +1327,19 @@ def _pct(part: int, total: int) -> str:
 def as_markdown(name: str, payload: dict) -> str:
     body = dump(payload)
     return (f"# {name}\n\n"
-            f"> Tergenerate oleh `.constitution/scripts/validate --generate`. "
-            f"MUST NOT diedit tangan.\n\n"
+            f"> Generated by `.constitution/scripts/validate --generate`. "
+            f"MUST NOT be hand-edited.\n\n"
             f"```yaml\n{body}```\n")
 
 
-# ------------------------------------------------------- halaman untuk manusia
+# ------------------------------------------------------- pages for humans
 
-PAGE_HEADER = ("> Tergenerate oleh `.constitution/scripts/validate --generate`. "
-               "MUST NOT diedit tangan.\n")
+PAGE_HEADER = ("> Generated by `.constitution/scripts/validate --generate`. "
+               "MUST NOT be hand-edited.\n")
 
 
 def _section(path: Path, heading: str) -> str:
-    """Ambil satu bagian `## <heading>` dari sebuah berkas markdown, apa adanya."""
+    """Extract one `## <heading>` section from a markdown file, as-is."""
     if not path.exists():
         return ""
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -1355,7 +1357,7 @@ def _section(path: Path, heading: str) -> str:
 
 
 def _body(path: Path) -> str:
-    """Isi berkas tanpa frontmatter dan tanpa komentar template."""
+    """File content without frontmatter and without template comments."""
     if not path.exists():
         return ""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -1370,8 +1372,8 @@ def _body(path: Path) -> str:
 
 
 def page_decisions(c: Corpus) -> str:
-    """Tabel rata seluruh `DEC-`. Ini yang menggantikan mencari keputusan lewat memlog."""
-    rows_out = ["| id | Judul | Status | Tipe | Menyentuh | Berkas |",
+    """Flat table of every `DEC-`. This is what replaces looking up decisions through the memlog."""
+    rows_out = ["| id | Title | Status | Type | Touches | File |",
                 "| --- | --- | --- | --- | --- | --- |"]
     for dec in c.decs:
         touches = ", ".join(f"`{x}`" for x in listy(dec, "touches")) or "—"
@@ -1382,65 +1384,65 @@ def page_decisions(c: Corpus) -> str:
     for dec in c.decs:
         key = str(dec.get("status"))
         counts[key] = counts.get(key, 0) + 1
-    tally = " · ".join(f"{k}: {v}" for k, v in sorted(counts.items())) or "belum ada keputusan"
+    tally = " · ".join(f"{k}: {v}" for k, v in sorted(counts.items())) or "no decisions yet"
     return ("# decisions\n\n" + PAGE_HEADER +
-            "\nMencari keputusan tidak lagi lewat memlog — memlog kembali jadi log lintasan saja.\n"
-            f"\n**{len(c.decs)} keputusan** — {tally}.\n\n" + "\n".join(rows_out) + "\n")
+            "\nDecisions are no longer looked up through the memlog — the memlog goes back to being just a pass log.\n"
+            f"\n**{len(c.decs)} decisions** — {tally}.\n\n" + "\n".join(rows_out) + "\n")
 
 
 def page_blueprint(c: Corpus) -> str:
-    """Roll-up satu halaman yang di-review di G3. Tujuh berkas jadi satu bacaan.
+    """One-page roll-up reviewed at G3. Seven files become one read.
 
-    Katalog UC, daftar aktor, dan model domain tetap tinggal di kernel komponennya masing-masing
-    sebagai rumah permanennya. Ini tampilannya. Satu fakta, satu rumah, satu tampilan.
+    The UC catalogue, actor list, and domain model stay put in their own component's kernel as
+    their permanent home. This is their view. One fact, one home, one view.
     """
     parts = ["# blueprint\n", PAGE_HEADER,
-             "\nIni yang dibaca pemilik di **G3 Blueprint**, bukan tujuh berkas. Isinya tidak "
-             "dipengaruhi `mode` maupun `risk_accepted`.\n"]
+             "\nThis is what the owner reads at **G3 Blueprint**, instead of seven files. Its "
+             "content is affected by neither `mode` nor `risk_accepted`.\n"]
 
     crit = sum(1 for uc in c.ucs if uc.get("critical"))
-    parts.append(f"\n## Katalog use case\n\n**{len(c.ucs)} use case**, {crit} bertanda "
+    parts.append(f"\n## Use case catalogue\n\n**{len(c.ucs)} use cases**, {crit} marked "
                  f"`critical`.\n")
-    parts.append("| id | Use case | Komponen | Memenuhi | critical |")
+    parts.append("| id | Use case | Component | Satisfies | critical |")
     parts.append("| --- | --- | --- | --- | --- |")
     for uc in c.ucs:
         sat = ", ".join(f"`{x}`" for x in listy(uc, "satisfies")) or "—"
-        flag = "ya" if uc.get("critical") else "tidak"
+        flag = "yes" if uc.get("critical") else "no"
         parts.append(f"| `{uc.get('id')}` | {_cell(uc.get('title'))} | "
                      f"`{uc.get('component', '')}` | {sat} | {flag} |")
 
-    parts.append("\n## Daftar aktor\n")
+    parts.append("\n## Actor list\n")
     for pc in c.pcs:
         pid = str(pc.get("id"))
         block = _section(c.root / f".what/{pid}/SRS-{pid}.md", "Actor Register")
         parts.append(f"\n### {pid} — {pc.get('name', '')}\n")
         parts.append(_demote(block) if block
-                     else "_belum ada § Actor Register di SRS komponen ini._")
+                     else "_no § Actor Register in this component's SRS yet._")
 
-    parts.append("\n## Model domain\n")
+    parts.append("\n## Domain model\n")
     for pc in c.pcs:
         pid = str(pc.get("id"))
         block = _body(c.root / f".what/{pid}/03-domain/domain-model.md")
         parts.append(f"\n### {pid}\n")
-        parts.append(_demote(block) if block else "_belum ada `03-domain/domain-model.md`._")
+        parts.append(_demote(block) if block else "_no `03-domain/domain-model.md` yet._")
 
-    parts.append("\n## Tiga inventaris\n")
-    for kind, name in (("db", "tabel"), ("api", "endpoint"), ("screen", "layar")):
+    parts.append("\n## Three inventories\n")
+    for kind, name in (("db", "table"), ("api", "endpoint"), ("screen", "screen")):
         block = _body(c.root / f".how/_platform/inventory-{kind}.md")
-        parts.append(f"\n### Daftar {name} — `inventory-{kind}.md`\n")
-        parts.append(_demote(block) if block else f"_belum ada `inventory-{kind}.md`._")
+        parts.append(f"\n### List of {name}s — `inventory-{kind}.md`\n")
+        parts.append(_demote(block) if block else f"_no `inventory-{kind}.md` yet._")
 
     return "\n".join(parts) + "\n"
 
 
 def _cell(value: object, limit: int = 110) -> str:
-    """Satu baris tabel, dipendekkan. Sumber panjangnya tetap di registry — ini tampilan."""
+    """One table row, shortened. The full-length source stays in the registry — this is just a view."""
     text = " ".join(str(value or "").split()).replace("|", "\\|")
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
 
 
 def _demote(block: str, by: int = 2) -> str:
-    """Turunkan tingkat heading isi yang di-inline, supaya ia tidak menabrak kerangka roll-up."""
+    """Demote the heading level of inlined content, so it does not clash with the roll-up's own structure."""
     out = []
     for line in block.splitlines():
         stripped = line.lstrip()
@@ -1453,7 +1455,7 @@ def _demote(block: str, by: int = 2) -> str:
 
 
 def page_estimate(c: Corpus) -> str:
-    """Tabel task KANDIDAT. Satu baris per `FR`, karena itu bentuk ideal sebuah wave."""
+    """Table of CANDIDATE tasks. One row per `FR`, since that is a wave's ideal shape."""
     mode_of = {str(pc.get("id")): c.mode_of(pc) for pc in c.pcs}
     risk_of = {str(pc.get("id")): (str(pc.get("risk_accepted") or "—"),
                                    str(pc.get("risk_note") or "—")) for pc in c.pcs}
@@ -1465,22 +1467,22 @@ def page_estimate(c: Corpus) -> str:
 
     have_mandays = any(x.get("estimate_mandays") for x in c.caps)
     parts = ["# estimate\n", PAGE_HEADER,
-             "\n**INI ESTIMASI, MENGHADAP KE DEPAN.** Tiap baris di bawah adalah task "
-             "**kandidat**; wave di `waves.yaml` yang nyata. Satu baris MAY jadi satu wave, dan tiga "
-             "baris bertetangga MAY digabung jadi satu — penggabungan itu keputusan manusia saat wave "
-             "dibuka.\n"]
+             "\n**THIS IS AN ESTIMATE, FORWARD-LOOKING.** Every row below is a **candidate** "
+             "task; the wave in `waves.yaml` is the real one. One row MAY become one wave, and three "
+             "neighboring rows MAY be merged into one — that merge is a human decision made when the "
+             "wave is opened.\n"]
     if not have_mandays:
-        parts.append("\n**Tanpa `estimate_mandays` pada satu pun `CAP`**, kolom Beban kosong dan "
-                     "keluaran ini setara ukuran kelas T-shirt. Ia MUST dilaporkan sebagai itu.\n")
+        parts.append("\n**With no `estimate_mandays` on a single `CAP`**, the Load column is empty and "
+                     "this output is only as good as a T-shirt-size estimate. It MUST be reported as such.\n")
 
-    parts.append("\n| Task | FR | Epic | mode | Paparan | Beban | Prioritas | Bergantung | Rilis |")
+    parts.append("\n| Task | FR | Epic | mode | Exposure | Load | Priority | Depends on | Release |")
     parts.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for fr in c.frs:
         cap_id = str(fr.get("capability", ""))
         cap = cap_by_id.get(cap_id, {})
         pid = str(fr.get("component") or cap.get("component") or "")
         risk, note = risk_of.get(pid, ("—", "—"))
-        exposure = "belum disetel" if risk == "—" else f"`{risk}` — {_cell(note, 60)}"
+        exposure = "not set yet" if risk == "—" else f"`{risk}` — {_cell(note, 60)}"
         mandays = cap.get("estimate_mandays")
         share = "—"
         if mandays:
@@ -1516,8 +1518,8 @@ def generate(c: Corpus, result: Result) -> list[Path]:
         md_path.write_text(as_markdown(name, payload), encoding="utf-8")
         written += [yaml_path, md_path]
 
-    # Tiga halaman untuk MANUSIA: tabel markdown sungguhan, tanpa kembar .yaml. Yang dibaca orang
-    # tidak dibungkus fence yaml, dan tidak ada pembaca mesin yang menuntut versi keduanya.
+    # Three pages for HUMANS: real markdown tables, with no .yaml twin. What people read is
+    # not wrapped in a yaml fence, and no machine reader demands a second version of it.
     for name, render in (("decisions", page_decisions),
                          ("blueprint", page_blueprint),
                          ("estimate", page_estimate)):
@@ -1532,15 +1534,15 @@ def generate(c: Corpus, result: Result) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="validate", description="V1..V27 dan generator .control/generated/")
+        prog="validate", description="V1..V27 and the .control/generated/ generator")
     parser.add_argument("--check", action="store_true",
-                        help="periksa saja; keluar non-zero bila ada yang merah")
+                        help="check only; exit non-zero if anything is red")
     parser.add_argument("--generate", action="store_true",
-                        help="tulis ulang .control/generated/ (tetap memeriksa lebih dulu)")
-    parser.add_argument("--root", default=".", help="akar repo (default: direktori sekarang)")
+                        help="rewrite .control/generated/ (still runs the check first)")
+    parser.add_argument("--root", default=".", help="repo root (default: current directory)")
     parser.add_argument("--asof", default=None,
-                        help="tanggal acuan V14, format YYYY-MM-DD (default: hari ini). "
-                             "Dinyatakan eksplisit supaya run bisa diulang persis")
+                        help="reference date for V14, format YYYY-MM-DD (default: today). "
+                             "Stated explicitly so a run can be repeated exactly")
     args = parser.parse_args(argv)
 
     if not args.check and not args.generate:
@@ -1548,7 +1550,7 @@ def main(argv: list[str] | None = None) -> int:
 
     root = Path(args.root).resolve()
     if not (root / ".control" / "registry").is_dir():
-        print(f"validate: {root} tidak punya .control/registry/ — salah akar repo?", file=sys.stderr)
+        print(f"validate: {root} has no .control/registry/ — wrong repo root?", file=sys.stderr)
         return 2
 
     asof = dt.date.fromisoformat(args.asof) if args.asof else dt.date.today()
@@ -1557,21 +1559,21 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.generate:
         for path in generate(corpus, result):
-            print(f"  tulis {path.relative_to(root).as_posix()}")
+            print(f"  wrote {path.relative_to(root).as_posix()}")
 
     if result.findings:
-        print(f"\nMERAH — {len(result.findings)} temuan di {len(result.red)} validator\n")
+        print(f"\nRED — {len(result.findings)} findings across {len(result.red)} validators\n")
         for finding in sorted(result.findings, key=lambda f: f.sort_key):
             print(f"  {finding.vid:<4} {finding.subject}: {finding.message}")
     else:
-        print("\nHIJAU — tidak ada temuan")
+        print("\nGREEN — no findings")
 
     if result.skipped:
-        print("\nDilewati:")
+        print("\nSkipped:")
         for vid, why in sorted(result.skipped.items()):
             print(f"  {vid:<4} {why}")
 
-    print(f"\nacuan waktu V14: {asof.isoformat()}")
+    print(f"\nV14 reference date: {asof.isoformat()}")
     return 1 if result.findings else 0
 
 

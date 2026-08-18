@@ -3,23 +3,23 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""timeline — dimensi waktu: generated/timeline, generated/report, .control/reports/<periode>.md.
+"""timeline — the time dimension: generated/timeline, generated/report, .control/reports/<period>.md.
 
-Korpus bisa menyatakan apa yang benar. Ia tidak bisa menyatakan KAPAN itu jadi benar, karena
-tidak ada satu pun tanggal realisasi yang disimpan — dan memang MUST NOT disimpan. Skrip ini
-memasok dimensi yang hilang itu dengan membaca git.
+The corpus can state what is true. It cannot state WHEN that became true, because not one
+delivery date is stored — and indeed MUST NOT be stored. This script supplies that missing
+dimension by reading git.
 
-    timeline.py --generate              tulis .control/generated/timeline.* dan report.*
-    timeline.py --publish weekly        bekukan .control/reports/2026-W34.md
-    timeline.py --publish monthly       bekukan .control/reports/2026-08.md
-    timeline.py --refresh --generate    jalankan validate --generate lebih dulu
+    timeline.py --generate              write .control/generated/timeline.* and report.*
+    timeline.py --publish weekly        freeze .control/reports/2026-W34.md
+    timeline.py --publish monthly       freeze .control/reports/2026-08.md
+    timeline.py --refresh --generate    run validate --generate first
 
-Pembagian kerjanya tetap seperti di 08-project-management.md: yang bisa dihitung dari registry
-saja milik validate.py; hanya yang butuh git yang tinggal di sini. Karena itu Corpus, dump, dan
-kawan-kawannya diimpor, bukan disalin — satu fakta MUST NOT punya dua rumah.
+The division of labor stays as in 08-project-management.md: whatever can be computed from the
+registry alone belongs to validate.py; only what needs git stays here. That is why Corpus, dump,
+and friends are imported, not copied — one fact MUST NOT have two homes.
 
-Tanggal realisasi MUST NOT ditulis balik ke registry mana pun. Ia diturunkan tiap run; salinan
-yang disimpan adalah salinan yang akan salah.
+A delivery date MUST NOT be written back to any registry. It is re-derived on every run; a stored
+copy is a copy that will go stale.
 """
 
 from __future__ import annotations
@@ -34,9 +34,9 @@ import yaml
 from validate import (FM, Corpus, _story_status, cap_stories, dump, git,
                       listy, load_yaml)
 
-# Status frontmatter yang belum berarti "dikerjakan". Story yang masih di sini belum punya
-# actual_start, betapapun tuanya berkasnya.
-BELUM_MULAI = {"", "draft", "backlog", "todo", "planned"}
+# Frontmatter statuses that do not yet mean "in progress". A story still in this set has no
+# actual_start, no matter how old the file is.
+NOT_STARTED = {"", "draft", "backlog", "todo", "planned"}
 
 TIMELINE_COLUMNS = [
     "id", "text", "size", "priority", "owner", "target_release",
@@ -45,14 +45,14 @@ TIMELINE_COLUMNS = [
 ]
 
 
-# ------------------------------------------------------------------ riwayat git
+# ------------------------------------------------------------------ git history
 
 
 _HIST: dict[tuple[str, str], list[tuple[str, str, str]]] = {}
 
 
 def history(root: Path, rel: str) -> list[tuple[str, str, str]]:
-    """[(sha, tanggal, isi)] kronologis untuk satu berkas. Kosong bila belum pernah dicommit."""
+    """[(sha, date, content)] in chronological order for one file. Empty if never committed."""
     key = (str(root), rel)
     if key in _HIST:
         return _HIST[key]
@@ -85,7 +85,7 @@ def yaml_of(text: str) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-# ------------------------------------------------------------- penurunan waktu
+# ------------------------------------------------------------- time derivation
 
 
 def story_path(c: Corpus, story: dict) -> str | None:
@@ -99,11 +99,11 @@ def story_path(c: Corpus, story: dict) -> str | None:
 
 
 def story_span(c: Corpus, story: dict) -> dict:
-    """Kapan story mulai dikerjakan dan kapan ia `done`, dibaca dari riwayat berkasnya.
+    """When a story started being worked on and when it went `done`, read from its file history.
 
-    Berkas yang ada di disk tetapi belum pernah dicommit ditandai `uncommitted` alih-alih
-    diberi tanggal karangan. Story selesai yang belum dicommit adalah keadaan yang MUST
-    terlihat, bukan yang ditambal.
+    A file that exists on disk but has never been committed is marked `uncommitted` instead
+    of being given a made-up date. A finished story that has not been committed is a state that
+    MUST be visible, not one that gets patched over.
     """
     rel = story_path(c, story)
     if rel is None:
@@ -114,7 +114,7 @@ def story_span(c: Corpus, story: dict) -> dict:
     start = end = None
     for _sha, date, text in revs:
         status = str(fm_of(text).get("status") or "").strip().lower()
-        if start is None and status not in BELUM_MULAI:
+        if start is None and status not in NOT_STARTED:
             start = date
         if status == "done":
             end = date
@@ -123,7 +123,7 @@ def story_span(c: Corpus, story: dict) -> dict:
 
 
 def fr_stories(c: Corpus) -> dict[str, list[dict]]:
-    """FR -> story, lewat UC-nya. Kembaran cap_stories() satu tingkat di bawahnya."""
+    """FR -> story, through its UCs. cap_stories()'s twin, one level down."""
     ucs_of: dict[str, list[str]] = {}
     for uc in c.ucs:
         for fid in listy(uc, "satisfies"):
@@ -138,7 +138,7 @@ def fr_stories(c: Corpus) -> dict[str, list[dict]]:
 
 
 def span_of(c: Corpus, items: list[dict], spans: dict[str, dict]) -> tuple[str | None, str | None, bool]:
-    """(mulai paling awal, selesai paling akhir, tertutup). Tertutup hanya bila SEMUA selesai."""
+    """(earliest start, latest end, closed). Closed only when ALL are finished."""
     if not items:
         return None, None, False
     starts = [spans[str(s.get("id"))]["start"] for s in items]
@@ -229,7 +229,7 @@ def gen_timeline(c: Corpus, asof: dt.date) -> dict:
 
 
 def last_report(c: Corpus, asof: dt.date) -> tuple[str | None, str | None]:
-    """(tanggal acuan laporan terakhir, namanya). Keduanya None bila belum ada laporan."""
+    """(reference date of the last report, its name). Both None if no report exists yet."""
     best: tuple[str, str] | None = None
     for path in sorted((c.root / ".control/reports").glob("*.md")):
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -251,7 +251,7 @@ def in_period(date: str | None, since: str | None, asof: dt.date) -> bool:
 
 
 def first_seen(c: Corpus, rel: str, key: str, pick) -> dict[str, str]:
-    """id -> tanggal saat `pick` pertama kali benar di riwayat sebuah registry."""
+    """id -> date when `pick` first became true in a registry's history."""
     seen: dict[str, str] = {}
     for _sha, date, text in history(c.root, rel):
         data = yaml_of(text)
@@ -279,12 +279,12 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
 
     moved = []
     for row in timeline["capabilities"]:
-        for field, event in (("actual_start", "mulai"), ("actual_end", "tertutup")):
+        for field, event in (("actual_start", "started"), ("actual_end", "closed")):
             when = row.get(field) or None
             if in_period(when, since, asof):
                 moved.append({"id": row["id"], "kind": "CAP", "event": event, "date": when})
         for child in row["children"]:
-            for field, event in (("actual_start", "mulai"), ("actual_end", "tertutup")):
+            for field, event in (("actual_start", "started"), ("actual_end", "closed")):
                 when = child.get(field) or None
                 if in_period(when, since, asof):
                     moved.append({"id": child["id"], "kind": "FR", "event": event, "date": when})
@@ -297,7 +297,7 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
         overdue_by = days_between(asof.isoformat(), row["planned_end"])
         late.append({"id": row["id"], "text": row["text"], "owner": row["owner"],
                      "planned_end": row["planned_end"], "days_late": overdue_by,
-                     "waiting_on": row["waiting_on"] or ["belum ada story"]})
+                     "waiting_on": row["waiting_on"] or ["no story yet"]})
     late.sort(key=lambda x: (-(x["days_late"] or 0), x["id"]))
 
     closures = first_seen(c, ".control/registry/defects.yaml", "defects",
@@ -318,9 +318,9 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
     for row in closed_rows:
         by_cause.setdefault(row["root_cause"] or "?", []).append(row["id"])
 
-    # `root_cause` kosong adalah keadaan sah — baris itu dibuka orang yang belum mendiagnosisnya,
-    # dan V20 memang melewatinya. Yang MUST NOT terjadi adalah ia menua tanpa terlihat, jadi ia
-    # disorot di laporan alih-alih ditahan validator. Seluruh periode, bukan cuma yang ini.
+    # An empty `root_cause` is a valid state — the row was opened by someone who has not yet
+    # diagnosed it, and V20 does skip it. What MUST NOT happen is it aging unseen, so it is
+    # surfaced in the report instead of being held by a validator. The whole period, not just this one.
     undiagnosed = sorted(
         ({"id": str(d.get("id")), "title": str(d.get("title") or ""),
           "reported": str(d.get("reported") or ""),
@@ -342,14 +342,14 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
         "since_report": since_name or "",
         "sha": head,
         "registry_dirty": dirty,
-        # Story done yang belum dicommit tetap dihitung RTM — statusnya dibaca dari working tree —
-        # tetapi tidak akan pernah muncul di "Terbukti", yang butuh tanggal dari git. Selisih itu
-        # MUST terlihat di laporan, bukan cuma di timeline.
+        # A done story that has not been committed still counts in the RTM — its status is read
+        # from the working tree — but it will never appear under "Proven", which needs a date from
+        # git. That gap MUST be visible in the report, not only in the timeline.
         "uncommitted_stories": timeline["uncommitted_stories"],
-        "progres_janji": status.get("progres_janji", "n/a"),
-        "baris_rtm": status.get("baris_rtm", {}),
-        "progres_kerja": status.get("progres_kerja", []),
-        "kesiapan_gate": status.get("kesiapan_gate", "n/a"),
+        "promise_progress": status.get("promise_progress", "n/a"),
+        "rtm_rows": status.get("rtm_rows", {}),
+        "work_progress": status.get("work_progress", []),
+        "gate_readiness": status.get("gate_readiness", "n/a"),
         "proven": proven,
         "moved": moved,
         "late": late,
@@ -371,7 +371,7 @@ def cell(value: object) -> str:
 
 def table(headers: list[str], lines: list[list[object]]) -> str:
     if not lines:
-        return "_Tidak ada._\n"
+        return "_None._\n"
     out = ["| " + " | ".join(headers) + " |",
            "|" + "|".join("---" for _ in headers) + "|"]
     out += ["| " + " | ".join(cell(v) for v in line) + " |" for line in lines]
@@ -379,18 +379,18 @@ def table(headers: list[str], lines: list[list[object]]) -> str:
 
 
 def safe(text: str, width: int = 44) -> str:
-    """Teks yang aman masuk mermaid: tanpa `:` dan `,` yang memotong sintaksnya."""
+    """Text safe to put into mermaid: without the `:` and `,` that break its syntax."""
     clean = str(text or "").replace(":", " ").replace(",", " ").replace("#", "").strip()
-    return (clean[:width].rstrip() + "…") if len(clean) > width else (clean or "tanpa judul")
+    return (clean[:width].rstrip() + "…") if len(clean) > width else (clean or "untitled")
 
 
 def gantt(timeline: dict) -> str:
-    """Gantt mermaid: rencana dan realisasi berdampingan, supaya selisihnya terlihat."""
+    """Mermaid Gantt: planned and actual side by side, so the gap is visible."""
     lines = ["```mermaid", "gantt", "    dateFormat YYYY-MM-DD", "    axisFormat %d %b",
-             "    title Rencana vs realisasi per CAP", ""]
+             "    title Planned vs actual per CAP", ""]
     by_release: dict[str, list[dict]] = {}
     for row in timeline["capabilities"]:
-        by_release.setdefault(row["target_release"] or "tanpa rilis", []).append(row)
+        by_release.setdefault(row["target_release"] or "no release", []).append(row)
     drawn = 0
     for release in sorted(by_release):
         rows_ = by_release[release]
@@ -404,38 +404,38 @@ def gantt(timeline: dict) -> str:
             label = f"{row['id']} {safe(row['text'])}"
             if row["planned_start"] and row["planned_end"]:
                 mark = "crit, " if row["state"] == "overdue" else ""
-                lines.append(f"    {label} rencana :{mark}{slug}p, "
+                lines.append(f"    {label} planned :{mark}{slug}p, "
                              f"{row['planned_start']}, {row['planned_end']}")
             if row["actual_start"]:
                 end = row["actual_end"] or timeline["asof"]
                 mark = "done, " if row["state"] == "done" else "active, "
-                lines.append(f"    {label} realisasi :{mark}{slug}a, {row['actual_start']}, {end}")
+                lines.append(f"    {label} actual :{mark}{slug}a, {row['actual_start']}, {end}")
             drawn += 1
         lines.append("")
     lines.append("```")
     if drawn == 0:
-        return ("_Belum ada CAP yang punya tanggal rencana maupun realisasi — "
-                "gantt tidak digambar._\n")
+        return ("_No CAP has a planned or actual date yet — "
+                "the gantt is not drawn._\n")
     return "\n".join(lines) + "\n"
 
 
-HEADER = ("> Tergenerate oleh `.constitution/scripts/timeline.py --generate`. "
-          "MUST NOT diedit tangan.\n")
+HEADER = ("> Generated by `.constitution/scripts/timeline.py --generate`. "
+          "MUST NOT be hand-edited.\n")
 
 
 def with_header(rendered: str) -> str:
-    """Sisipkan peringatan tepat di bawah judul — bukan di atasnya, supaya judul tetap H1."""
+    """Insert the warning right below the title — not above it, so the title stays H1."""
     title, _, body = rendered.partition("\n")
     return f"{title}\n\n{HEADER}{body}"
 
 
 def render_timeline(timeline: dict) -> str:
-    out = ["# Timeline\n", f"\nAcuan: **{timeline['asof']}**\n\n"]
+    out = ["# Timeline\n", f"\nAs of: **{timeline['asof']}**\n\n"]
     out.append(gantt(timeline))
     out.append("\n## Per CAP\n\n")
     out.append(table(
-        ["CAP", "Judul", "Rilis", "Ukuran", "Prioritas", "Pemilik",
-         "Rencana", "Realisasi", "Δ hari", "Keadaan"],
+        ["CAP", "Title", "Release", "Size", "Priority", "Owner",
+         "Planned", "Actual", "Δ days", "State"],
         [[r["id"], r["text"], r["target_release"], r["size"], r["priority"], r["owner"],
           f"{r['planned_start'] or '—'} → {r['planned_end'] or '—'}",
           f"{r['actual_start'] or '—'} → {r['actual_end'] or '—'}",
@@ -446,94 +446,94 @@ def render_timeline(timeline: dict) -> str:
                  f"{ch['actual_start'] or '—'} → {ch['actual_end'] or '—'}", ch["state"]]
                 for r in timeline["capabilities"] if r["size"] == "L" for ch in r["children"]]
     if children:
-        out.append("\n## Rincian FR untuk CAP berukuran L\n\n")
-        out.append("CAP berukuran `L` digambar sebagai batang ringkasan; ini isinya.\n\n")
-        out.append(table(["CAP", "FR", "Judul", "Story", "Realisasi", "Keadaan"], children))
+        out.append("\n## FR detail for CAPs sized L\n\n")
+        out.append("A CAP sized `L` is drawn as one summary bar; this is what is inside it.\n\n")
+        out.append(table(["CAP", "FR", "Title", "Story", "Actual", "State"], children))
 
     if timeline["uncommitted_stories"]:
-        out.append("\n## Story tanpa riwayat git\n\n")
-        out.append("Berkasnya ada di disk tetapi belum pernah dicommit, jadi tanggalnya "
-                   "MUST NOT diturunkan. Commit dulu, lalu jalankan ulang.\n\n")
+        out.append("\n## Stories with no git history\n\n")
+        out.append("The file exists on disk but has never been committed, so its date "
+                   "MUST NOT be derived. Commit it first, then run again.\n\n")
         out.append("".join(f"- `{sid}`\n" for sid in timeline["uncommitted_stories"]))
     return "".join(out)
 
 
 def render_report(report: dict, title: str = "Report") -> str:
-    since = report["since"] or "awal proyek"
-    edge = ("Periode ini tidak berbatas di kiri — belum ada laporan sebelumnya."
+    since = report["since"] or "the project's start"
+    edge = ("This period has no left bound — there is no earlier report yet."
             if not report["since"] else
-            f"Sejak `{report['since_report']}` ({report['since']}).")
+            f"Since `{report['since_report']}` ({report['since']}).")
     out = [f"# {title}\n\n"]
-    out.append(f"Periode: **{since} → {report['asof']}**. {edge}\n\n")
-    out.append(f"Kesegaran: commit `{(report['sha'] or '?')[:12]}`.")
+    out.append(f"Period: **{since} → {report['asof']}**. {edge}\n\n")
+    out.append(f"Freshness: commit `{(report['sha'] or '?')[:12]}`.")
     if report["registry_dirty"]:
-        out.append(" **Registry punya perubahan yang belum dicommit — angka di bawah "
-                   "belum tentu menggambarkan apa yang ada di `main`.**")
+        out.append(" **The registry has uncommitted changes — the numbers below "
+                   "may not reflect what is on `main`.**")
     out.append("\n\n")
     if report["uncommitted_stories"]:
-        out.append("> **Peringatan.** Story berikut berstatus terbaca dari working tree tetapi "
-                   "belum pernah dicommit: "
+        out.append("> **Warning.** The following stories have a status read from the working "
+                   "tree but have never been committed: "
                    + ", ".join(f"`{s}`" for s in report["uncommitted_stories"])
-                   + ". Ia ikut menghitung progres janji, tetapi MUST NOT muncul di bagian "
-                     "Terbukti — di sana tanggalnya harus datang dari git. Commit dulu, lalu "
-                     "jalankan ulang.\n\n")
+                   + ". They still count toward promise progress, but MUST NOT appear in the "
+                     "Proven section — there, the date must come from git. Commit them first, "
+                     "then run again.\n\n")
 
-    out.append(f"## Progres janji — {report['progres_janji']}\n\n")
-    counts = report["baris_rtm"] or {}
-    out.append(f"Ini angka yang berlaku: baris RTM hijau dibagi baris yang dihitung "
-               f"({counts.get('hijau', 0)} dari {counts.get('dihitung', 0)}; "
-               f"{counts.get('dikecualikan_no_uc', 0)} dikecualikan karena ber-`no_uc`). "
-               f"Ia mengukur yang **terbukti**, bukan yang dikerjakan.\n\n")
-    out.append(table(["Ukuran lain", "Nilai", "Menjawab"], [
-        ["Progres kerja", ", ".join(f"{w.get('wave')} {w.get('progres_kerja')}"
-                                    for w in report["progres_kerja"]) or "n/a",
-         "berapa banyak yang dikerjakan"],
-        ["Kesiapan gate", report["kesiapan_gate"], "apakah gate berikutnya bisa dibuka"],
+    out.append(f"## Promise progress — {report['promise_progress']}\n\n")
+    counts = report["rtm_rows"] or {}
+    out.append(f"This is the number that counts: green RTM rows divided by counted rows "
+               f"({counts.get('green', 0)} out of {counts.get('counted', 0)}; "
+               f"{counts.get('excluded_no_uc', 0)} excluded for having `no_uc`). "
+               f"It measures what is **proven**, not what has been worked on.\n\n")
+    out.append(table(["Other measure", "Value", "Answers"], [
+        ["Work progress", ", ".join(f"{w.get('wave')} {w.get('work_progress')}"
+                                    for w in report["work_progress"]) or "n/a",
+         "how much has been worked on"],
+        ["Gate readiness", report["gate_readiness"], "whether the next gate can open"],
     ]))
 
-    out.append("\n## 1. Terbukti\n\n")
-    out.append("Baris RTM yang berubah hijau dalam periode ini.\n\n")
-    out.append(table(["FR", "UC", "Story", "Test", "Tanggal"],
+    out.append("\n## 1. Proven\n\n")
+    out.append("RTM rows that turned green within this period.\n\n")
+    out.append(table(["FR", "UC", "Story", "Test", "Date"],
                      [[p["FR"], p["UC"], p["story"], p["test"], p["closed"]]
                       for p in report["proven"]]))
 
-    out.append("\n## 2. Bergerak\n\n")
-    out.append(table(["ID", "Lapis", "Peristiwa", "Tanggal"],
+    out.append("\n## 2. Moved\n\n")
+    out.append(table(["ID", "Layer", "Event", "Date"],
                      [[m["id"], m["kind"], m["event"], m["date"]] for m in report["moved"]]))
 
-    out.append("\n## 3. Telat\n\n")
+    out.append("\n## 3. Late\n\n")
     if report["late"]:
-        out.append("Disebut satu per satu. Meringkasnya jadi hitungan adalah cara rencana "
-                   "yang meleset tetap terasa nyaman.\n\n")
-    out.append(table(["CAP", "Judul", "Pemilik", "Rencana selesai", "Telat (hari)", "Menunggu"],
+        out.append("Named one by one. Summarizing it into a count is how a plan that missed "
+                   "keeps feeling comfortable.\n\n")
+    out.append(table(["CAP", "Title", "Owner", "Planned end", "Late (days)", "Waiting on"],
                      [[l["id"], l["text"], l["owner"], l["planned_end"],
                        l["days_late"], l["waiting_on"]] for l in report["late"]]))
 
-    out.append("\n## 4. Cacat\n\n")
+    out.append("\n## 4. Defects\n\n")
     defects = report["defects"]
-    out.append("**Dibuka**\n\n")
-    out.append(table(["ID", "Judul", "Root cause", "Melanggar"],
+    out.append("**Opened**\n\n")
+    out.append(table(["ID", "Title", "Root cause", "Violates"],
                      [[d["id"], d["title"], d["root_cause"], d["violates"]]
                       for d in defects["opened"]]))
-    out.append("\n**Ditutup, dikelompokkan menurut root cause**\n\n")
-    out.append(table(["Root cause", "Cacat", "Jumlah"],
+    out.append("\n**Closed, grouped by root cause**\n\n")
+    out.append(table(["Root cause", "Defects", "Count"],
                      [[cause, ids, len(ids)]
                       for cause, ids in defects["closed_by_root_cause"].items()]))
     if defects["closed_by_root_cause"]:
-        out.append("\nBaris `requirement` dan `architecture` adalah yang layak dibaca dua kali: "
-                   "keduanya menghitung cacat yang ternyata bukan kode yang salah.\n")
+        out.append("\nThe `requirement` and `architecture` rows are worth reading twice: "
+                   "both count defects that turned out not to be bad code.\n")
     if defects["undiagnosed"]:
-        out.append("\n**Belum didiagnosis** — terbuka tanpa `root_cause`, seluruh periode\n\n")
-        out.append(table(["ID", "Judul", "Dilaporkan", "Umur (hari)"],
+        out.append("\n**Not yet diagnosed** — open with no `root_cause`, the whole period\n\n")
+        out.append(table(["ID", "Title", "Reported", "Age (days)"],
                          [[d["id"], d["title"], d["reported"], d["age_days"]]
                           for d in defects["undiagnosed"]]))
-        out.append("\nBaris tanpa `root_cause` tidak melanggar apa pun — ia berarti belum ada yang "
-                   "menjalankan `wdi-systematic-debugging` atasnya. Selama begitu ia juga tidak "
-                   "ikut menghitung rasio di atas, jadi rasio itu berlaku atas cacat yang sudah "
-                   "didiagnosis saja.\n")
+        out.append("\nA row with no `root_cause` violates nothing — it means no one has run "
+                   "`wdi-systematic-debugging` on it yet. While that holds it also does not "
+                   "count toward the ratio above, so that ratio applies only to defects that "
+                   "have already been diagnosed.\n")
 
-    out.append("\n## 5. Gate\n\n")
-    out.append(table(["Gate", "Tanggal"], [[g["gate"], g["date"]] for g in report["gates"]]))
+    out.append("\n## 5. Gates\n\n")
+    out.append(table(["Gate", "Date"], [[g["gate"], g["date"]] for g in report["gates"]]))
     return "".join(out)
 
 
@@ -548,12 +548,12 @@ def period_name(kind: str, asof: dt.date) -> str:
     return kind
 
 
-CATATAN = """
-## Catatan
+NOTE = """
+## Notes
 
-<!-- Ditulis manusia sekali, saat terbit. MUST mengutip sebabnya (ADR, OQ-, risiko, atau
-     cacat), bukan menceritakannya ulang — cerita kedua akan menyimpang dari yang pertama.
-     Kosongkan bila memang tidak ada yang perlu ditambahkan. -->
+<!-- Written by a human once, at publish time. MUST cite the cause (ADR, OQ-, risk, or
+     defect), not retell it — a second telling will drift from the first.
+     Leave empty if there is truly nothing to add. -->
 """
 
 
@@ -561,18 +561,18 @@ def publish(c: Corpus, report: dict, kind: str, asof: dt.date) -> tuple[Path, st
     name = period_name(kind, asof)
     path = c.root / ".control" / "reports" / f"{name}.md"
     if path.exists():
-        return path, (f"{path.name} sudah terbit. Laporan yang sudah terbit itu BEKU — "
-                      f"bila ia keliru, laporan berikutnya yang menyatakannya.")
+        return path, (f"{path.name} has already been published. A published report is FROZEN — "
+                      f"if it turns out to be wrong, the next report is what corrects it.")
     path.parent.mkdir(parents=True, exist_ok=True)
     front = dump({
         "period": name,
         "asof": report["asof"],
         "since": report["since"],
         "sha": report["sha"],
-        "progres_janji": report["progres_janji"],
+        "promise_progress": report["promise_progress"],
         "generated_by": ".constitution/scripts/timeline.py",
     })
-    path.write_text(f"---\n{front}---\n\n{render_report(report, f'Laporan {name}')}{CATATAN}",
+    path.write_text(f"---\n{front}---\n\n{render_report(report, f'Report {name}')}{NOTE}",
                     encoding="utf-8")
     return path, None
 
@@ -582,16 +582,16 @@ def publish(c: Corpus, report: dict, kind: str, asof: dt.date) -> tuple[Path, st
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="timeline", description="dimensi waktu dari git: timeline, report, laporan periode")
+        prog="timeline", description="the time dimension from git: timeline, report, period report")
     parser.add_argument("--generate", action="store_true",
-                        help="tulis .control/generated/timeline.* dan report.*")
-    parser.add_argument("--publish", metavar="PERIODE",
-                        help="bekukan .control/reports/<periode>.md — weekly | monthly | <nama>")
+                        help="write .control/generated/timeline.* and report.*")
+    parser.add_argument("--publish", metavar="PERIOD",
+                        help="freeze .control/reports/<period>.md — weekly | monthly | <name>")
     parser.add_argument("--refresh", action="store_true",
-                        help="jalankan validate --generate lebih dulu supaya tabelnya segar")
-    parser.add_argument("--root", default=".", help="akar repo (default: direktori sekarang)")
+                        help="run validate --generate first so the tables are fresh")
+    parser.add_argument("--root", default=".", help="repo root (default: current directory)")
     parser.add_argument("--asof", default=None,
-                        help="tanggal acuan, YYYY-MM-DD (default: hari ini)")
+                        help="reference date, YYYY-MM-DD (default: today)")
     args = parser.parse_args(argv)
 
     if not args.generate and not args.publish:
@@ -599,30 +599,30 @@ def main(argv: list[str] | None = None) -> int:
 
     root = Path(args.root).resolve()
     if not (root / ".control" / "registry").is_dir():
-        print(f"timeline: {root} tidak punya .control/registry/ — salah akar repo?", file=sys.stderr)
+        print(f"timeline: {root} has no .control/registry/ — wrong repo root?", file=sys.stderr)
         return 2
 
     asof = dt.date.fromisoformat(args.asof) if args.asof else dt.date.today()
     corpus = Corpus.load(root)
 
     if git(root, "rev-parse", "HEAD") is None:
-        print("timeline: git tidak menjawab di akar ini. Seluruh tanggal realisasi diturunkan "
-              "dari git, jadi tanpa git tidak ada yang bisa dilaporkan — dan mengarangnya "
-              "MUST NOT dilakukan.", file=sys.stderr)
+        print("timeline: git did not respond at this root. Every delivery date is derived "
+              "from git, so with no git there is nothing that can be reported — and making "
+              "one up MUST NOT be done.", file=sys.stderr)
         return 3
 
     if args.refresh:
         import validate
         result = validate.run_checks(corpus, asof)
         validate.generate(corpus, result)
-        print(f"  segarkan .control/generated/ — {len(result.findings)} temuan validator")
+        print(f"  refreshed .control/generated/ — {len(result.findings)} validator findings")
 
     generated = root / ".control" / "generated"
     missing = [n for n in ("rtm", "status") if not (generated / f"{n}.yaml").exists()]
     if missing:
-        print(f"timeline: {', '.join(missing)} belum ada di .control/generated/. Laporan di atas "
-              f"tabel yang basi lebih buruk daripada tidak ada laporan — jalankan "
-              f"`validate.py --generate`, atau ulangi dengan `--refresh`.", file=sys.stderr)
+        print(f"timeline: {', '.join(missing)} does not exist yet in .control/generated/. A "
+              f"report on top of a stale table is worse than no report — run "
+              f"`validate.py --generate`, or repeat with `--refresh`.", file=sys.stderr)
         return 3
 
     timeline = gen_timeline(corpus, asof)
@@ -636,28 +636,28 @@ def main(argv: list[str] | None = None) -> int:
         ):
             (generated / f"{name}.yaml").write_text(dump(payload), encoding="utf-8")
             (generated / f"{name}.md").write_text(with_header(rendered), encoding="utf-8")
-            print(f"  tulis .control/generated/{name}.yaml")
-            print(f"  tulis .control/generated/{name}.md")
+            print(f"  wrote .control/generated/{name}.yaml")
+            print(f"  wrote .control/generated/{name}.md")
 
     if args.publish:
         path, refusal = publish(corpus, report, args.publish, asof)
         if refusal:
             print(f"\ntimeline: {refusal}", file=sys.stderr)
             return 4
-        print(f"  terbit {path.relative_to(root).as_posix()}")
+        print(f"  published {path.relative_to(root).as_posix()}")
 
     overdue = [r for r in timeline["capabilities"] if r["state"] == "overdue"]
-    print(f"\nprogres janji: {report['progres_janji']}"
-          f"   ·   CAP telat: {len(overdue)}"
-          f"   ·   acuan: {asof.isoformat()}")
+    print(f"\npromise progress: {report['promise_progress']}"
+          f"   ·   CAP overdue: {len(overdue)}"
+          f"   ·   as of: {asof.isoformat()}")
     for row in overdue:
-        print(f"  TELAT  {row['id']} — rencana selesai {row['planned_end']}, "
-              f"menunggu {', '.join(row['waiting_on']) or 'belum ada story'}")
+        print(f"  LATE  {row['id']} — planned end {row['planned_end']}, "
+              f"waiting on {', '.join(row['waiting_on']) or 'no story yet'}")
     if report["registry_dirty"]:
-        print("\nregistry punya perubahan yang belum dicommit — angka di atas belum tentu "
-              "menggambarkan apa yang ada di main")
+        print("\nthe registry has uncommitted changes — the numbers above may not "
+              "reflect what is on main")
     if timeline["uncommitted_stories"]:
-        print(f"story tanpa riwayat git: {', '.join(timeline['uncommitted_stories'])}")
+        print(f"stories with no git history: {', '.join(timeline['uncommitted_stories'])}")
     return 0
 
 

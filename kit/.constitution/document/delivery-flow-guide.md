@@ -159,7 +159,7 @@ MUST NOT be negotiated.
 
 ## Gate checklists
 
-Each question is answered **ya / tidak / ubah**. One "tidak" on a ★ question holds the gate.
+Each question is answered **yes / no / change**. One "no" on a ★ question holds the gate.
 
 **On `mode: catalog`, only the ★ questions are asked** — fourteen across all five gates. The rest stay here
 as material, and asking them is never wrong; requiring them is.

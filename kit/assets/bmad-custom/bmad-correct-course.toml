@@ -1,27 +1,28 @@
-# Kelas B — tidak ada knob path sama sekali.
+# Class B — no path knob at all.
 #
-# customize.toml bawaan bmad-correct-course hanya membuka activation_steps, persistent_facts, dan
-# on_complete. Tidak ada *_output_path, jadi proposalnya tetap mendarat di
-# _bmad-output/planning-artifacts/sprint-change-proposal-{date}.md dan MUST didaratkan ulang oleh
-# wdi-decision sebagai `DEC-` bertipe course-correction. Kode `SCP-` dan folder
-# .control/supplements/ SUDAH DICABUT — koreksi arah adalah keputusan, dan tidak ada kode kedua yang
-# menamai hal yang sama.
+# bmad-correct-course's own default customize.toml only opens activation_steps, persistent_facts,
+# and on_complete. There is no *_output_path, so its proposal still lands at
+# _bmad-output/planning-artifacts/sprint-change-proposal-{date}.md and MUST be landed again by
+# wdi-decision as a `DEC-` of type course-correction. The `SCP-` code and the
+# .control/supplements/ folder have ALREADY BEEN RETIRED — a course correction is a decision, and
+# there is no second code naming the same thing.
 #
-# Bahaya utamanya bukan path, melainkan kebiasaan skill ini menyunting langsung: default-nya
-# "direct updates to epics, stories, or PRD sections". Di repo ini itu MUST NOT terjadi — perubahan
-# dokumen lewat wdi-decision intent `apply`, isi wave lewat wdi-build. Karena itu larangannya
-# dipasang sebagai persistent_facts, yang dipegang sejak aktivasi, bukan sebagai poles di akhir.
+# The main danger is not the path but this skill's habit of editing directly: its default is
+# "direct updates to epics, stories, or PRD sections". In this repo that MUST NOT happen —
+# document changes go through wdi-decision intent `apply`, and wave content through wdi-build.
+# That is why the prohibition is installed as a persistent fact, held from activation, rather than
+# as end-of-run polish.
 
 [workflow]
 
 persistent_facts = [
   "file:{project-root}/.constitution/document/delivery-flow-guide.md",
   "file:{project-root}/.constitution/document/corpus-guide.md",
-  "Skill ini MUST NOT menulis atau menyunting apa pun di {project-root}/.what/ maupun {project-root}/.how/. Keluarannya adalah proposal; perubahan dokumen dikerjakan wdi-decision intent `apply` setelah `DEC-`-nya accepted, dan isi wave oleh wdi-build.",
-  "epics.md dan sprint-status.yaml TIDAK dipakai di repo ini — kita menjalankan stories route. Keduanya MUST NOT dibaca sebagai sumber, dan MUST NOT dibuat.",
-  "Pemindaian impak MUST mencakup .what/_prd/, .what/<pc>/, .how/_platform/, .how/<pc>/, SPEC.md, .control/registry/waves.yaml, dan berkas story. .what/<pc>/ tidak dikenal skill ini sama sekali dan tanpa ini akan basi diam-diam.",
-  "Setiap perubahan rencana yang mahal dibalik MUST menjadi `DEC-` lewat wdi-decision, bukan paragraf di dalam proposal. Koreksi arah sendiri adalah satu `DEC-` bertipe course-correction.",
-  "Sebuah koreksi yang membatalkan lebih dari 30% story sebuah wave MUST NOT ditangani sebagai tambalan. Katakan begitu, dan biarkan wave-nya dipotong ulang lewat wdi-build.",
+  "This skill MUST NOT write or edit anything in {project-root}/.what/ or {project-root}/.how/. Its output is a proposal; document changes are made by wdi-decision intent `apply` once the `DEC-` is accepted, and wave content by wdi-build.",
+  "epics.md and sprint-status.yaml are NOT used in this repo — we run the stories route. Neither MUST be read as a source, and neither MUST be created.",
+  "The impact scan MUST cover .what/_prd/, .what/<pc>/, .how/_platform/, .how/<pc>/, SPEC.md, .control/registry/waves.yaml, and the story files. .what/<pc>/ is unknown to this skill entirely, and without this it goes stale silently.",
+  "Every plan change that is expensive to reverse MUST become a `DEC-` through wdi-decision, not a paragraph inside the proposal. A course correction is itself one `DEC-` of type course-correction.",
+  "A correction that voids more than 30% of a wave's stories MUST NOT be handled as a patch. Say so, and let the wave be re-cut through wdi-build.",
 ]
 
-on_complete = "Serahkan pendaratan ke wdi-decision: seluruh proposal jadi satu `DEC-` bertipe course-correction, dan folder run-nya MUST NOT dihapus. MUST NOT menempatkan sendiri, MUST NOT menyunting .what/ atau .how/."
+on_complete = "Hand the landing to wdi-decision: the whole proposal becomes one `DEC-` of type course-correction, and its run folder MUST NOT be deleted. MUST NOT land itself, MUST NOT edit .what/ or .how/."

@@ -53,17 +53,17 @@ updated: '{YYYY-MM-DD}'
      one component depends on it. corpus-guide.md owns that test, and it refuses the one use people
      reach for: "the owner is hard to decide".
 
-     `Jenis` is data · endpoint · job · screen, and the list is open. What is not open is the test.
+     `Kind` is data · endpoint · job · screen, and the list is open. What is not open is the test.
 
      `_platform` has no `FR`, so there is no owner-FR for another component to point at. What replaces
      "one writer" is ONE DOCUMENTED SHAPE — stated here, once. A component that wants it different is
      proposing a change to this file, not making a local choice. -->
 
-| Apa | Jenis | Kenapa tidak ada komponen yang menjelaskannya | Siapa yang menyentuhnya | Bentuk yang setiap penyentuh patuhi |
+| What | Kind | Why no component explains it | Who touches it | The shape every toucher obeys |
 | --- | --- | --- | --- | --- |
 
-<!-- `Siapa yang menyentuhnya` menyebut komponen, dan menyebut lebih dari satu adalah keadaan NORMAL —
-     itu separuh alasan barisnya ada di sini. Satu penyentuh adalah sinyal ia milik komponen itu. -->
+<!-- `Who touches it` names components, and naming more than one is a NORMAL state — that is half the
+     reason the row is here. A single toucher is a signal it belongs to that component instead. -->
 
 ## Other product-level agreements
 

@@ -1,12 +1,13 @@
-# Review Panel: dua peninjau dari dua keluarga CLI berbeda, dan tidak boleh dari keluarga yang
-# menjalankan implementasinya.
+# Review Panel: two reviewers from two different CLI families, and neither may come from the
+# family that ran the implementation.
 #
-# PERINGATAN: lensa adversarial dan edge-case di sini dibaca dari salinan bundel review-prompts/,
-# BUKAN dari skill bmad-review. Override pada bmad-review tidak akan terlihat di jalur ini.
+# WARNING: the adversarial and edge-case lenses here are read from the bundled copy of
+# review-prompts/, NOT from the bmad-review skill. An override on bmad-review will not be visible
+# on this path.
 
 [workflow]
 
 persistent_facts = [
   "file:{project-root}/.constitution/codebase/conventions-guide.md",
-  "Temuan yang berulang lintas story MUST dicatat lewat bmad-project-context intent record, bukan diperbaiki diam-diam tiap kali muncul.",
+  "A finding that repeats across stories MUST be recorded through bmad-project-context intent record, not fixed silently every time it recurs.",
 ]
