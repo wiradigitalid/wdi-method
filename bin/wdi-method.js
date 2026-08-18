@@ -173,9 +173,11 @@ function copyFile(src, dest) {
   fs.copyFileSync(src, dest);
 }
 
-function copyTree(src, dest) {
+function copyTree(src, dest, skipRel) {
   let n = 0;
   for (const p of walkFiles(src)) {
+    const rel = posixRel(src, p);
+    if (skipRel && skipRel(rel)) continue;
     copyFile(p, path.join(dest, path.relative(src, p)));
     n += 1;
   }
@@ -289,6 +291,13 @@ function bmadMissingMessage() {
   ].join("\n");
 }
 
+// Kamar custom milik produk. Tiga sifatnya, dan ketiganya harus dipegang bersama:
+//   install/update  menyemai isinya HANYA bila belum ada — sesudah itu ia tak pernah ditulis lagi
+//   promote         MELEWATINYA seluruhnya, jadi aturan khusus produk tidak mungkin terbit ke repo publik
+//   agent           memuatnya seperti guide lain, jadi ia MENGIKAT
+// Konsekuensi yang disengaja: README kamar ini diarang di paket dan tidak pernah pulang lewat promote.
+const PROJECT_ROOM = "project/";
+
 function syncConstitution(target) {
   const kitConst = path.join(KIT, ".constitution");
   const destConst = path.join(target, ".constitution");
@@ -306,6 +315,11 @@ function syncConstitution(target) {
     if (rel.startsWith("codebase/") && fs.existsSync(dest) && acceptedCodebase(dest)) {
       skipped += 1;
       note(`keep ${rel} (Accepted codebase guide)`);
+      continue;
+    }
+    if (rel.startsWith(PROJECT_ROOM) && fs.existsSync(dest)) {
+      skipped += 1;
+      note(`keep ${rel} (product custom room)`);
       continue;
     }
     copyFile(file, dest);
@@ -541,11 +555,23 @@ function promote(live) {
   if (!fs.existsSync(path.join(live, ".constitution"))) {
     die(`${live} has no .constitution/ — is this a method-carrying repo?`);
   }
+  // README kamar custom dikarang di paket dan MUST bertahan melewati rmSync di bawah. Dibaca di
+  // sini, bukan sesudahnya — versi pertama patch ini membacanya sesudah kit dihapus, sehingga
+  // nilainya selalu null dan README-nya hilang tiap promote. Tes project-room yang menemukannya.
+  const roomKit = path.join(KIT, ".constitution", PROJECT_ROOM, "README.md");
+  const roomKept = fs.existsSync(roomKit) ? fs.readFileSync(roomKit, "utf8") : null;
+
   fs.rmSync(KIT, { recursive: true, force: true });
   fs.mkdirSync(KIT, { recursive: true });
 
-  const nConst = copyTree(path.join(live, ".constitution"), path.join(KIT, ".constitution"));
-  note(`constitution ${nConst} files`);
+  const nConst = copyTree(path.join(live, ".constitution"), path.join(KIT, ".constitution"),
+                          (rel) => rel.startsWith(PROJECT_ROOM));
+  note(`constitution ${nConst} files (${PROJECT_ROOM} skipped — it is the product's)`);
+  if (roomKept !== null) {
+    fs.mkdirSync(path.dirname(roomKit), { recursive: true });
+    fs.writeFileSync(roomKit, roomKept, "utf8");
+    note(`${PROJECT_ROOM}README.md restored from the package — promote never carries it home`);
+  }
 
   let copiedSkills = 0;
   const skillsSrc = path.join(live, ".claude", "skills");

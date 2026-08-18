@@ -3,7 +3,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""validate — V1..V26 plus generator .control/generated/.
+"""validate — V1..V27 plus generator .control/generated/.
 
 Dua mode:
     validate --check      keluar non-zero bila ada yang merah; tidak menulis apa pun
@@ -1083,10 +1083,59 @@ def v26(c: Corpus, r: Result) -> None:
         r.skip("V26", "tidak ada SRS yang dapat dibaca")
 
 
+def v27(c: Corpus, r: Result) -> None:
+    """Tiap berkas di kamar custom MUST menyatakan dirinya, dan pembantahan MUST punya keputusan.
+
+    Kamar `.constitution/project/` ada supaya aturan khusus produk punya rumah yang `update` tidak
+    timpa dan `promote` tidak terbitkan. Ongkos yang datang bersamanya: ia juga tempat paling mudah
+    untuk melanggar aturan generic tanpa jejak. Frontmatter-nya yang menahan itu.
+
+    Sebuah berkas di sini MAY mempersempit atau menambah tanpa menyebut apa pun. Untuk MEMBANTAH
+    aturan generic ia MUST menyebutnya di `overrides:` dan membawa `decision:` — sebab metode yang
+    boleh dibantah tanpa keputusan berhenti dapat dipercaya di repo berikutnya.
+
+    `README.md` kamar dilewati: ia dikarang di paket, bukan di produk.
+    """
+    room = c.root / ".constitution" / "project"
+    if not room.is_dir():
+        r.skip("V27", "kamar `.constitution/project/` belum ada — ia disemai saat install")
+        return
+    files = [p for p in sorted(room.rglob("*.md")) if p.name != "README.md"]
+    if not files:
+        r.skip("V27", "kamar `.constitution/project/` kosong, dan itu keadaan yang sah — "
+                      "aturan generic MUST NOT dipindahkan ke sini supaya kamarnya terpakai")
+        return
+    dec_ids = {str(d.get("id")) for d in c.decs}
+    for path in files:
+        rel = path.relative_to(c.root).as_posix()
+        fm = frontmatter(path)
+        if fm is None:
+            r.fail("V27", rel, "tidak punya frontmatter")
+            continue
+        if str(fm.get("scope") or "").strip() != "project":
+            r.fail("V27", rel, "`scope:` MUST berisi tepat `project`")
+        if not str(fm.get("purpose") or "").strip():
+            r.fail("V27", rel, "`purpose:` kosong — satu baris: aturan ini menjaga apa")
+        over = str(fm.get("overrides") or "").strip()
+        dec = str(fm.get("decision") or "").strip()
+        if over:
+            if not (c.root / over).exists():
+                r.fail("V27", rel, f"`overrides:` menunjuk `{over}` yang tidak ada — "
+                                   f"aturan yang dibantah mungkin sudah hilang")
+            if not dec:
+                r.fail("V27", rel, "membantah aturan generic tanpa `decision:` — "
+                                   "pembantahan MUST punya `DEC-` yang memutuskannya")
+            elif dec not in dec_ids:
+                r.fail("V27", rel, f"`decision: {dec}` tidak terdaftar di decisions.yaml")
+        elif dec:
+            r.fail("V27", rel, "`decision:` terisi tanpa `overrides:` — "
+                               "sebutkan aturan mana yang dibantah, atau cabut `decision:`")
+
+
 def run_checks(c: Corpus, asof: dt.date) -> Result:
     r = Result()
     for fn in (v1, v2, v3, v4, v5, v6, v7, v8, v9, v11, v12, v13, v15, v16, v17, v18, v19, v20,
-               v21, v22, v23, v24, v25, v26):
+               v21, v22, v23, v24, v25, v26, v27):
         fn(c, r)
     v14(c, r, asof)
     return r
@@ -1219,7 +1268,7 @@ def gen_status(c: Corpus, rtm: dict, result: Result) -> dict:
         per_wave.append({"wave": wid, "status": wave.get("status"),
                          "stories_done": done, "stories_total": len(items),
                          "progres_kerja": _pct(done, len(items))})
-    applicable = 25  # V1..V26 tanpa V10 yang gugur
+    applicable = 26  # V1..V27 tanpa V10 yang gugur
     return {
         "progres_janji": _pct(green, len(counted)),
         "baris_rtm": {"hijau": green, "dihitung": len(counted),
@@ -1472,7 +1521,7 @@ def generate(c: Corpus, result: Result) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="validate", description="V1..V26 dan generator .control/generated/")
+        prog="validate", description="V1..V27 dan generator .control/generated/")
     parser.add_argument("--check", action="store_true",
                         help="periksa saja; keluar non-zero bila ada yang merah")
     parser.add_argument("--generate", action="store_true",

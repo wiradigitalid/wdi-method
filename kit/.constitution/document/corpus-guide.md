@@ -259,6 +259,33 @@ the same three dozen historical files and the diff stops carrying information.
 
 File naming that must survive every OS is governed by `structure-guide.md` and MUST NOT be restated here.
 
+## `.constitution/project/` — kamar aturan khusus produk
+
+Sisa `.constitution/` **milik metode**, dikirim paket `wdi-method` dan **ditimpa** tiap `update`.
+Folder ini satu-satunya yang tidak: `update` menyemainya sekali lalu tidak pernah menulis lagi, dan
+`promote` **melewatinya**, jadi aturan khusus produk tidak mungkin terbit ke paket publik.
+
+| Yang masuk | Yang TIDAK, dan rumahnya |
+|---|---|
+| Kebijakan review yang diminta klien | Nama produk/klien → `index.yaml` `product:` |
+| Aturan proses yang lahir dari kontrak | Konvensi kode → `codebase/*-guide.md` |
+| Kebijakan yang beda dari default metode | Lingkup & kepemilikan → `constitution.md` Article 1, 2, 5 |
+| Larangan atau kewajiban khusus domain ini | Instruksi agent → `AGENTS.md`, di luar blok bertanda |
+
+**Sebuah aturan yang generic MUST NOT dipindahkan ke sini.** Kalau ia berlaku di proyek mana pun ia
+milik paket — perbaiki di sana, lalu `promote`. Memakai kamar ini sebagai jalan memintas paket adalah
+cara metode berhenti generic tanpa ada yang memutuskannya, dan **kamar yang kosong adalah keadaan yang
+sah**: mengisinya supaya terpakai justru kegagalan yang aturan ini cegah.
+
+Frontmatter wajib, dan **V27** memeriksanya: `scope: project` · `purpose:` satu baris. Sebuah berkas
+MAY mempersempit atau menambah tanpa menyebut apa pun; untuk **membantah** aturan generic ia MUST
+menyebutnya di `overrides:` dan membawa `decision:` berisi `DEC-` yang memutuskannya. Metode yang boleh
+dibantah tanpa keputusan berhenti dapat dipercaya di repo berikutnya.
+
+**Berkas utuh, bukan blok bertanda di dalam guide.** `AGENTS.md` memakai blok bertanda karena ia satu
+berkas; `.constitution/` punya lima puluhan, dan blok di dalamnya menuntut `update` melakukan operasi
+bedah di tiap berkas — satu marker rusak berarti aturan produk terhapus atau aturan generic membeku.
+
 ## Documents that predate the method
 
 A repository that already had documentation keeps it in `_bmad-output/prior-knowledge/`. It follows the same

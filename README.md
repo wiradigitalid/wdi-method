@@ -69,10 +69,48 @@ is replaced.
 | `.constitution/` guides, templates, scripts, `method/` | `.control/` `.what/` `.how/` `_bmad-output/` `.work/` |
 | fifteen `wdi-*` skills | `constitution.md` that already exists (Articles 1, 2, 5) |
 | `_bmad/custom/*.toml` | `codebase/*-guide.md` once `Accepted` |
-| | extra files already in `.constitution/` |
+| | **`.constitution/project/`** — the product's custom room |
 | | `_bmad/custom/*.user.toml` |
 
 `.control/` empty stubs are written only when that folder is absent.
+
+## `.constitution/project/` — the custom room
+
+Everything else in `.constitution/` belongs to the method and is **overwritten** on update. This one
+folder is not: `install` seeds it, `update` never writes over a file that exists in it, and `promote`
+**skips it entirely** — so a rule that names a client cannot reach this public repository.
+
+| Goes there | Does not, and where it goes |
+|---|---|
+| A review policy a client requires | product / client name → `index.yaml` `product:` |
+| A process rule that came from a contract | code conventions → `codebase/*-guide.md` |
+| A policy that differs from the method default | scope, method ownership → `constitution.md` Art. 1, 2, 5 |
+| A prohibition specific to this domain | agent instructions → `AGENTS.md`, outside the marked block |
+
+**A generic rule MUST NOT be moved there.** If it holds in any project it belongs to the package — fix
+it there and `promote`. Using the room to bypass the package is how a method stops being generic with
+nobody deciding it, and **an empty room is a valid state**: filling it so it gets used is the very
+failure this rule prevents.
+
+Required frontmatter, checked by `V27` in `validate.py`:
+
+```yaml
+scope: project      # exactly this
+purpose: ""         # one line: what this rule protects
+overrides: null     # optional: the kit file it narrows or contradicts
+decision: null      # REQUIRED when `overrides:` is set — the DEC- that decided it
+```
+
+A file there MAY narrow or add with none of the last two. To **contradict** a generic rule it MUST name
+it in `overrides:` and carry `decision:`; a method that can be contradicted without a decision stops
+being trustworthy in the next repo.
+
+**Whole files, not marked blocks.** `AGENTS.md` uses a marked block because it is *one* file.
+`.constitution/` has fifty-odd, and blocks inside them would make `update` perform surgery in each —
+one broken marker and either the product's rule is erased or the generic rule freezes forever.
+
+The room's own `README.md` is authored in the package and `promote` never carries it home. Edit it if
+you like; the edit will not survive the next install elsewhere, so **your rules MUST be other files.**
 
 ## Product name — one room, filled at G1
 
