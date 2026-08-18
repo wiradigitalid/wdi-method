@@ -40,6 +40,11 @@ defaulting to English:
 | `doc_language` | The **prose** of working documents in `.what/` · `.how/` · `.control/` |
 | `doc_filename_language` | The **slug** part of a document filename |
 
+**Both are free text, not a list of codes.** `English`, `Bahasa Indonesia`, `id`, `Indonesia` — write
+whatever names the language, because what reads the value is a **model**, and a model does not need a
+lookup table. Fencing it into two codes would only make the owner translate their intent into the
+installer's vocabulary first, and nothing is bought with that. The one value refused is an empty one.
+
 Nothing else about language is a setting, and a skill MUST NOT ask:
 
 - **Method terminology** — `DEC` `SRS` `SDD` `UC` `FR` `AD`, the gate names, the values of `mode` and

@@ -131,11 +131,16 @@ The TUI asks two questions; `install`/`update` write the answers to `.control/re
 
 ```yaml
 policy:
-  doc_language: en           # prose of working documents in .what/ .how/ .control/
-  doc_filename_language: en  # the slug part of a document filename
+  doc_language: "English"           # prose of working documents in .what/ .how/ .control/
+  doc_filename_language: "English"  # the slug part of a document filename
 ```
 
-Non-interactive: `--doc-language <en|id> --doc-filename-language <en|id>`.
+**Both are free text, not a list of codes.** `English`, `Bahasa Indonesia`, `id`, `Indonesia` — write
+whatever names the language. What reads the value is a **model**, and a model does not need a lookup
+table; fencing it into two codes would only make you translate your intent into this installer's
+vocabulary first. The one value refused is an empty one.
+
+Non-interactive: `--doc-language "Bahasa Indonesia" --doc-filename-language Indonesia`.
 
 **A setting that already exists is kept**, and the run says so. A language somebody already chose is
 not the installer's to change behind their back.

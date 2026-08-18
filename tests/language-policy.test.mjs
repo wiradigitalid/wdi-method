@@ -10,7 +10,7 @@ import {
   readLanguagePolicy,
   writeLanguagePolicy,
   readProductIdentity,
-  DOC_LANGUAGES,
+  DEFAULT_DOC_LANGUAGE,
 } from "../lib/identity.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -73,20 +73,45 @@ test("English is the default when nothing is passed", () => {
   const dir = repoWithIndex(null);
   try {
     run([], dir);
-    assert.deepEqual(policyOf(dir), { docLanguage: "en", docFilenameLanguage: "en" });
+    assert.deepEqual(policyOf(dir), { docLanguage: "English", docFilenameLanguage: "English" });
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("an unknown language is refused, not silently accepted", () => {
+test("free text, not an enum — anything a model can read is accepted, and quoted so YAML survives", () => {
+  // The consumer is a model, so there is no list to match against. What MUST NOT happen is a value
+  // with a space breaking the YAML, or being silently truncated to its first word.
   const dir = repoWithIndex(null);
   try {
-    assert.throws(() => run(["--doc-language", "jv"], dir), /doc-language needs one of/);
-    assert.deepEqual(DOC_LANGUAGES, ["en", "id"]);
+    run(["--doc-language", "Bahasa Indonesia", "--doc-filename-language", "Indonesia"], dir);
+    assert.deepEqual(policyOf(dir),
+      { docLanguage: "Bahasa Indonesia", docFilenameLanguage: "Indonesia" });
+    const raw = fs.readFileSync(path.join(dir, ".control", "registry", "index.yaml"), "utf8");
+    assert.match(raw, /doc_language: "Bahasa Indonesia"/, "free text MUST be quoted in the file");
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("only an empty value is refused", () => {
+  const dir = repoWithIndex(null);
+  try {
+    assert.throws(() => run(["--doc-language", ""], dir), /needs a value/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a bare legacy value is still read — `doc_language: id` was written before quoting", () => {
+  const bare = [
+    'policy:',
+    '  doc_language: id   # a trailing note',
+    '  doc_filename_language: id',
+    '',
+  ].join(String.fromCharCode(10));
+  assert.deepEqual(readLanguagePolicy(bare), { docLanguage: "id", docFilenameLanguage: "id" });
+  assert.equal(DEFAULT_DOC_LANGUAGE, "English");
 });
 
 test("CRLF: a Windows checkout is read and written without losing its endings", () => {

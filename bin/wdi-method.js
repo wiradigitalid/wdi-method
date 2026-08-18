@@ -12,7 +12,7 @@ import {
   identityIsPlaceholder,
   readLanguagePolicy,
   writeLanguagePolicy,
-  DOC_LANGUAGES,
+  DEFAULT_DOC_LANGUAGE,
   readProductIdentity,
   writeProductIdentity,
 } from "../lib/identity.mjs";
@@ -93,8 +93,8 @@ function usage() {
   --agents a,b              claude,cursor,codex,antigravity
   --product NAME            written to index.yaml product.name
   --client NAME             written to index.yaml product.client (optional)
-  --doc-language <en|id>            prose of working documents; default en
-  --doc-filename-language <en|id>  slug part of document filenames; default en
+  --doc-language <text>            prose of working documents; free text, default English
+  --doc-filename-language <text>   slug part of document filenames; free text, default English
   --skip-bmad-check
 
 BMad first, then this package. ${WDI_REPO}
@@ -145,10 +145,9 @@ function parseArgs(argv) {
     } else if (t === "--product") args.product = rest.shift();
     else if (t === "--client") args.client = rest.shift();
     else if (t === "--doc-language" || t === "--doc-filename-language") {
+      // Free text: "English", "Bahasa Indonesia", "id" — a model reads it, so no list to match.
       const raw = (rest.shift() || "").trim();
-      if (!DOC_LANGUAGES.includes(raw)) {
-        die(`${t} needs one of: ${DOC_LANGUAGES.join(", ")}`);
-      }
+      if (!raw) die(`${t} needs a value, for example: English`);
       if (t === "--doc-language") args.docLanguage = raw;
       else args.docFilenameLanguage = raw;
     }
@@ -510,8 +509,9 @@ function setLanguagePolicy(target, { docLanguage, docFilenameLanguage }) {
     return;
   }
   const next = writeLanguagePolicy(text, {
-    docLanguage: docLanguage || existing.docLanguage || "en",
-    docFilenameLanguage: docFilenameLanguage || existing.docFilenameLanguage || "en",
+    docLanguage: docLanguage || existing.docLanguage || DEFAULT_DOC_LANGUAGE,
+    docFilenameLanguage:
+      docFilenameLanguage || existing.docFilenameLanguage || DEFAULT_DOC_LANGUAGE,
   });
   fs.writeFileSync(file, next.endsWith("\n") ? next : `${next}\n`);
   const after = readLanguagePolicy(next);
@@ -838,23 +838,23 @@ async function runWizard(pre) {
   // Dua pertanyaan, dan hanya dua. Istilah metodologi, kode di depan nama berkas, penanda
   // machine-facing, dan identifier kode selalu English — MUST NOT ditanyakan.
   const policy = readIndexPolicy(target);
+  // Teks bebas, bukan daftar. Tulis apa saja yang dimengerti sebuah model — "English",
+  // "Bahasa Indonesia", "id". Yang ditolak hanya kosong.
   const askLanguage = async (message, current) =>
-    cancelIf(
-      await p.select({
+    (cancelIf(
+      await p.text({
         message,
-        options: [
-          { value: "en", label: "English" },
-          { value: "id", label: "Bahasa Indonesia" },
-        ],
-        initialValue: current || "en",
+        placeholder: current || DEFAULT_DOC_LANGUAGE,
+        defaultValue: current || DEFAULT_DOC_LANGUAGE,
       }),
-    );
+    ) || DEFAULT_DOC_LANGUAGE).trim();
   const docLanguage = policy.docLanguage
     ? (note(`bahasa dokumen sudah disetel: ${policy.docLanguage}`), policy.docLanguage)
-    : await askLanguage("Bahasa isi dokumen kerja (.what/ .how/ .control/)", pre.docLanguage);
+    : await askLanguage("Bahasa isi dokumen kerja (.what/ .how/ .control/) — tulis bebas",
+                        pre.docLanguage);
   const docFilenameLanguage = policy.docFilenameLanguage
     ? policy.docFilenameLanguage
-    : await askLanguage("Bahasa slug nama berkas dokumen — kode `UC-` `DEC-` tetap English",
+    : await askLanguage("Bahasa slug nama berkas — kode `UC-` `DEC-` tetap English",
                         pre.docFilenameLanguage || docLanguage);
 
   const selected = cancelIf(
