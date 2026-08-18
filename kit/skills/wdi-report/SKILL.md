@@ -1,0 +1,205 @@
+---
+name: wdi-report
+description: Use when someone needs numbers about this project — progress for a client update, an estimate before the work is committed, or task rows ready to paste into a tracker. Three intents, progress and estimate and dispatch. Never invents a number.
+---
+
+# WDI Report
+
+Three intents, and the first is deliberately fenced off from the other two **because their rules are opposite**.
+
+| Intent | Answers | Rule |
+|---|---|---|
+| `progress` | What has moved, what is late, how much is proven | **Entirely derived.** MUST NOT write one number, date, or percentage that did not come from the registry or from git |
+| `estimate` | How big this is, what the tasks are, how much load, what the timeline looks like | **Forward-facing.** MUST state which inputs exist and how precise that makes it, and MUST be labelled an estimate |
+| `dispatch` | Task rows ready for an outside tracker | Reads the same table as `estimate`; recomputes nothing |
+
+Confusing the first two is the failure this split exists to prevent: a forward-looking figure presented in the
+voice of a derived one is the most expensive kind of wrong.
+
+## What owns what
+
+| Owner | Produces |
+|---|---|
+| `.constitution/scripts/validate.py` | `generated/rtm` · `dag` · `status` · `risks` · `components` · `decisions` · `blueprint` · `estimate` |
+| `.constitution/scripts/timeline.py` | `generated/timeline` · `generated/report` · `.control/reports/<period>.md` |
+| `.constitution/scripts/inventory.py` | The three inventories, derived from code |
+| `wdi-reconcile` | Drift between corpus and registry — read-only, no file |
+| **this skill** | The judgment on top: whether the tables are fresh enough to report on, and the human commentary written at publish time |
+
+All three scripts are deterministic and already written. You MUST NOT hand-derive anything they produce, and you
+MUST NOT write into `generated/` yourself. Your job starts where their output stops being self-explanatory.
+
+---
+
+# Intent `progress`
+
+## Step 1 — Refresh, or refuse
+
+```bash
+uv run .constitution/scripts/timeline.py --refresh --generate
+```
+
+`--refresh` runs the validators first, so both halves of `generated/` are derived at the same commit. Read what
+it prints before reading anything else:
+
+| What it says | What you MUST do |
+|---|---|
+| `rtm/status belum ada` (exit 3) | Stop. The tables cannot be built, so there is nothing honest to report |
+| `git tidak menjawab` (exit 3) | Stop. Every actual date comes from git; without it there is no time dimension |
+| `registry punya perubahan yang belum dicommit` | Say so in the report header. The numbers describe a working tree, not `main` |
+| `story tanpa riwayat git` | Name those stories. They count toward progres janji but cannot appear under Proven |
+| `n temuan validator` | Report the count and, if any are red, say which gate they block |
+
+A report built on stale tables is worse than no report: it looks authoritative and is not.
+
+## Step 2 — Read the derived time dimension
+
+You MUST NOT derive dates yourself. `timeline.py` reads each story file's history and takes the first commit whose
+frontmatter status left `draft` as the start, and the commit where it became `done` as the end. `FR` spans its
+stories; `CAP` spans its `FR`, and closes only when every story under it is closed.
+
+None of this is written back into any registry. A stored copy would be a second home for one fact, and the stored
+copy is the one that goes wrong.
+
+## Step 3 — Read `generated/timeline` and `generated/report`
+
+`timeline` gives one row per `CAP`, plan beside actual, plus a gantt. `state` is `not-started`, `in-progress`,
+`done`, or **`overdue`** — the last being V14.
+
+You MUST list every overdue row **by name**, with what it is waiting on. The script prints them individually for
+the same reason: aggregating them into a count is how a slipping plan stays comfortable.
+
+`report` gives five composed sections covering the span since the last published report: **Proven** (RTM rows that
+turned green, named) · **Moved** (`CAP` and `FR` that started or closed) · **Late** · **Defects** (grouped by
+`root_cause`) · **Gates** (dated from the history of `index.yaml`).
+
+Section 4 grouped by root cause is worth reading twice: it answers how many defects were a wrong requirement rather
+than wrong code, and that ratio is a fact about the method, not about the team.
+
+The left edge is the `asof` of the newest published report. When there is none, the script says the period is
+unbounded on the left, and you MUST repeat that rather than picking a date.
+
+## Step 4 — Publish
+
+```bash
+uv run .constitution/scripts/timeline.py --publish weekly
+```
+
+A published report is **frozen**. It states what was true on a date, exactly like minutes. The script refuses to
+overwrite one (exit 4) rather than trusting anyone to remember.
+
+- You MUST NOT edit a published report. If it was wrong, the next report says so.
+- The `## Catatan` block is the one part a person writes, once, at publish time, before the commit.
+- Commentary MUST cite rather than restate: a slip has a cause, and that cause already lives in a `DEC-`, an
+  `OQ-`, a risk, or a defect.
+
+## Step 5 — Lead with the honest number
+
+| Measure | Formula | Answers |
+|---|---|---|
+| **Progres janji** | green RTM rows ÷ total RTM rows | How much is **proven** |
+| Progres kerja | stories `done` ÷ stories in wave | How much was worked on |
+| Kesiapan gate | green validators ÷ applicable validators | Whether the next gate can open |
+
+You MUST present **progres janji** first and label it as the one that counts. Progres kerja MUST NOT lead a
+client-facing report: a story can be `done` while its RTM row is still red because the test has no name or the `UC`
+does not exist — and that gap is exactly what the client is entitled to know.
+
+---
+
+# Intent `estimate`
+
+**It runs as early as G1, and sharpens every time an input arrives.** That is what makes it useful for sizing a
+project before there is a line of code.
+
+## Step 1 — State the input, and the precision it buys
+
+You MUST say which of these exist and stop at the honest level. Claiming precision the inputs do not support is the
+one thing this intent can get badly wrong.
+
+| Input available | What can be estimated | Precision |
+|---|---|---|
+| **G1** — the brief | T-shirt size · rough capability count · the first risk list | very rough |
+| **+ G2** — the PRD | **The candidate task list = the `FR` list** · `estimate_mandays` per `CAP` · `must/should/could/wont` · order from `depends_on` between `CAP` | rough |
+| **+ tail of G2** — components born | Tasks grouped per component = per Epic · **`mode` per component, so document load is counted too** · `risk_accepted` marks exposure | medium |
+| **+ G3** — the blueprint | Table, endpoint, and screen counts → real implementation load, not load guessed from an `FR` count | good |
+| **+ G4** — component depth | Stories and test names → measured load | best |
+
+## Step 2 — Inputs
+
+`requirements.yaml` (`estimate_mandays`, `priority`, `depends_on`, `target_release`) · `components.yaml` (`mode`,
+`risk_accepted`, `risk_note`) · the three `inventory-*.md` when they exist.
+
+`estimate_mandays` on `CAP` is the **source**, and it is used for real here rather than being decoration. When it is
+absent, say so — an estimate with no mandays input is a T-shirt size, and it MUST be reported as one.
+
+## Step 3 — The output: one task table
+
+Written to `.control/generated/estimate.md` by `validate.py --generate`. **Default one row per `FR`**, because that
+is the ideal shape of a wave and because an `FR` has had a proof of done since birth.
+
+| Column | Content |
+|---|---|
+| Task | The title, from the `FR` |
+| `FR` | Its id |
+| Epic | The Product Component |
+| `mode` | That component's depth — this is what makes document load visible |
+| Paparan | `risk_accepted` + `risk_note` |
+| Beban | Mandays, derived from the parent `CAP`'s `estimate_mandays`, divided among its `FR` |
+| Prioritas | From the `CAP` |
+| Bergantung pada | From `depends_on` |
+| Rilis | The `CAP`'s `target_release` |
+
+## Step 4 — Say what it is, and what it is not
+
+> A row in the estimate table is a **candidate** task. A wave in `waves.yaml` is a **real** one. The first missing
+> is normal; the second is not.
+
+The table is planning, not commitment. One row MAY become one wave, and three neighbouring rows MAY be merged into
+one. **That merge is a human decision made when the wave opens**, and this intent MUST NOT pretend to already know
+the answer.
+
+- Every output MUST carry the word estimate, visibly, at the top.
+- You MUST NOT present a mandays figure without naming what it was derived from.
+- You MUST NOT include a date this intent computed itself. Plan dates come from `planned_end` on a `CAP`; where
+  there is none, the timeline is stated in sequence and dependency, not in dates.
+
+---
+
+# Intent `dispatch`
+
+Reads `.control/generated/estimate.md` and `waves.yaml`. **It recomputes nothing.**
+
+It emits rows in a form that can be pasted into an outside tracker: Epic (the Product Component), Task (the wave, or
+the candidate row where no wave exists yet), Sub-task (the story, where one exists), labels for `FR` and `CAP`, and
+Fix Version from the release.
+
+- Output goes **to the screen**. This intent MUST NOT write a file, and MUST NOT write to the tracker — entering it
+  is a human act.
+- The corpus never reads back from the tracker. **The corpus is the source of truth; the tracker is a view.**
+- A row whose Task is still a candidate MUST be marked as one. A candidate pasted as a real Task is how a tracker
+  fills with issues nobody committed to.
+
+---
+
+## Rules
+
+- You MUST NOT invent progress. When a table is missing or stale, name it and stop.
+- You MUST NOT report `progress` in stories. The planning layer speaks in `CAP`, `FR`, and defects; stories are the
+  execution layer and are born too late to plan against.
+- You MUST NOT hand-write anything under `generated/`. There is no exception.
+- You MUST NOT re-run `--publish` to "fix" a report. The refusal is the rule working.
+- When plan dates have moved since the last report, you MUST say so and point at the commit.
+- When there is no previous report, say the period is unbounded on the left rather than picking a date.
+- You MUST NOT mix the intents in one output. A derived number and a forward-looking one MUST NOT appear in the same
+  table without the labels that separate them.
+
+## Output
+
+**`progress`:** the published path, the freshness commit, progres janji, then the five sections — overdue rows named
+individually, never counted away.
+
+**`estimate`:** which inputs exist and the precision that buys, the task table, and what is a candidate rather than
+a commitment.
+
+**`dispatch`:** the paste-ready rows, on screen, with candidates marked.

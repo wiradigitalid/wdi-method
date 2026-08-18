@@ -1,0 +1,19 @@
+# Kelas B — path bisa dikonfigurasi, granularitas per-PC tidak.
+#
+# bmad-ux hanya mengenal {project_name} dan {date}, tidak ada {slug}, jadi ia tidak bisa mendarat
+# sendiri ke .how/<pc>/. Landing zone-nya dibuat NETRAL di _bmad-output/ karena keluarannya
+# membelah dua lapisan: DESIGN.md milik .how/, EXPERIENCE.md milik .what/. Mendarat lebih dulu di
+# salah satunya adalah pelanggaran lapisan yang hidup selama satu run.
+
+[workflow]
+
+ux_output_path     = "{project-root}/_bmad-output/ux"
+run_folder_pattern = "ux"
+
+doc_standards = ["file:{project-root}/.constitution/document/ux-guide.md"]
+
+persistent_facts = [
+  "Seluruh panggilan memlog.py MUST memakai --path {project-root}/.control/memlog/ux.md. --workspace MUST NOT dipakai.",
+]
+
+on_complete = "Serahkan pendaratan ke wdi-ux: DESIGN.md ke .how/<pc>/01-ux/, token dan komponen dasar ke .how/_platform/design-system.md, EXPERIENCE.md ke .what/<pc>/04-usecases/, tiap layar didaftarkan sebagai LC ui-screen di components.yaml. MUST NOT menempatkan sendiri."

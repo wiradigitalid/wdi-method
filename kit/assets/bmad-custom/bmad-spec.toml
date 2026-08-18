@@ -1,0 +1,15 @@
+# Kelas C — satu run per (wave x Product Component), habis setelah G5.
+#
+# Slug menentukan apakah spec fana atau hidup: slug yang sama mendarat di folder yang sama dan
+# mempertahankan capability ID. Slug per-PC saja akan membuat SPEC.md jadi dokumen hidup per PC —
+# saingan langsung SRS. Slug w<N>-<pc> menjaga spec tetap fana, dan CAP-N tetap terjaga karena
+# dialokasikan dari registry, bukan dari mekanisme internal BMad.
+
+[workflow]
+
+persistent_facts = [
+  "Slug spec MUST berbentuk w<N>-<pc>, satu run per pasangan wave x Product Component.",
+  "SPEC.md MUST NOT memuat apa pun yang tidak berasal dari SRS, SDD, atau PRD. Temuan baru MUST didaratkan ke korpus oleh skill pemilik lapisannya — tabel kepemilikan di .constitution/document/corpus-guide.md — sebelum wave ditutup, bukan dibiarkan tinggal di spec.",
+  "CAP-N MUST dialokasikan dari {project-root}/.control/registry/requirements.yaml.",
+  "file:{project-root}/.control/product-glossary.md",
+]

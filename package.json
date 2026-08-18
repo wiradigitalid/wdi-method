@@ -1,0 +1,31 @@
+{
+  "name": "wdi-method",
+  "version": "0.1.0",
+  "description": "WDI Method — software delivery method that wraps BMad",
+  "bin": {
+    "wdi-method": "./bin/wdi-method.js"
+  },
+  "files": [
+    "bin/",
+    "kit/",
+    "kit-overlay/",
+    "scaffold/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wiradigitalid/wdi-method.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wiradigitalid/wdi-method/issues"
+  },
+  "homepage": "https://github.com/wiradigitalid/wdi-method#readme"
+}

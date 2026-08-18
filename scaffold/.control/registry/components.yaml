@@ -1,0 +1,21 @@
+# components.yaml — SSOT untuk Product Component, container, dan Logical Component
+#
+# Tiga hal berbeda, dua di antaranya berbagi kata "component":
+#   Product Component (PC) — irisan DOMAIN, permukaan yang bisa disebut pengguna
+#   Container              — unit yang berjalan atau dideploy sendiri; C4 L2 memilikinya
+#   Logical Component (LC) — satu unit build yang bisa ditunjuk
+#
+# `mode` — KEDALAMAN DOKUMEN. Ditulis HANYA pada komponen yang memang perlu beda dari global.
+# `risk_accepted` — INTENSITAS REVIEW, bukan kedalaman. low · medium · high
+# `owns` — entitas domain yang komponen ini BERWENANG MENULIS.
+# `g4_passed` — hanya berarti pada komponen ber-mode di atas catalog.
+#
+# Komponen lahir lewat wdi-init intent `component` di ekor G2. Berkas ini lahir kosong.
+
+product_components: []
+
+platform_owns: []
+
+containers: []
+
+logical_components: []

@@ -1,0 +1,15 @@
+# Skill ini tidak punya key `persistent_facts`, jadi aturan rumah tidak bisa disuntikkan lewat
+# jalur biasa. `preferences` adalah tuas setaranya: kalimat literal yang dipatuhi perefine tiap
+# sesi.
+#
+# Hanya aturan rumah yang mengubah CARA sebuah kritik mendarat yang pantas di sini — metode
+# lengkapnya tetap di .constitution/document/delivery-flow-guide.md.
+
+[workflow]
+
+preferences = [
+  "Honor AGENTS.md dan .constitution/document/ sebagai aturan yang sedang berlaku di repo ini.",
+  "Nilai artefak G1-G4 terutama dari Decision Summary-nya: satu halaman, bahasa bisnis, tanpa jargon yang belum punya entri Glossary. Ringkasan yang tidak bisa dibaca habis dalam time budget gate-nya adalah temuan itu sendiri.",
+  "Kata normatif hanya lima — MUST, MUST NOT, SHOULD, SHOULD NOT, MAY — dalam bahasa Inggris dan huruf besar; prosanya tetap Bahasa Indonesia. Tandai sebagai cacat: penanda imperatif lain dalam bahasa apa pun, istilah metode yang diterjemahkan, dan karangan padanan Indonesia untuk istilah teknis yang lazim ditulis dalam bahasa Inggris.",
+  "Pushback MUST menyebut keputusan yang sedang dipertaruhkan dan ongkosnya bila salah, bukan sekadar menilai tulisannya.",
+]

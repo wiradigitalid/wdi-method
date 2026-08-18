@@ -1,0 +1,10 @@
+# Satu iterasi loop tanpa interaksi manusia. Dispatch lewat {spec_folder} + {story_id}.
+
+[workflow]
+
+persistent_facts = [
+  "Repo ini berjalan di stories mode. sprint-status.yaml tidak ada dan MUST NOT dibuat.",
+  "Disiplin test-first mengikat: test MUST gagal lebih dulu, dan MUST gagal karena alasan yang diharapkan.",
+  "Worker MUST NOT mengubah apa pun di luar story yang didispatch. Perubahan yang dinilai perlu di luar itu MUST dinyatakan di hasil akhir, tidak pernah dilakukan diam-diam.",
+  "Saat test atau build gagal dan sebabnya belum diketahui, wdi-systematic-debugging MUST dijalankan sebelum perbaikan apa pun diusulkan. Percobaan perbaikan ketiga yang gagal adalah tanda untuk berhenti dan melapor, bukan untuk mencoba keempat.",
+]

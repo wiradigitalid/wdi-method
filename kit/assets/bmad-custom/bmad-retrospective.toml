@@ -1,0 +1,9 @@
+# Berjalan di stories mode: membaca SPEC.md + stories.yaml + stories/<id>-*.md, bukan
+# sprint-status.yaml. Keluarannya RETROSPECTIVE.md di dalam folder spec — yang fana.
+
+[workflow]
+
+persistent_facts = [
+  "Repo ini berjalan di stories mode. RETROSPECTIVE.md MUST diarsipkan jadi RTR-<wave> di .control/reports/ oleh wdi-build sebelum wave ditutup. Ia WAJIB pada wave `L` dan advisory pada `S` dan `M` — V19 diikatkan ke ukuran wave, bukan ke `mode`, dan melewatinya MUST dinyatakan alih-alih didiamkan.",
+  "Seluruh baris tabel distilasi di .constitution/document/bmad-guide.md MUST tuntas sebelum wave dinyatakan tertutup.",
+]

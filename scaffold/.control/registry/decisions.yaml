@@ -1,0 +1,6 @@
+# decisions.yaml — SSOT untuk keputusan `DEC-`
+#
+# Penomoran GLOBAL. `status`: draft | accepted | applied | superseded | rejected.
+# Keputusan MEMBEKU saat `applied`, bukan saat `accepted`.
+
+decisions: []

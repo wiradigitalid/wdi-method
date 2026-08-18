@@ -1,0 +1,46 @@
+# index.yaml — peta kendali
+#
+# Memuat yang tidak punya rumah di registry lain: identitas produk, kedalaman global, peran, jatah
+# waktu gate, jatah pertanyaan terbuka, dan kosakata `touches`.
+
+# IDENTITAS PRODUK. Satu-satunya tempat terstruktur. Diisi di G1.
+# constitution.md Pasal 1 dan judul brief mengutip nilai ini — mereka MUST NOT menjadi sumber kedua.
+product:
+  name: "{product}"
+  client: ""
+
+# KEDALAMAN GLOBAL. Satu-satunya knob kedalaman dokumen, dan ia MUST NOT ikut mengendalikan intensitas
+# review — itu `risk_accepted` per komponen di components.yaml.
+#   catalog  daftar UC + tiga inventaris + C4; nol berkas tambahan per komponen. G4 dilewati
+#   outline  + alur penuh maks 3 UC, business rule lokal, Decision Summary, daftar LC
+#   guarded  + Failure Behaviour seluruh boundary, Inherited Constraints, dokumen integrasi
+#   deep     + ABCE, spec kontrak per endpoint, data dictionary, flow, state machine, skenario
+# Default `catalog` bila baris ini tidak ada. Baris per komponen di components.yaml MENANG atas ini.
+# Tidak ada scope ketiga: `mode` MUST NOT di-override per wave maupun per SPEC.md.
+mode: catalog
+
+# GATE YANG SUDAH LULUS. Ditulis hanya atas keputusan pemilik repo di gate-nya sendiri, dan MUST NOT
+# diisi agent untuk membuka jalan bagi dirinya.
+gates_passed: []
+
+roles: []
+  # - role: Product Owner
+  #   files: []
+
+gates:
+  G1: { name: Problem,   stage: 1, budget_minutes: 20 }
+  G2: { name: Product,   stage: 2, budget_minutes: 45 }
+  G3: { name: Blueprint, stage: 3, budget_minutes: 45 }
+  G4: { name: Component, stage: 4, budget_minutes: 30 }
+  G5: { name: Release,   stage: 5, budget_minutes: 10 }
+
+question_budget:
+  blocking_per_component: 3
+  assumptions_per_gate: 15
+
+wave_sizes:
+  S: { stories: "<=3", note: "tanpa FR baru; G4 dan G5 digabung satu sesi 20 menit" }
+  M: { stories: "4-12", note: "seperti biasa" }
+  L: { stories: ">12",  note: "atau container baru; retrospektif dijalankan" }
+
+touches_vocabulary: []

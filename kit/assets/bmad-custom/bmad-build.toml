@@ -1,0 +1,52 @@
+# G5 — satu-satunya pelaksana, dan wdi-build yang mendispatch-nya. Pelaksana MUST NOT merakit
+# rantai sendiri.
+#
+# Memasok disiplin test-first yang bmad-build tidak punya: ia mengaudit test SETELAH implementasi
+# (Matrix Test Audit di step-03), tetapi tidak pernah mewajibkan sebuah test gagal lebih dulu.
+#
+# Aturan merge: string mengganti, list menambah, tabel merge per key.
+# .claude/skills/bmad-build/customize.toml MUST NOT diedit — ia ditimpa tiap update.
+
+[workflow]
+
+# Mengganti handoff step-03 bawaan. Semua yang dibawa bawaan tetap ada (subagent tanpa konteks
+# percakapan, spec sebagai satu-satunya sumber kebenaran, memuat berkas `context:`, laporan
+# penutup); siklus test-first inilah yang ditambahkan override ini.
+#
+# Sengaja memuat METODE saja. Pernyataan ulang tujuan, daftar berkas, acceptance criteria, dan
+# aturan gaya rumah TIDAK masuk dispatch — semuanya sudah ada di spec, dan step-03 melarang
+# menggandakannya di sini.
+
+implementation_handoff = """
+Launch a subagent with no prior conversation context, with this prompt:
+
+> Read {spec_file} fully and implement it — the spec is the sole source of truth. Load every file listed in its frontmatter `context:` before you start.
+>
+> Work test-first, one task at a time:
+>
+> 1. Write the smallest test that expresses the next unmet acceptance criterion.
+> 2. Run it. Confirm it fails, and confirm it fails for the reason you expect — a test that errors on a typo or a missing import has proven nothing.
+> 3. Write the minimum code that makes it pass. No extra scope, no "while I'm here" refactoring.
+> 4. Run the test plus the surrounding suite. Both must be green before you start the next task.
+>
+> If a criterion genuinely cannot be expressed as a test — pure configuration, a docs change, a visual-only tweak — say so explicitly in your report and state how you verified it instead. Never invent a test that asserts nothing in order to satisfy the cycle, and never write the implementation first and the test afterwards to make it look followed.
+>
+> When done, report what you changed, how you verified it, and anything left incomplete or risky. Include the actual command output for the final test run — a claim of green without the output does not count as verification.
+"""
+
+persistent_facts = [
+  "Repo ini berjalan di stories mode. sprint-status.yaml tidak ada dan MUST NOT dibuat; status story tinggal di frontmatter story file.",
+  "Satu Logical Component MUST terdaftar di components.yaml sebelum story yang menyentuhnya dikerjakan.",
+  "Saat ada yang rusak dan sebabnya belum diketahui, wdi-systematic-debugging MUST dijalankan sebelum perbaikan apa pun diusulkan.",
+]
+
+# Tidak dioverride, dan itu disengaja:
+#
+# - review_layers — tiga layer bawaan (blind-hunter, edge-case-hunter, verification-gap) plus
+#   Review Panel dua keluarga CLI yang dijalankan bmad-code-review sesudahnya sudah menutup
+#   kebutuhan review repo ini. Menambah layer keempat memakan token tanpa menutup celah.
+#
+# - on_complete — pembaruan registry setelah story selesai adalah tugas wdi-build dan skill pemilik
+#   lapisannya,
+#   bukan bmad-build. Menaruhnya di sini membuat dua penulis untuk satu berkas.
+#   Checklist penutup story ada di 05-gates.md.

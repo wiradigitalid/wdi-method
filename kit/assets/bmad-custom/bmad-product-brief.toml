@@ -1,0 +1,34 @@
+# Kelas A — menulis langsung ke korpus.
+# Singleton: satu produk, satu brief, lintas rilis. Produk kedua MUST dapat repo sendiri.
+#
+# Dipanggil lewat `wdi-problem`, bukan langsung. Override di sini yang menentukan
+# ke mana artefaknya mendarat; skill wrapper yang memeriksa isinya.
+
+[workflow]
+
+brief_template     = "{project-root}/.constitution/document/templates/brief.md"
+
+# run_folder_pattern MUST konstan — tanpa {project_name} dan tanpa {date}.
+# Itu yang memaksa singleton: tiap run jatuh ke folder yang sama, jadi run kedua
+# terdeteksi sebagai resume/update, bukan folder sebelah.
+# Hasilnya .what/_product-brief/brief.md dan .what/_product-brief/addendum.md;
+# kedua nama berkas itu di-hardcode di SKILL.md dan tidak bisa diatur.
+brief_output_path  = "{project-root}/.what"
+run_folder_pattern = "_product-brief"
+
+# Append-only terhadap default `skill:bmad-review lenses=structure,prose`.
+doc_standards = ["file:{project-root}/.constitution/document/brief-guide.md"]
+
+persistent_facts = [
+  "Seluruh panggilan memlog.py — init, append, set, dan pembacaan saat resume atau intent Update — MUST memakai --path {project-root}/.control/memlog/brief.md. --workspace MUST NOT dipakai; ia akan menaruh .memlog.md di dalam .what/, dan tidak ada memlog yang boleh tinggal di korpus.",
+
+  "Template brief membuka dengan izin membuang section yang tidak layak. Izin itu MUST NOT diterapkan pada delapan section wajib: The Problem, Who This Serves, Goals, Success Criteria, Scope In, Scope Out, Constraints, Assumptions — beserta Prerequisites. Section template lain MAY dibuang.",
+
+  "Goals MUST bernomor BG-1, BG-2, dan seterusnya. MUST NOT bernomor G1, G2 — G1 sampai G5 adalah nama lima gate di metode ini, dan BG adalah mata rantai pertama rantai traceability BG -> CAP -> FR/NFR -> UC -> Story -> Test.",
+
+  "Tabel Who This Serves MUST memuat tepat satu baris bertanda primary, dan MUST memuat seluruh stakeholder termasuk yang tidak pernah membuka produknya.",
+
+  "Brief MUST NOT memuat daftar Product Component dan MUST NOT mengisi product_components maupun logical_components. Slicing lahir di EKOR G2 lewat wdi-init intent `component`, dibaca dari brief plus seluruh PRD.",
+
+  "Keluaran riset, brainstorming, forge, dan PRFAQ MUST tetap di _bmad-output/. Ia MUST NOT dilebur ke dalam brief dan MUST NOT dipromosikan ke .what/; `DEC-` atau PRD merujuknya lewat path. Folder run itu MUST NOT dihapus — intent Update membacanya kembali sebagai original inputs.",
+]

@@ -1,0 +1,15 @@
+# requirements.yaml — SSOT untuk BG · CAP · FR · NFR · UJ
+#
+# Kunci berbahasa Inggris; isi nilainya Bahasa Indonesia.
+# Nomor dialokasikan DARI SINI dan MUST NOT dimulai ulang per dokumen, per komponen, atau per rilis.
+# Deretnya global untuk satu produk.
+
+goals: []
+
+capabilities: []
+
+functional: []
+
+nonfunctional: []
+
+journeys: []

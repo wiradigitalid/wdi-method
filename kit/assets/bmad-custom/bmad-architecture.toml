@@ -1,0 +1,31 @@
+# Kelas A — altitude initiative saja.
+# Spine memuat invariant yang mencegah unit yang dibangun terpisah jadi divergen.
+# Struktur (stack, tree, data shape) diperlakukan sebagai seed, bukan kontrak.
+#
+# Urutan mengikat: spine lebih dulu, bmad-spec membacanya sebagai companion — bukan sebaliknya.
+
+[workflow]
+
+spine_template     = "{project-root}/.constitution/document/templates/architecture-spine.md"
+spine_output_path  = "{project-root}/.how/_platform"
+run_folder_pattern = "architecture"
+
+# architecture-guide.md MUST NOT dipasang sebagai doc_standards, meski itu tempat lazimnya
+# bagi guide dokumen. Skill ini mengecualikan spine dari doc_standards secara sengaja —
+# customize.toml bawaannya menyebut "never to the spine", dan langkah 5 SKILL.md mengulanginya:
+# "apply {workflow.doc_standards} polish to that prose only, never to the spine".
+# Dipasang di sana, aturan AD-N cuma memoles deck dan C4 — dokumen yang tidak punya AD-N —
+# sementara spine ditulis tanpa guide-nya. Karena itu ia jadi fakta yang dipegang sejak
+# aktivasi, bukan poles di akhir.
+#
+# doc_standards sengaja tidak diisi. Default BMad `skill:bmad-review lenses=structure,prose`
+# tetap berlaku untuk rendering, dan array ini append — mengosongkannya tidak mencabut default.
+#
+# Akibatnya spine tidak punya review otomatis. `bmad-review` atasnya MUST dipanggil manual
+# sebelum G4 — lihat tabel "Siapa memanggil bmad-review" di 05-gates.md.
+
+persistent_facts = [
+  "file:{project-root}/.constitution/document/architecture-guide.md",
+  "file:{project-root}/.constitution/document/decision-guide.md",
+  "Seluruh panggilan memlog.py MUST memakai --path {project-root}/.control/memlog/spine.md. --workspace MUST NOT dipakai.",
+]

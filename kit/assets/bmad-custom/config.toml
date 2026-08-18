@@ -1,0 +1,6 @@
+# Dipasang di langkah 1 runbook — MUST lebih dulu dari yang lain.
+#
+# bmad-help dan bmad-correct-course membaca {project_knowledge}. Selama ia menunjuk docs/,
+# keduanya membaca folder yang sudah dibubarkan.
+
+project_knowledge = "{project-root}/.control"

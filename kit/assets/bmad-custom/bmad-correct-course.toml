@@ -1,0 +1,27 @@
+# Kelas B — tidak ada knob path sama sekali.
+#
+# customize.toml bawaan bmad-correct-course hanya membuka activation_steps, persistent_facts, dan
+# on_complete. Tidak ada *_output_path, jadi proposalnya tetap mendarat di
+# _bmad-output/planning-artifacts/sprint-change-proposal-{date}.md dan MUST didaratkan ulang oleh
+# wdi-decision sebagai `DEC-` bertipe course-correction. Kode `SCP-` dan folder
+# .control/supplements/ SUDAH DICABUT — koreksi arah adalah keputusan, dan tidak ada kode kedua yang
+# menamai hal yang sama.
+#
+# Bahaya utamanya bukan path, melainkan kebiasaan skill ini menyunting langsung: default-nya
+# "direct updates to epics, stories, or PRD sections". Di repo ini itu MUST NOT terjadi — perubahan
+# dokumen lewat wdi-decision intent `apply`, isi wave lewat wdi-build. Karena itu larangannya
+# dipasang sebagai persistent_facts, yang dipegang sejak aktivasi, bukan sebagai poles di akhir.
+
+[workflow]
+
+persistent_facts = [
+  "file:{project-root}/.constitution/document/delivery-flow-guide.md",
+  "file:{project-root}/.constitution/document/corpus-guide.md",
+  "Skill ini MUST NOT menulis atau menyunting apa pun di {project-root}/.what/ maupun {project-root}/.how/. Keluarannya adalah proposal; perubahan dokumen dikerjakan wdi-decision intent `apply` setelah `DEC-`-nya accepted, dan isi wave oleh wdi-build.",
+  "epics.md dan sprint-status.yaml TIDAK dipakai di repo ini — kita menjalankan stories route. Keduanya MUST NOT dibaca sebagai sumber, dan MUST NOT dibuat.",
+  "Pemindaian impak MUST mencakup .what/_prd/, .what/<pc>/, .how/_platform/, .how/<pc>/, SPEC.md, .control/registry/waves.yaml, dan berkas story. .what/<pc>/ tidak dikenal skill ini sama sekali dan tanpa ini akan basi diam-diam.",
+  "Setiap perubahan rencana yang mahal dibalik MUST menjadi `DEC-` lewat wdi-decision, bukan paragraf di dalam proposal. Koreksi arah sendiri adalah satu `DEC-` bertipe course-correction.",
+  "Sebuah koreksi yang membatalkan lebih dari 30% story sebuah wave MUST NOT ditangani sebagai tambalan. Katakan begitu, dan biarkan wave-nya dipotong ulang lewat wdi-build.",
+]
+
+on_complete = "Serahkan pendaratan ke wdi-decision: seluruh proposal jadi satu `DEC-` bertipe course-correction, dan folder run-nya MUST NOT dihapus. MUST NOT menempatkan sendiri, MUST NOT menyunting .what/ atau .how/."
