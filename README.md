@@ -212,6 +212,11 @@ git commit && git push
 `promote` copies the portable method, replaces product-named files with their generic versions, scrubs
 initiative slugs, and **skips `.constitution/project/`** so a product's own rules can never be published.
 
+**Patch releases are routine; minor and major are the maintainer's call.** This package overwrites files
+in repos that already hold months of work, and the version is the only signal a reader has for how
+carefully to read the diff. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the detail, and
+[`AGENTS.md`](AGENTS.md) states it for agents working on the package.
+
 ---
 
 MIT. Requires Node 20+ and [uv](https://docs.astral.sh/uv/) for the Python scripts.
