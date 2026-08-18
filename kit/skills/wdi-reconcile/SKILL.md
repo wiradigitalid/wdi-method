@@ -111,7 +111,7 @@ Two properties keep the check healthy:
   is no flood.
 - It is cheap: a path and symbol lookup, not a semantic judgement.
 
-A claim the check proves absent MUST be labelled `[TIDAK ADA]` in the document rather than deleted —
+A claim the check proves absent MUST be labelled `[MISSING]` in the document rather than deleted —
 see the evidence ladder in `sdd-guide.md`, which owns that rule.
 
 ## Output — an action matrix

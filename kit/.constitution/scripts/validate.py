@@ -38,11 +38,17 @@ GENERATED_PAGES = ["decisions", "blueprint", "estimate"]
 
 MODES = ("catalog", "outline", "guarded", "deep")
 
-# Kata kunci yang membuat sebuah komponen "sensitif" untuk keperluan V23. Dicocokkan pada `risk_note`,
-# yang ditulis Bahasa Indonesia. Daftar ini SENGAJA pendek: ia mengungkap, bukan menghakimi.
+# Keywords that make a component "sensitive" for V23. Matched against `risk_note`, which is PROSE in
+# whatever `policy.doc_language` the product chose — so the set is the UNION of both languages rather
+# than a translation. It leans toward disclosing more, which is what this check is for: it discloses,
+# it does not judge. Deliberately short.
 SENSITIVE_MARKERS = (
-    "uang", "pembayaran", "data pribadi", "pii",
-    "tak-terbalikkan", "tak terbalikkan", "tidak dapat dibatalkan", "irreversible",
+    # English
+    "money", "payment", "personal data", "pii",
+    "irreversible", "cannot be undone", "contractual", "contract", "integration",
+    # Bahasa Indonesia
+    "uang", "pembayaran", "data pribadi",
+    "tak-terbalikkan", "tak terbalikkan", "tidak dapat dibatalkan",
     "kontraktual", "kontrak", "integrasi",
 )
 
@@ -1031,6 +1037,11 @@ def v25(c: Corpus, r: Result) -> None:
 
 UC_ROW_RE = re.compile(r"^\|\s*(UC-\d+)\s*\|([^\n]*)$", re.M)
 
+# Nilai kolom `critical` dicocokkan mesin, jadi ia machine-facing dan bentuk kanoniknya English `yes`.
+# `ya` tetap diterima: sebuah korpus yang menulisnya sebelum aturan ini berlaku MUST NOT dipaksa migrasi
+# hanya supaya sebuah regex lebih rapi. Batas kata mencegah `ya` mencocoki kata lain.
+CRITICAL_YES = re.compile(r"\b(yes|ya)\b", re.I)
+
 
 def v26(c: Corpus, r: Result) -> None:
     """Katalog UC di tiap SRS MUST sepakat dengan `usecases.yaml` — id-nya DAN `critical`-nya.
@@ -1071,11 +1082,11 @@ def v26(c: Corpus, r: Result) -> None:
             if reg_pc[uid] != pid:
                 r.fail("V26", f"{pid}/{uid}",
                        f"registry menaruhnya di `{reg_pc[uid]}`, bukan di komponen ini")
-            marked = "ya" in cells[3].lower()
+            marked = CRITICAL_YES.search(cells[3]) is not None
             if marked != reg[uid]:
                 r.fail("V26", f"{pid}/{uid}",
-                       f"`critical` di SRS {'ya' if marked else 'tidak'}, "
-                       f"di registry {'ya' if reg[uid] else 'tidak'}")
+                       f"`critical` in the SRS {'yes' if marked else 'no'}, "
+                       f"in the registry {'yes' if reg[uid] else 'no'}")
         for uid, owner in sorted(reg_pc.items()):
             if owner == pid and uid not in seen:
                 r.fail("V26", f"{pid}/{uid}", "ada di `usecases.yaml` tetapi tidak di katalog SRS")

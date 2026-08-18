@@ -117,16 +117,16 @@ NOT register a `container`, and you MUST NOT register `ui-screen` or `ui-composi
 
 ## Step 5 — Evidence, and the as-built case
 
-Every technical claim about code that already exists MUST name what was read. The four labels — `[ASUMSI]` ·
-`[PARTIAL]` · `[PERLU DIKONFIRMASI]` · `[TIDAK ADA]` — are mandatory, and their ladder rules are in
+Every technical claim about code that already exists MUST name what was read. The four labels — `[ASSUMED]` ·
+`[PARTIAL]` · `[NEEDS CONFIRMATION]` · `[MISSING]` — are mandatory, and their ladder rules are in
 `sdd-guide.md`.
 
 **Raising a component's `mode` after its code runs is the case this matters most for.** What you write then is
 an **as-built record, not a design**, and you MUST NOT raise a claim to verified without naming the file that
 proves it. Two labels MUST be acted on rather than left in the text:
 
-- `[PERLU DIKONFIRMASI]` → `wdi-question`, before G4 opens.
-- `[TIDAK ADA]` → dispositioned as a `BUG-`, a correction, or planned work. It MUST NOT be deleted; the
+- `[NEEDS CONFIRMATION]` → `wdi-question`, before G4 opens.
+- `[MISSING]` → dispositioned as a `BUG-`, a correction, or planned work. It MUST NOT be deleted; the
   sentence is the only surviving evidence that somebody once believed the thing existed.
 
 ## Step 6 — Drift

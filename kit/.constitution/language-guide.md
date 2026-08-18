@@ -30,11 +30,38 @@ The path a person types or copies is a name. One exception: `/bisnis` and `/{cod
 surface is named in Indonesian in the product, and `/business` would be a second name for the same
 thing.
 
-## Document filenames MAY be Indonesian
+## Two settings, and everything else is not a choice
 
-Three parts are not free, because the method reads them: layer and slot folder names, document code
-prefixes (`DEC-`, `FR-`), and a `YYYY-MM-DD` prefix. Files under `.constitution/` MUST be English —
-they are agent instructions.
+The product picks two things, both in `.control/registry/index.yaml` under `policy:`, and both
+defaulting to English:
+
+| Setting | Governs |
+|---|---|
+| `doc_language` | The **prose** of working documents in `.what/` · `.how/` · `.control/` |
+| `doc_filename_language` | The **slug** part of a document filename |
+
+Nothing else about language is a setting, and a skill MUST NOT ask:
+
+- **Method terminology** — `DEC` `SRS` `SDD` `UC` `FR` `AD`, the gate names, the values of `mode` and
+  `risk_accepted`. One thing, one name, in every repo the method is installed in.
+- **Machine-facing markers** — `[NEEDS CONFIRMATION]` `[MISSING]` `[ASSUMED]` `[PARTIAL]`, and the
+  `yes`/`no` in a `critical` column. They are matched by scripts, which makes them keys rather than
+  prose, and the rule above on registry values already covers keys.
+- **Code identifiers, database columns, config keys** — §Code MUST be English, above.
+
+**A corpus written before these settings existed MUST NOT be migrated for them.** The readers accept
+both languages — `validate.py` matches `yes|ya`, and V23's keyword set is the union of both — so an
+existing document keeps working and a new one is written in the chosen language. Rewriting a hundred
+documents so a regex looks tidier is a cost with no buyer.
+
+## Document filenames — the slug follows the setting
+
+Three parts are **not** free, because the method reads them: layer and slot folder names, document code
+prefixes (`DEC-`, `FR-`), and a `YYYY-MM-DD` prefix. Those are always English and always as written.
+The slug after the code follows `doc_filename_language`.
+
+Files under `.constitution/` MUST be English whatever the settings say — they are agent instructions,
+and they travel to every repo through the `wdi-method` package.
 
 ## A wrong name MUST NOT be fixed inside an unrelated change
 

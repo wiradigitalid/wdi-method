@@ -148,10 +148,10 @@ as-built record, and the labels are mandatory there for the same reason.
 
 | Label | Meaning |
 |---|---|
-| `[ASUMSI]` | We decided to believe it; nothing was read that confirms it |
+| `[ASSUMED]` | We decided to believe it; nothing was read that confirms it |
 | `[PARTIAL]` | Verified for part of the surface, not all of it |
-| `[PERLU DIKONFIRMASI]` | A question with an owner, filed through `wdi-question` |
-| `[TIDAK ADA]` | **Checked, and the thing described is not there** |
+| `[NEEDS CONFIRMATION]` | A question with an owner, filed through `wdi-question` |
+| `[MISSING]` | **Checked, and the thing described is not there** |
 
 An unlabelled claim is read as verified. That is why the labels are mandatory and not a courtesy.
 
@@ -165,10 +165,10 @@ An unlabelled claim is read as verified. That is why the labels are mandatory an
   wearing a label.
 - A claim MUST NOT be raised because it has survived several readings. Familiarity is not evidence.
 
-### `[TIDAK ADA]` — negative knowledge, and why it MUST NOT be deleted
+### `[MISSING]` — negative knowledge, and why it MUST NOT be deleted
 
 The first three labels state a degree of **not knowing**; this one states the opposite — it was checked, and
-it is not there. `[ASUMSI]` means nobody looked.
+it is not there. `[ASSUMED]` means nobody looked.
 
 The instinct is to delete the sentence, and that MUST NOT be done. Deleting it throws away the fact that
 somebody once believed the thing existed, and that belief came from somewhere: a cancelled plan, a rename
@@ -182,7 +182,7 @@ Each MUST be resolved into exactly one of three, with the disposition recorded b
 | The document was wrong | Correct the claim, and say in the same pass what it used to assert |
 | It is real but not built yet | A planned line with an owner — a `CAP` or an `FR`, never a bare note |
 
-An unresolved `[TIDAK ADA]` MUST NOT pass G4.
+An unresolved `[MISSING]` MUST NOT pass G4.
 
 ## The boundary against promising
 
@@ -199,7 +199,7 @@ Only what this component's `mode` demands, and nothing beyond it:
   Behaviour present for **every** boundary named in the API and screen inventories.
 - At `deep`: Robustness Analysis done; every `critical` use case mirrored at the technical altitude under
   the same ids; contract specs answering all five lanes; the data dictionary present.
-- Always: unresolved `[PERLU DIKONFIRMASI]` filed through `wdi-question`, no unresolved `[TIDAK ADA]`, and
+- Always: unresolved `[NEEDS CONFIRMATION]` filed through `wdi-question`, no unresolved `[MISSING]`, and
   `wdi-review` run with the lens set `risk_accepted` names.
 
 The spine comes first and `bmad-spec` comes last. An SDD written before the spine will be rewritten; a SPEC

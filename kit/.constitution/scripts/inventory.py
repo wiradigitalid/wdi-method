@@ -133,8 +133,8 @@ def table_owner(root: Path) -> dict[str, str]:
     """Pemilik tiap tabel, dibaca dari `owns` dan `platform_owns` di components.yaml.
 
     Kolom pemilik BISA diturunkan sejak nilai `owns` disetel, jadi menuliskannya sebagai
-    [PERLU DIKONFIRMASI] akan menandai sebagai tidak diketahui sesuatu yang registry sudah nyatakan.
-    Yang tidak diklaim siapa pun tetap [PERLU DIKONFIRMASI] — itu temuan, bukan celah.
+    [NEEDS CONFIRMATION] akan menandai sebagai tidak diketahui sesuatu yang registry sudah nyatakan.
+    Yang tidak diklaim siapa pun tetap [NEEDS CONFIRMATION] — itu temuan, bukan celah.
     """
     import yaml as _yaml
     path = root / ".control/registry/components.yaml"
@@ -181,8 +181,8 @@ def derive_db(root: Path) -> Derived:
         who = owner.get(name)
         out.rows.append(Row(key=name, source=rel,
                             cells=[f"`{name}`",
-                                   f"`{who}`" if who else "[PERLU DIKONFIRMASI]",
-                                   "[PERLU DIKONFIRMASI]", keys, "published"]))
+                                   f"`{who}`" if who else "[NEEDS CONFIRMATION]",
+                                   "[NEEDS CONFIRMATION]", keys, "published"]))
         if not who:
             out.unread.append(f"tabel `{name}` tidak diklaim `owns` maupun `platform_owns` — "
                               f"V21 tidak melihatnya, dan tidak ada yang berwenang menulisnya")
@@ -280,10 +280,10 @@ def derive_api(root: Path) -> Derived:
     for (host, method, path_str) in sorted(found):
         key = f"{host} {method} {path_str}"
         owner = "`_platform`" if (key in plat or f"{method} {path_str}" in plat
-                                 or path_str in plat) else "[PERLU DIKONFIRMASI]"
+                                 or path_str in plat) else "[NEEDS CONFIRMATION]"
         out.rows.append(Row(key=key, source=found[(host, method, path_str)],
                             cells=[host, method, f"`{path_str}`", owner,
-                                   "[PERLU DIKONFIRMASI]", "published"]))
+                                   "[NEEDS CONFIRMATION]", "published"]))
     if not found:
         out.unread.append("tidak satu pun registrasi route terbaca di src/**/*.go — "
                           "bila API-nya memang belum ada, `derived_from: plan` yang benar")
@@ -326,7 +326,7 @@ def derive_screen(root: Path) -> Derived:
         state_cell = ", ".join(f"`{r}`" for r in sorted(extra)) if extra else "—"
         out.rows.append(Row(key=f"{spa}:{route}", source=rel,
                             cells=[f"`{spa}/{component}`", f"`{route}`", state_cell,
-                                   "[PERLU DIKONFIRMASI]", "[PERLU DIKONFIRMASI]"]))
+                                   "[NEEDS CONFIRMATION]", "[NEEDS CONFIRMATION]"]))
 
     orphan = sorted(r for r in states
                     if not any(states[r] == route for _, route in seen))

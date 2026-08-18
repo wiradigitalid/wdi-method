@@ -97,15 +97,15 @@ reviewed:                # V13. Diisi hanya setelah bmad-review benar-benar dija
      RECORD, not a design.
 
      Every technical claim MUST name the file that proves it. Four labels, and they are mandatory:
-       [ASUMSI]              we decided to believe it; nothing was read that confirms it
+       [ASSUMED]              we decided to believe it; nothing was read that confirms it
        [PARTIAL]             verified for part of the surface — and it MUST say which part is not
-       [PERLU DIKONFIRMASI]  a question with an owner, filed through wdi-question
-       [TIDAK ADA]           checked, and the thing described is NOT there
+       [NEEDS CONFIRMATION]  a question with an owner, filed through wdi-question
+       [MISSING]           checked, and the thing described is NOT there
 
      An unlabelled claim is read as verified. A claim MUST NOT be raised because it survived several
      readings — familiarity is not evidence.
 
-     [TIDAK ADA] MUST NOT be deleted. It is the only surviving evidence that somebody once believed the
+     [MISSING] MUST NOT be deleted. It is the only surviving evidence that somebody once believed the
      thing existed. Each is dispositioned as a BUG-, a correction, or planned work, and an unresolved
      one MUST NOT pass G4. -->
 
