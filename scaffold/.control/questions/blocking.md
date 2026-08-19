@@ -3,7 +3,7 @@
 **Loaded when:** every gate.
 
 Only this file holds a gate. Written through `wdi-question`, never by hand directly; the row shape
-lives in `.constitution/document/templates/questions.md`.
+lives in `.constitution/method/document/templates/questions.md`.
 
 Target **<=3 rows per Product Component**. A question rises to here only through three tests, one is
 enough:

@@ -1,7 +1,7 @@
 {
   "name": "wdi-method",
   "version": "0.5.1",
-  "description": "WDI Method — software delivery method that wraps BMad",
+  "description": "WDI Method \u2014 software delivery method that wraps BMad",
   "type": "module",
   "bin": {
     "wdi-method": "bin/wdi-method.js"
@@ -20,7 +20,9 @@
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "prepublishOnly": "node --test tests/*.test.mjs"
+    "prepublishOnly": "node --test tests/*.test.mjs",
+    "overlay": "node scripts/apply-overlay.mjs",
+    "pretest": "node scripts/apply-overlay.mjs"
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0"

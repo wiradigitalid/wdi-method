@@ -96,6 +96,14 @@ Everything in the room is yours: `project/constitution.md` (Articles 1, 2, 5),
 `project/codebase-*-guide.md` (stack, conventions, brownfield — protected at **any** `status:`,
 including `Draft`, which is when they are actually written), and any rule file you add.
 
+**A file this product adds belongs in `project/`.** `.constitution/` holds two folders and nothing
+else the method knows about, so a loose `.md` at its root is in a state no rule describes: `update`
+leaves it (it is not the method's) and no guide names it. Migration deliberately does NOT move one —
+it may already be pointed at by its current path from `AGENTS.md` or an editor rule the installer
+cannot see — so it prints the filename and leaves the choice to you. Either move it into `project/`
+and fix those pointers, or name it from Article 2 so the next reader knows why it is there. Leaving
+it unnamed is the only wrong answer.
+
 The seam is the **folder**, never a marked region inside a generic file. `AGENTS.md` uses a marked
 block because it is one file with no alternative; `.constitution/` has fifty-odd, and blocks inside
 them would make every update perform surgery in every file. Prose has no merge algebra — only a path

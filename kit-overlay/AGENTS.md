@@ -72,9 +72,9 @@ Read this instead of reasoning about what `.what/` and `.how/` mean.
 
 | The thing in your hand | Its folder |
 |---|---|
-| A rule, a guide, a template — how we work | `.constitution/` |
+| A rule, a guide, a template — how we work | `.constitution/method/` — **overwritten in full by `update`** |
 | A rule that binds **only this product** | `.constitution/project/` — `update` never writes over it, `promote` never publishes it |
-| The explanation of a rule, never a rule itself | `.constitution/method/` |
+| The explanation of a rule, never a rule itself | `.constitution/method/why/` |
 | A decision, an open question, a registry, a structure map, minutes | `.control/` |
 | The brief, a PRD, a use case, a business rule — what is promised | `.what/` |
 | The spine, C4, an inventory, an SDD, a contract — how it is built | `.how/` |
@@ -142,9 +142,10 @@ verifies the result, and lands the memlog.
   re-derives them.
 - A `DEC-` with status `applied` MUST NOT be edited, except to record its supersession — status moves
   to `superseded` and names its replacement. A change of mind produces a new `DEC-`.
-- A file in `.constitution/method/` MUST NOT be cited as the reason to reject a change. It is
+- A file in `.constitution/method/why/` MUST NOT be cited as the reason to reject a change. It is
   `status: Reference` — it explains, it does not bind, and where it disagrees with a guide the guide
-  wins and the disagreement is a defect.
+  wins and the disagreement is a defect. This covers `why/` ONLY: a guide in
+  `.constitution/method/document/` is `status: Accepted` and it binds.
 - More than the component's `mode` demands MUST NOT be written. Exceeding the depth the owner set is
   not diligence.
 - `.claude/skills/bmad-*/customize.toml` MUST NOT be edited — it is overwritten on every BMad update;
@@ -176,13 +177,15 @@ verifies the result, and lands the memlog.
 | Writing or reading a structure map | `.constitution/method/structure-guide.md` |
 | Looking for where code lives, or placing new code | `.control/structure-codebase.md` |
 | Looking for where a document lives | `.control/structure-document.md` |
-| Writing or reviewing code | `.constitution/project/codebase-stack-guide.md` · `conventions-guide.md` · `brownfield-guide.md` |
+| Writing or reviewing code | `.constitution/project/codebase-stack-guide.md` · `codebase-conventions-guide.md` · `codebase-brownfield-guide.md` |
 
 All three `.constitution/project/codebase-*-guide.md` start as `status: Draft`. While they are, their contents MAY be read
 as guidance but MUST NOT be used to reject a change.
 
 The two structure maps MUST NOT be installed as `doc_standards` — they are facts, not standards. Nor
-MUST anything in `.constitution/method/`; `status: Reference` forbids it.
+MUST anything in `.constitution/method/why/`; `status: Reference` forbids it. A guide in
+`.constitution/method/document/` MAY be installed that way, and several already are — see
+`_bmad/custom/bmad-prd.toml`.
 
 ## Bugs, decisions, questions
 

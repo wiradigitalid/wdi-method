@@ -269,8 +269,8 @@ public package.
 | Goes here | Does not, and its home |
 |---|---|
 | A review policy a client requires | product / client name → `index.yaml` `product:` |
-| A process rule that came from a contract | code conventions → `../../project/codebase-*-guide.md` |
-| A policy that differs from the method default | scope and ownership → `constitution.md` Art. 1, 2, 5 |
+| A process rule that came from a contract | code conventions → `.constitution/project/codebase-*-guide.md` |
+| A policy that differs from the method default | scope and ownership → `.constitution/project/constitution.md` Art. 1, 2, 5 |
 | A prohibition specific to this domain | agent instructions → `AGENTS.md`, outside the marked block |
 
 **A generic rule MUST NOT be moved here.** If it holds in any project it belongs to the package — fix

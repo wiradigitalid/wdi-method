@@ -326,6 +326,77 @@ function mv(from, to) {
   fs.renameSync(from, to);
 }
 
+/** Article numbers that belong to the method half. The product keeps 1, 2, and 5. */
+const METHOD_ARTICLES = [3, 4, 6, 7];
+
+/**
+ * Cut the method's articles out of a product's constitution.md, and repoint its relative links.
+ *
+ * Returns {cut, kept, relinked}, or null when the file does not look like a constitution at all —
+ * in which case it is left ALONE rather than guessed at.
+ *
+ * 0.5.0 moved the file whole and printed "delete Articles 3, 4, 6, 7 yourself", on the grounds that
+ * no script can tell an edited copy from the original. That reasoning was wrong in the way that
+ * matters: the split does not need to know whether a section was edited, only which article numbers
+ * are the method's — and the file states them in its own headings. Leaving it whole left every
+ * migrated repo carrying those articles in TWO files, one of them frozen and drifting, plus relative
+ * links that no longer resolve one level down. It is all in git, so cutting is reversible; not
+ * cutting is what nobody notices.
+ */
+function splitProductConstitution(file) {
+  const raw = fs.readFileSync(file, "utf8");
+  const crlf = raw.includes("\r\n");
+  const text = crlf ? raw.replaceAll("\r\n", "\n") : raw;
+  const marks = [...text.matchAll(/^## Article (\d+)\b.*$/gm)];
+  if (marks.length < 2) return null;   // not the shape we know; do not touch it
+
+  const kept = [];
+  const cut = [];
+  let out = text.slice(0, marks[0].index);
+  for (let i = 0; i < marks.length; i += 1) {
+    const n = Number(marks[i][1]);
+    const end = i + 1 < marks.length ? marks[i + 1].index : text.length;
+    if (METHOD_ARTICLES.includes(n)) cut.push(n);
+    else {
+      kept.push(n);
+      out += text.slice(marks[i].index, end);
+    }
+  }
+  if (!cut.length) return { cut, kept, relinked: 0 };
+
+  // The file sits one level deeper than it did, and its former siblings moved into method/. A link
+  // left as `repo-guide.md` now resolves to .constitution/project/repo-guide.md, which does not exist.
+  let relinked = 0;
+  const bump = (re, to) => {
+    out = out.replace(re, (m, ...rest) => {
+      relinked += 1;
+      return typeof to === "function" ? to(m, ...rest) : to + m;
+    });
+  };
+  for (const name of ["repo-guide.md", "structure-guide.md", "language-guide.md",
+                      "method-glossary.md"]) {
+    bump(new RegExp(`(?<![\\w./-])${name.replace(".", "\\.")}`, "g"), "../method/");
+  }
+  bump(/(?<![\w./-])document\//g, "../method/");
+  bump(/(?<![\w./-])codebase\/([a-z]+)-guide\.md/g, (_m, kind) => `codebase-${kind}-guide.md`);
+  out = out.replaceAll("../method/../method/", "../method/");
+
+  const banner = [
+    "",
+    `> **Articles ${cut.join(", ")} were removed from this file on migration to the two-folder layout.**`,
+    "> They are the method's and live in [`../method/constitution.md`](../method/constitution.md), which",
+    `> \`update\` replaces. Only Articles ${kept.join(", ")} are yours. The removed text is in git.`,
+    "",
+  ].join("\n");
+  const firstArticle = out.search(/^## Article /m);
+  out = firstArticle === -1
+    ? out + banner
+    : out.slice(0, firstArticle) + banner.trimStart() + "\n" + out.slice(firstArticle);
+
+  fs.writeFileSync(file, crlf ? out.replaceAll("\n", "\r\n") : out, "utf8");
+  return { cut, kept, relinked };
+}
+
 function migrateToTwoFolders(target) {
   const c = path.join(target, ".constitution");
   if (!fs.existsSync(c)) return false;          // a first install has nothing to migrate
@@ -377,11 +448,18 @@ function migrateToTwoFolders(target) {
   }
   // 6. The product's constitution.md moves WHOLE into the room, so its Articles 1, 2, and 5 survive
   //    exactly as written. The generic half then arrives fresh at method/constitution.md.
-  let split = false;
+  let split = null;
   if (fs.existsSync(at("constitution.md")) && !fs.existsSync(at("project", "constitution.md"))) {
     mv(at("constitution.md"), at("project", "constitution.md"));
-    note("  moved constitution.md → project/constitution.md (your Articles 1, 2, 5)");
-    split = true;
+    note("  moved constitution.md → project/constitution.md");
+    split = splitProductConstitution(at("project", "constitution.md"));
+    if (split && split.cut.length) {
+      note(`    kept Articles ${split.kept.join(", ")}, removed ${split.cut.join(", ")} `
+           + "(the method's — they arrive in method/constitution.md)");
+      if (split.relinked) note(`    repointed ${split.relinked} relative links one level up`);
+    } else if (split === null) {
+      note("    it does not carry `## Article N` headings, so it was moved but NOT split — yours to check");
+    }
   }
   // Anything else loose at the root is a file this product ADDED. It is NOT moved: it may be routed
   // from AGENTS.md by its current path, and guessing a destination would break that silently.
@@ -392,6 +470,8 @@ function migrateToTwoFolders(target) {
     : [];
   if (stray.length) {
     note(`  left at .constitution/ root, yours to place: ${stray.join(", ")}`);
+    note("    a file you added belongs in project/ — but moving it would break any pointer that");
+    note("    names its current path, so the choice is yours. repo-guide.md states the rule.");
   }
   return split;
 }
@@ -747,10 +827,14 @@ function apply(target, agents,
   const splitConstitution = migrateToTwoFolders(target);
   const { written, skipped } = syncConstitution(target);
   note(`constitution wrote ${written}, kept ${skipped}`);
+  // A migrated repo also carries derived output stamped against the OLD layout: .control/generated/*
+  // still names the pre-0.5.0 script path, and the two structure maps still draw the old tree. The
+  // installer MUST NOT write either — one is generated, the other is re-derived by a skill — so it
+  // says so instead of leaving them to be found by whoever trusts them next.
   if (splitConstitution) {
-    note("  your constitution.md still carries Articles 3, 4, 6, 7 — now also in method/constitution.md.");
-    note("  Delete them from project/constitution.md; only 1, 2, 5 are yours. Not automated: your");
-    note("  copy may have been edited, and no script can tell an edit from the original.");
+    note("  derived output still describes the OLD layout, and neither is mine to write:");
+    note("    uv run .constitution/method/scripts/validate.py --generate   → .control/generated/");
+    note("    then the wdi-init skill, intent `structure`                  → the two structure maps");
   }
   const skills = syncSkills(target, agents);
   note(`skills ${skills.files} files`);

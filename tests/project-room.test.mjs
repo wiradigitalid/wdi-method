@@ -270,7 +270,19 @@ function fakeOldLayoutRepo() {
   fs.writeFileSync(c("document", "templates", "srs.md"), "# srs template\n");
   fs.writeFileSync(c("scripts", "validate.py"), "# validate\n");
   // the product's own work — every one of these MUST survive
-  fs.writeFileSync(c("constitution.md"), "# Constitution\n\n## Article 2\n\nMY OWN BOUNDARY RULE\n");
+  // The real shape: seven articles, three of them the product's, and relative links to what used to
+  // be a sibling. A single-heading stub would not exercise the split at all.
+  fs.writeFileSync(c("constitution.md"), [
+    "---", "status: Accepted", "---", "",
+    "# Constitution — A Product", "",
+    "## Article 1 — Scope", "", "See [`repo-guide.md`](repo-guide.md).", "",
+    "## Article 2 — Content boundary", "", "MY OWN BOUNDARY RULE", "",
+    "## Article 3 — Layers", "", "Generic.", "",
+    "## Article 4 — Lifecycle", "", "Generic; `document/templates/` is exempt.", "",
+    "## Article 5 — The method", "", "Protects `codebase/stack-guide.md`.", "",
+    "## Article 6 — Decisions", "", "See `document/decision-guide.md`.", "",
+    "## Article 7 — Non-technical facts", "", "Generic.", "",
+  ].join("\n"));
   fs.writeFileSync(c("codebase", "stack-guide.md"),
     "---\nstatus: Draft\n---\n\n# stack\n\nGo 1.23 and MariaDB. HALF-WRITTEN BY THE PRODUCT.\n");
   fs.writeFileSync(c("project", "my-rule.md"),
@@ -315,9 +327,21 @@ test("update migrates a pre-0.5.0 repo: nothing of the product's is lost, nothin
       "a file the product added was moved; the migration MUST NOT guess where somebody else's file goes");
     assert.match(out, /our-own-extra-guide\.md/, "leaving it silently is not enough — say so");
 
-    // 4. the one thing no script can resolve MUST be said out loud
-    assert.match(out, /Articles 3, 4, 6, 7/,
-      "the duplicated generic articles were not reported — a migration that hides its own loose end");
+    // 4. the method's articles are CUT, not left duplicated. 0.5.0 moved the file whole and asked the
+    //    owner to delete them, which left every migrated repo carrying them twice — one copy frozen in
+    //    project/ and drifting. An external audit of 0.5.0 named this as its worst finding.
+    const mine = fs.readFileSync(c("project", "constitution.md"), "utf8");
+    assert.match(mine, /^## Article 2\b/m, "the product's own Article 2 was cut — only 3, 4, 6, 7 are the method's");
+    assert.doesNotMatch(mine, /^## Article 4\b/m, "Article 4 is the method's and MUST NOT stay in the room");
+    assert.doesNotMatch(mine, /^## Article 6\b/m, "Article 6 is the method's and MUST NOT stay in the room");
+    assert.match(out, /kept Articles .*removed/, "the cut MUST be reported, not done silently");
+    // and the links it left behind MUST resolve from one level deeper
+    assert.match(mine, /\.\.\/method\/repo-guide\.md/,
+      "a relative link to a former sibling was left pointing inside project/, where nothing is");
+
+    // 5. derived output is named rather than silently left stale
+    assert.match(out, /validate\.py --generate/, "the generated tables were not mentioned");
+    assert.match(out, /wdi-init/, "the structure maps were not mentioned");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

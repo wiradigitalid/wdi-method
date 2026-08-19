@@ -58,3 +58,47 @@ test("every relative link inside the kit resolves — a dead link is what a new 
   walk(KIT_CONST);
   assert.deepEqual(dead, [], `dead relative links in the kit:\n  ${dead.join("\n  ")}`);
 });
+
+test("no LIVE reference to a pre-0.5.0 path survives anywhere in what ships", () => {
+  // The guard an external audit of 0.5.0 asked for, and it earns its place immediately: it finds a
+  // pointer in scaffold/ that four hand sweeps had missed. scaffold/ is what a FRESH install receives,
+  // so every new repo was being seeded with a link to a folder 0.5.0 deletes.
+  //
+  // Prose ABOUT the old layout is allowed — a migration note has to be able to name what moved — so a
+  // line is only a finding when the path is not immediately preceded by a word like "formerly".
+  const RETIRED = /\.constitution\/(document|codebase|scripts)\//g;
+  const ALLOWED_NEARBY = /(formerly|used to|was at|pre-0\.5\.0|before 0\.5\.0|retired|old layout)/i;
+  const hits = [];
+  const walk = (dir) => {
+    if (!fs.existsSync(dir)) return;
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { if (e.name !== "__pycache__") walk(p); continue; }
+      if (!/\.(md|ya?ml|toml|py|mjs|js)$/.test(e.name)) continue;
+      const lines = fs.readFileSync(p, "utf8").split(/\r?\n/);
+      lines.forEach((line, i) => {
+        RETIRED.lastIndex = 0;
+        if (RETIRED.test(line) && !ALLOWED_NEARBY.test(line)) {
+          hits.push(`${path.relative(ROOT, p).split(path.sep).join("/")}:${i + 1}  ${line.trim()}`);
+        }
+      });
+    }
+  };
+  for (const d of ["kit", "kit-overlay", "scaffold"]) walk(path.join(ROOT, d));
+  assert.deepEqual(hits, [],
+    `a retired pre-0.5.0 path is still live in the published surface:\n  ${hits.join("\n  ")}`);
+});
+
+test("the AGENTS.md block does not call the whole kit non-binding", () => {
+  // 0.5.0's block still said `.constitution/method/` is `status: Reference`, explains rather than
+  // binds, and MUST NOT be installed as doc_standards. After the split that folder IS the kit — so the
+  // block told every agent that no method guide binds, while bmad-prd.toml installed one of those very
+  // guides as doc_standards. The Reference rule belongs to `method/why/` and nothing wider.
+  const text = fs.readFileSync(path.join(ROOT, "kit-overlay", "AGENTS.md"), "utf8");
+  for (const line of text.split(/\r?\n/)) {
+    if (!/status: Reference|non-binding|MUST NOT be cited|doc_standards/.test(line)) continue;
+    const m = line.match(/`\.constitution\/method\/(?!why\/)[^`]*`/);
+    assert.equal(m, null,
+      `this line applies a Reference-only rule to more than method/why/:\n  ${line.trim()}`);
+  }
+});
