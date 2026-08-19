@@ -27,8 +27,8 @@ Normative rules that hold **only in this product**, and are not code conventions
 | The thing | Its home |
 |---|---|
 | Product or client name | `.control/registry/index.yaml` → `product:` |
-| Code conventions, stack, brownfield patterns | `.constitution/codebase/*-guide.md` — already protected once `Accepted` |
-| Scope, method ownership, repo checklist | `constitution.md` Articles 1, 2, 5 — already protected |
+| Code conventions, stack, brownfield patterns | `codebase-*-guide.md`, here in this room — protected at **any** `status:` |
+| Scope, method ownership, repo checklist | `constitution.md` Articles 1, 2, 5, here in this room |
 | Agent instructions for this product | `AGENTS.md`, **outside** the marked `wdi-method` block |
 | BMad overrides for this product | `_bmad/custom/*.user.toml` |
 | State, promises, design | `.control/` · `.what/` · `.how/` |

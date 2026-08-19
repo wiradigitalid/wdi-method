@@ -44,18 +44,19 @@ What is particular to this repo, and therefore lives here:
 
 This is the **consumer** article. Use it in every product repo.
 
-`.constitution/` guides and templates (except this file's Articles 1, 2, and 5,
-`codebase/*-guide.md`, and any extra file this repo added), the `wdi-*` skills,
-and `_bmad/custom/*.toml` arrive from the public WDI Method package via
-`npx wdi-method install` / `update`.
+Everything in `.constitution/method/`, the `wdi-*` skills, and
+`_bmad/custom/*.toml` arrive from the public WDI Method package via
+`npx wdi-method install` / `update`. Everything in `.constitution/project/` —
+this file, `codebase-*-guide.md`, and any rule this repo adds — is **ours**: it is
+seeded once and never written again.
 
 - A method file MUST NOT be invented or patched here to improve the method. If a
   rule is wrong, it is fixed in the WDI Method package, then brought here with
   `update`.
-- `wdi-method update` MUST overwrite method files and MUST NOT touch `.what/`,
-  `.how/`, `.control/` product state, this file's Articles 1–2 and 5,
-  `codebase/*-guide.md` once `Accepted`, extra constitution files this repo
-  added, or `_bmad/custom/*.user.toml`.
+- `wdi-method update` MUST overwrite everything in `.constitution/method/` and
+  MUST NOT touch `.what/`, `.how/`, `.control/` product state, anything in
+  `.constitution/project/` — at **any** `status:`, `Draft` included, which is when
+  a codebase guide is actually written — or `_bmad/custom/*.user.toml`.
 - A rule particular to this repo MUST be written out in full in this file or a
   sibling, and MUST NOT be replaced by a pointer into another repository.
 
