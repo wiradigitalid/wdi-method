@@ -139,6 +139,35 @@ test("a product's OWN reader is loaded and used, with Row and Derived injected",
   }
 });
 
+test("loading the readers leaves no bytecode in the product's room", (t) => {
+  if (requireUv(t)) return;
+  // Found in a real product the first day the readers shipped: running the engine planted
+  // .constitution/project/__pycache__/inventory-readers.cpython-311.pyc. That repo's .gitignore
+  // happened to cover it; nothing in the method guarantees the next one's does. A .pyc from an
+  // older CPython also carries the absolute path it was compiled from, which is exactly why
+  // walkFiles refuses to publish one.
+  //
+  // Deliberately run WITHOUT PYTHONDONTWRITEBYTECODE — the suite sets it everywhere else, which is
+  // what hid this. The engine has to switch it off itself, because a product runs the engine
+  // directly and inherits none of the suite's environment.
+  const tmp = fixtureCopy();
+  try {
+    const room = path.join(tmp, ".constitution", "project");
+    fs.mkdirSync(room, { recursive: true });
+    fs.writeFileSync(path.join(room, "inventory-readers.py"), TOY_READER);
+    const env = { ...process.env };
+    delete env.PYTHONDONTWRITEBYTECODE;
+    try {
+      execFileSync("uv", ["run", ENGINE, "--root", "."],
+                   { cwd: tmp, encoding: "utf8", env, stdio: ["ignore", "pipe", "pipe"] });
+    } catch { /* findings exit 1; the litter is what is under test */ }
+    assert.ok(!fs.existsSync(path.join(room, "__pycache__")),
+      "the engine wrote bytecode into the product's room — a method script leaving litter behind");
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test("a reader missing a kind is refused by name, not by a stack trace", (t) => {
   if (requireUv(t)) return;
   const tmp = fixtureCopy();

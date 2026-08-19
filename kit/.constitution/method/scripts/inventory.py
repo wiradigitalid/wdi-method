@@ -213,6 +213,12 @@ def load_readers(root: Path):
     if spec is None or spec.loader is None:
         raise SystemExit(f"inventory: {READERS.as_posix()} could not be loaded as Python")
     mod = importlib.util.module_from_spec(spec)
+    # Importing the readers writes .constitution/project/__pycache__/ into the product. A method
+    # script MUST NOT leave litter in the repo it was asked to read — and a .pyc is worse than
+    # litter: an older CPython stores the absolute path it was compiled from, which is why
+    # walkFiles refuses to publish one. A product whose .gitignore lacks __pycache__ would commit
+    # it. Turned off here rather than at module level so it is unmistakably about this import.
+    sys.dont_write_bytecode = True
     mod.Row, mod.Derived, mod.decisions = Row, Derived, decisions
     spec.loader.exec_module(mod)
     missing = [f"derive_{k}" for k in KINDS if not callable(getattr(mod, f"derive_{k}", None))]
