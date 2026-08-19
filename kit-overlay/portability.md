@@ -22,7 +22,7 @@ them only an *example* does — not a rule.
 
 | File | What is this product's | What to do when carrying it |
 |---|---|---|
-| `../../project/constitution.md` | Articles 1, 2, and 5 | **Rewrite 2 and 5.** Article 1 cites `index.yaml` `product.name`. Articles 3, 4, 6, 7 travel unchanged. `wdi-method promote` already replaces this file with the kit template |
+| `../../project/constitution.md` | Articles 1, 2, and 5 | **Rewrite 2 and 5.** Article 1 cites `index.yaml` `product.name`. Articles 3, 4, 6, 7 are NOT here — they are the method's, in `../constitution.md`, and `update` replaces them. `promote` never touches this file: the room is skipped, so the package's copy is a seed and nothing more |
 | `../document/architecture-guide.md` | Seed examples of stack and tree shape | Re-point the examples. Every rule around them travels |
 | `../document/corpus-guide.md` | Worked examples of `_platform` ownership | Re-point the examples. **Keep both kinds**: they teach the trap better than the rule alone |
 | `templates/design-system.md` | The pointer to wherever this project keeps its tokens | Re-point at that project's token file |
