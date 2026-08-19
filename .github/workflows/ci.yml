@@ -1,0 +1,50 @@
+# The package is the source of truth for the method, so it needs a gate. Before this workflow it had
+# none: `prepublishOnly` runs the suite on the publisher's machine, which catches nothing on a push
+# and nothing in a pull request.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      # uv runs the three registry scripts' inline PEP 723 dependencies. Without it the fixture
+      # tests skip, and a skipped Python check is how a broken validator reaches a consumer.
+      - uses: astral-sh/setup-uv@v5
+
+      - name: uv is present, so the fixture checks will really run
+        run: uv --version
+
+      - run: npm test
+
+      # A published package that names a private path or a client is the one defect that cannot be
+      # taken back. Cheap to check, so check it on every push rather than trusting a habit.
+      # A published package that names a private path or a client is the one defect that cannot be
+      # taken back. Two shapes, both cheap: a known product or client name, and an absolute path from
+      # somebody's machine — a .pyc once carried one into this repo through a file nobody wrote.
+      # No lookahead: git grep -E has no PCRE, so the pattern must stay basic ERE.
+      - name: the package stays generic
+        run: |
+          set +e
+          git grep -inE "bima|toko-tanpa-akun|kodesh" -- kit kit-overlay scaffold bin lib README.md
+          named=$?
+          git grep -inE "[A-Z]:[\/]+(Developer|Users)|/(home|Users)/[a-z]" -- kit kit-overlay scaffold bin lib
+          pathed=$?
+          set -e
+          if [ $named -eq 0 ] || [ $pathed -eq 0 ]; then
+            echo "::error::a product name, client name, or a machine path reached the published surface"
+            exit 1
+          fi
+          echo "clean"

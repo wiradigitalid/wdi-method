@@ -1,0 +1,25 @@
+# One Product Component, one built container, one that is not built. Enough for the container rules
+# (V25) and the PC x container matrix to have something real to check.
+product_components:
+  - id: checkout
+    name: "Checkout"
+    mode: outline
+    risk_accepted: low
+    risk_note: "Takes payment details, so money is in scope"
+    g4_passed: false
+    owns: [orders, order_lines]
+    containers: [app]
+
+platform_owns: [audit_log]
+
+containers:
+  - id: app
+    name: "Application"
+    built: true
+    what: "One process; serves the checkout surface and its API"
+  - id: db
+    name: "Database"
+    built: false
+    what: "Stores what the application writes; we deploy it, we do not write it"
+
+logical_components: []

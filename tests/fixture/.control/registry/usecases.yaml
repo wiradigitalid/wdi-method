@@ -1,0 +1,13 @@
+usecases:
+  - id: UC-1
+    component: checkout
+    title: "Place an order without an account"
+    actor: Visitor
+    satisfies: [FR-1]
+    critical: true
+  - id: UC-2
+    component: checkout
+    title: "Reopen my last order"
+    actor: Visitor
+    satisfies: [FR-2]
+    critical: false

@@ -6,3 +6,7 @@ Thumbs.db
 .env.*
 __pycache__/
 *.py[cod]
+
+# Python bytecode. A .pyc embeds the absolute path it was compiled from.
+__pycache__/
+*.pyc

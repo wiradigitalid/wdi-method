@@ -44,7 +44,7 @@ updated: '{YYYY-MM-DD}'
 | Code | HTTP | Means | Caller should |
 | --- | --- | --- | --- |
 
-## Milik platform
+## Platform-owned
 
 <!-- REQUIRED as soon as anything is owned by `_platform` — a `platform_owns` entity, an inventory row,
      an LC. V21 checks it.

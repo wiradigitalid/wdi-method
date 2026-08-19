@@ -24,8 +24,8 @@ it thicker?**
 
 **✅ What fits:**
 
-- A guide, template, or validator that closes a real gap — found by running the method on real work, not
-  imagined in the abstract
+- A guide, template, or validator that closes a real gap — one you hit in real work, not one imagined
+  in the abstract, and provable against the fixture corpus
 - A clearer explanation of a rule that already exists
 - An installer fix: a broken update path, a lost setting, a message that misleads
 
@@ -38,23 +38,55 @@ it thicker?**
 
 ## Where a method change starts
 
-Two places, and which one depends on what you are changing.
-
-**A generic rule** — a guide, a template, a skill wrapper, a validator: change it in a **product repo
-that carries the method**, run it against real work, then promote it here. A rule that has never been
-run is a rule nobody has tested.
+**Here.** Every method change — a guide, a template, a skill wrapper, a validator — is authored in
+this package and proven against the fixture corpus before it is published.
 
 ```bash
-npx wdi-method promote /path/to/the/product-repo
-npm test
+npm test        # includes the fixture corpus: validate.py, timeline.py, inventory.py all run
 ```
 
-`promote` copies the portable method, replaces product-named files with their generic versions in
-`kit-overlay/`, scrubs initiative slugs, and skips `.constitution/project/` so a product's own rules can
-never be published.
+`tests/fixture/` is a small but complete corpus — one Product Component, two `FR`, two `UC`, an
+applied decision, a built container and one that is not, a platform-owned entity, a code map. It
+exists so a validator change can be **run** here rather than only reasoned about. It is kept
+**green**: a new finding means a regression, and one test deliberately plants a defect in a copy and
+requires the matching validator to name it, because a green baseline could otherwise just mean every
+check is broken.
 
-**The installer itself** — `bin/`, `lib/`, `tests/`, `kit-overlay/`, this file, the README: change it
-here directly. `promote` does not touch any of them.
+Building it immediately found two real defects, which is the argument for it in one sentence: the
+V21 section heading was Indonesian while `language-guide.md` says a script-matched key is always
+English, and a `sha:` of all digits was read by YAML as the integer `0` and reported as *absent* —
+a finding that looked correct and was wrong.
+
+### This direction was reversed on 2026-08-19, and here is what it cost
+
+It used to run the other way: author a rule in a product repo, run it against real work, then
+`promote` it here. That bought something real — a rule was always exercised before publishing.
+
+It also had two structural faults that no amount of care fixed. `kit/` is derived and `kit-overlay/`
+is source, so the two could disagree with nothing to notice — and in 0.5.0 they did, shipping three
+dead links in the index a new install reads first. And nothing consumed the package, so a broken kit
+reached the registry with no one to trip over it.
+
+What replaces "it was run before publishing" is two things: the fixture corpus for the mechanical
+half, and a consuming repo that updates promptly for the judgement half. A guide that reads well and
+helps nobody at G3 is still only provable in use — the difference is that it now surfaces within one
+update cycle instead of never.
+
+### `promote` is a rescue tool now, not the workflow
+
+It overwrites the whole kit from one consumer's copy, which silently reverts everything authored here
+since that repo last updated. So it refuses to run unless you say you mean it:
+
+```bash
+npx wdi-method promote /path/to/the/product-repo --rescue
+```
+
+Use it when a method change really was made in a product repo by mistake and has to be recovered.
+Read the diff before committing it.
+
+### The installer, the tests, the docs
+
+`bin/`, `lib/`, `tests/`, `kit-overlay/`, this file, the README: edited here directly, as always.
 
 ## Reporting issues
 
@@ -72,7 +104,7 @@ version (`npx wdi-method --help` prints it). A feature request needs: what gap i
 |---|---|
 | Typo, broken link, a message that misleads | Just open the PR |
 | A new validator, guide, or skill change | Open an issue first; wait for a maintainer's go-ahead |
-| Anything touching `.constitution/` | Promoted from a product repo where it already ran — see above |
+| Anything touching `kit/.constitution/` | Authored here, and the fixture corpus stays green — see above |
 
 Keep one change per PR. A PR that mixes an installer fix with a guide rewrite makes both harder to
 review and neither easier to revert.

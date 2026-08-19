@@ -89,7 +89,7 @@ function usage() {
   install [dir]             first install (TUI unless --yes)
   update  [dir]             update      (TUI unless --yes)
   verify  [dir]
-  promote <live-dir>
+  promote <live-dir> --rescue   pull a method change back out of a consumer (not the normal flow)
 
   --yes                     non-interactive
   --agents a,b              claude,cursor,codex,antigravity
@@ -109,6 +109,7 @@ function parseArgs(argv) {
     dir: null,
     agents: null,
     skipBmad: false,
+    rescue: false,
     yes: false,
     product: null,
     client: null,
@@ -136,6 +137,7 @@ function parseArgs(argv) {
   while (rest.length) {
     const t = rest.shift();
     if (t === "--skip-bmad-check") args.skipBmad = true;
+    else if (t === "--rescue") args.rescue = true;
     else if (t === "--yes" || t === "-y") args.yes = true;
     else if (t === "--agents") {
       const raw = rest.shift();
@@ -1100,6 +1102,20 @@ async function main() {
   }
   if (args.cmd === "promote") {
     if (!args.dir) die("promote needs a path to the working copy");
+    // `promote` used to BE the workflow: author a rule in a product repo, run it, carry it here.
+    // It is now a rescue tool, and the flag is what makes that structural rather than a paragraph
+    // nobody rereads. Running it by habit overwrites the whole kit with one consumer's copy —
+    // silently reverting every change made here since that repo last updated.
+    if (!args.rescue) {
+      die([
+        "promote overwrites the whole kit from a consumer's copy, and this package is now where a",
+        "       method change is authored — see CONTRIBUTING.md. If a change really was made in a",
+        "       product repo by mistake and needs rescuing, say so:",
+        "",
+        "         npx wdi-method promote <dir> --rescue",
+      ].join("\n"));
+    }
+    note("--rescue: pulling the method back out of a consumer. Read the diff before committing.");
     promote(args.dir);
     return;
   }

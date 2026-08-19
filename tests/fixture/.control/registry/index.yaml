@@ -1,0 +1,33 @@
+# The fixture corpus. Small on purpose, COMPLETE on purpose: a validator that skips proves nothing,
+# so this carries just enough of every shape for the checks to actually fire.
+product:
+  name: "Fixture Product"
+  client: ""
+
+policy:
+  doc_language: "English"
+  doc_filename_language: "English"
+
+mode: outline
+
+gates_passed: [G1, G2, G3]
+
+roles: []
+
+gates:
+  G1: { name: Problem,   stage: 1, budget_minutes: 20 }
+  G2: { name: Product,   stage: 2, budget_minutes: 45 }
+  G3: { name: Blueprint, stage: 3, budget_minutes: 45 }
+  G4: { name: Component, stage: 4, budget_minutes: 30 }
+  G5: { name: Release,   stage: 5, budget_minutes: 10 }
+
+question_budget:
+  blocking_per_component: 3
+  assumptions_per_gate: 15
+
+wave_sizes:
+  S: { stories: "<=3", note: "no new FR; G4 and G5 merge into one 20-minute session" }
+  M: { stories: "4-12", note: "as usual" }
+  L: { stories: ">12",  note: "or a new container; a retrospective runs" }
+
+touches_vocabulary: [money, personal-data, irreversible]

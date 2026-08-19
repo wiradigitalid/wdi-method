@@ -133,7 +133,7 @@ You MUST NOT register a
 
 **Register what `_platform` owns** in the same pass — a domain entity through `platform_owns`, an inventory
 row through that inventory's `platform_rows:`, an `LC` through its `component:`. The test is in
-`corpus-guide.md` and both halves MUST hold. Each one MUST then be described under `## Milik platform` in
+`corpus-guide.md` and both halves MUST hold. Each one MUST then be described under `## Platform-owned` in
 `cross-cutting.md`, in the same act: V21 checks that second half, because owning something without
 documenting it is taking ownership without taking responsibility.
 

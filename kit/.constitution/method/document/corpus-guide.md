@@ -167,7 +167,7 @@ would have to be withdrawn for the entity to stop being needed. Two examples of 
 | `email_logs` | one component sends first | **`_platform`** — it is the trace of one outbound channel that order notifications and password recovery both use, and neither promise is why the channel exists |
 
 **One guard, and it is what stops this becoming a drawer:** everything `_platform` owns — in any position —
-MUST be described under `## Milik platform` in `cross-cutting.md`, with its kind and the shape every toucher
+MUST be described under `## Platform-owned` in `cross-cutting.md`, with its kind and the shape every toucher
 obeys. A platform that owns something documents it. V21 checks it, and skips only while that section has not
 been born at G3.
 

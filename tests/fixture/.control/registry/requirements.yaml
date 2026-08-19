@@ -1,0 +1,29 @@
+goals:
+  - id: BG-1
+    statement: "A visitor can buy without an account"
+
+capabilities:
+  - id: CAP-1
+    goal: BG-1
+    statement: "Checkout without an account"
+    priority: must
+    estimate_mandays: 5
+    target_release: v1
+
+functional:
+  - id: FR-1
+    capability: CAP-1
+    statement: "A visitor can place an order without creating an account"
+    proof_of_done: "An order exists and the visitor can reopen it"
+  - id: FR-2
+    capability: CAP-1
+    statement: "A visitor can read their order back after placing it"
+    proof_of_done: "The order page renders for the code given at checkout"
+
+nonfunctional:
+  - id: NFR-1
+    capability: CAP-1
+    statement: "An order write MUST be atomic"
+    enforced_by: ["checkout.orders"]
+
+journeys: []

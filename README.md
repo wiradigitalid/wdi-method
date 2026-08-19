@@ -228,19 +228,26 @@ It prints the version it replaced, what it wrote, what it kept, and what to do n
 
 ---
 
-## Carrying a change back into this package
+## Changing the method
 
-The published source is this repository. A product repo that holds a newer working copy of the method
-promotes it here before the change counts as published:
+**This repository is where a method change is authored** — a guide, a template, a skill wrapper, a
+validator. It is proven here before publishing, against a fixture corpus the three registry scripts
+actually run against:
 
 ```bash
-npx wdi-method promote /path/to/the/product-repo
-npm test
-git commit && git push
+npm test        # includes validate.py, timeline.py and inventory.py over tests/fixture/
 ```
 
-`promote` copies the portable method, replaces product-named files with their generic versions, scrubs
-initiative slugs, and **skips `.constitution/project/`** so a product's own rules can never be published.
+The fixture is small but complete, and kept **green**, so a new finding is a regression rather than
+noise. One test plants a defect in a copy and requires the matching validator to name it — a green
+baseline is worthless if it is green because every check is broken.
+
+A consuming repo then takes the change with `npx wdi-method update`, and that is where the judgement
+half gets tested: whether a guide actually helps a person at G3 is only provable in use.
+
+`promote` — pulling the method back out of a consumer — is a **rescue tool**, not the workflow. It
+overwrites the whole kit from one copy, so it refuses to run without `--rescue`.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) records why the direction was reversed and what it cost.
 
 **Patch releases are routine; minor and major are the maintainer's call.** This package overwrites files
 in repos that already hold months of work, and the version is the only signal a reader has for how

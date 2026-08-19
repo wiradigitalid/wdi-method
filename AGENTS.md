@@ -37,12 +37,17 @@ X"* inside `kit-overlay/` ships that assumption to every consumer.
 
 | Changing | Edit it | Reaches consumers via |
 |---|---|---|
-| A guide, template, script, or skill wrapper | a **product repo**, then `promote` | `kit/` |
+| A guide, template, script, or skill wrapper | **here**, in `kit/` | the published package |
 | `bin/` `lib/` `tests/` `kit-overlay/` README | here, directly | the published package |
-| `kit/.constitution/project/README.md` | here — `promote` skips that folder | `update`, seeded once |
+| Anything in `kit/.constitution/project/` | here — `promote` skips that folder | `update`, seeded once |
 
-A generic rule MUST NOT be authored here from imagination. Write it where it will be run, run it, then
-promote it. `CONTRIBUTING.md` explains why.
+**The direction was reversed on 2026-08-19.** A method change is authored HERE and proven against
+`tests/fixture/` — a small complete corpus the three registry scripts actually run against. It MUST
+stay green; `npm test` is what says so.
+
+`promote` is no longer the workflow. It overwrites the whole kit from one consumer's copy, so it
+refuses to run without `--rescue`, and an agent MUST NOT reach for it to land a change it made in a
+product repo — that change belongs here instead. `CONTRIBUTING.md` states what the reversal cost.
 
 ## Before any commit that touches the kit
 

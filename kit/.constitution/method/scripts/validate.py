@@ -482,7 +482,16 @@ FRONTMATTER_KEYS = ("reviewed:", "date:", "sha:", "lenses:", "updated:")
 
 
 def _reviewed_ok(r: Result, rel: str, block: object, need: set[str]) -> None:
-    if not isinstance(block, dict) or not block.get("sha") or not block.get("date"):
+    # str() before the truth test: an unquoted sha of all digits — `0000000`, and roughly one
+    # short sha in twenty-seven is all digits — is read by YAML as the INTEGER 0, which is falsy.
+    # The old test then reported "carries no reviewed trace" about a file that plainly carries one,
+    # which is the worst kind of finding: correct-looking, and wrong.
+    if not isinstance(block, dict):
+        r.fail("V13", rel, "carries no `reviewed` trace with a date and sha")
+        return
+    # NOT `block.get("sha") or ""` — for the integer 0 that yields "" and reintroduces the very
+    # bug this guards. `.get(key, "")` returns the 0, and str(0) is "0", which is truthy.
+    if not str(block.get("sha", "")).strip() or not str(block.get("date", "")).strip():
         r.fail("V13", rel, "carries no `reviewed` trace with a date and sha")
         return
     lenses = {str(x) for x in (block.get("lenses") or [])}
@@ -713,7 +722,12 @@ def v19(c: Corpus, r: Result) -> None:
 
 PLATFORM = "_platform"
 CROSS_CUTTING = ".how/_platform/cross-cutting.md"
-PLATFORM_DATA_HEADING = "Milik platform"
+# The section heading V21 looks for. A heading a SCRIPT matches is a machine-facing key, and
+# `language-guide.md` says a key is always English — so the template writes the English one and
+# this is what a new corpus carries. The Indonesian form is kept as a READER-side alias, exactly
+# like `yes|ya`: a corpus written before this MUST NOT be migrated for a regex.
+PLATFORM_DATA_HEADINGS = ("Platform-owned", "Milik platform")
+PLATFORM_DATA_HEADING = PLATFORM_DATA_HEADINGS[0]
 
 
 def v21(c: Corpus, r: Result) -> None:
@@ -797,7 +811,7 @@ def _platform_documented(c: Corpus, r: Result, entities: list[str]) -> None:
         return
     path = c.root / CROSS_CUTTING
     text = path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
-    if PLATFORM_DATA_HEADING.lower() not in text.lower():
+    if not any(h.lower() in text.lower() for h in PLATFORM_DATA_HEADINGS):
         r.skip("V21", f"`{CROSS_CUTTING}` has no `{PLATFORM_DATA_HEADING}` section yet — "
                       f"{len(entities)} entities with platform_owns are not documented yet: "
                       + ", ".join(sorted(entities)))

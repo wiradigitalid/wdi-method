@@ -78,7 +78,7 @@ test("promote SKIPS the room: a product's own rule is not published, and the pac
   const room = path.join(pkg, "kit", ".constitution", "project");
   const before = fs.readFileSync(path.join(room, "README.md"), "utf8");
   try {
-    execFileSync(process.execPath, [path.join(pkg, "bin", "wdi-method.js"), "promote", live],
+    execFileSync(process.execPath, [path.join(pkg, "bin", "wdi-method.js"), "promote", live, "--rescue"],
                  { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.ok(!fs.existsSync(path.join(room, "secret-client.md")),
       "a product's own rule reached the kit — the leak this test exists to catch");
@@ -100,7 +100,7 @@ test("promote SKIPS the codebase guides too — they live in the room now, so on
   const live = fakeLiveRepo(pkg);
   const room = path.join(pkg, "kit", ".constitution", "project");
   try {
-    execFileSync(process.execPath, [path.join(pkg, "bin", "wdi-method.js"), "promote", live],
+    execFileSync(process.execPath, [path.join(pkg, "bin", "wdi-method.js"), "promote", live, "--rescue"],
                  { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     for (const name of fs.readdirSync(room)) {
       assert.doesNotMatch(fs.readFileSync(path.join(room, name), "utf8"), /Elixir|Secret Client/,

@@ -1,0 +1,7 @@
+decisions:
+  - id: DEC-001
+    title: "Orders are written in one transaction"
+    status: applied
+    type: technical
+    touches:
+      - .how/checkout/SDD-checkout.md

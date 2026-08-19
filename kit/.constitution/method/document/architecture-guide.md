@@ -166,7 +166,7 @@ another. One fact, one home.
 
 **The platform MAY own things, and owning one costs a row here.** `_platform` is a legitimate owner in every
 position that asks which component owns something — a domain entity through `platform_owns`, an inventory row,
-an `LC`. Whatever it owns MUST be described under `## Milik platform` in this file: what it is, its kind, why
+an `LC`. Whatever it owns MUST be described under `## Platform-owned` in this file: what it is, its kind, why
 no component's promise explains it, who touches it, and the shape every toucher obeys. V21 checks that second
 half, because a platform that owns something without documenting it has taken ownership without taking
 responsibility.
