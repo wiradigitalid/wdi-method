@@ -97,3 +97,40 @@ test("timeline.py and inventory.py run against the fixture without crashing", (t
     assert.doesNotMatch(out, /Traceback/, `${name} crashed:\n${out}`);
   }
 });
+
+test("a validator walks the corpus, not somebody's build output", (t) => {
+  if (requireUv(t)) return;
+  // Found the first time bima ran as a consumer: V24 used rglob plus an after-the-fact filter, so it
+  // had already walked into web/node_modules/ inside an abandoned git worktree, hit a dangling npm
+  // workspace symlink, and took the whole run down with FileNotFoundError. A validator that crashes on
+  // build output reports nothing about the corpus at all — and `node_modules/` matched only at the
+  // root, so a monorepo's real one was never skipped anyway.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-prune-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  const nested = path.join(tmp, "web", "node_modules", "@scope", "pkg");
+  fs.mkdirSync(nested, { recursive: true });
+  // a .md that would produce findings if it were read at all
+  fs.writeFileSync(path.join(nested, "README.md"), "See `.constitution/does-not-exist.md`\n");
+  // and a link to nowhere, which is what actually crashed the run
+  try {
+    fs.symlinkSync(path.join(tmp, "web", "node_modules", "gone"),
+                   path.join(tmp, "web", "node_modules", "@scope", "dangling"), "junction");
+  } catch { /* a machine that refuses links still proves the pruning half */ }
+  try {
+    let out;
+    try {
+      out = execFileSync("uv", ["run", path.join(SCRIPTS, "validate.py"), "--root", "."],
+                         { cwd: tmp, encoding: "utf8", env: PY_ENV,
+                           stdio: ["ignore", "pipe", "pipe"] });
+    } catch (e) {
+      out = `${e.stdout || ""}${e.stderr || ""}`;
+    }
+    assert.doesNotMatch(out, /Traceback|FileNotFoundError/,
+      `validate.py crashed on build output instead of pruning it:\n${out}`);
+    assert.doesNotMatch(out, /does-not-exist\.md/,
+      `a file inside node_modules was read and reported on:\n${out}`);
+    assert.match(out, /GREEN — no findings/, `the corpus itself should still be green:\n${out}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

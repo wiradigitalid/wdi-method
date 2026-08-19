@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import re
 import subprocess
 import sys
@@ -920,6 +921,40 @@ CITE_RE = re.compile(
     r"/[A-Za-z0-9_./-]+\.(?:md|yaml|yml|py|go|tsx|ts|js|mjs|sql|html|css|json))`")
 
 
+# Directories that MUST be pruned DURING traversal, not filtered afterwards.
+#
+# The old form was `c.root.rglob("*.md")` plus a `rel.startswith(...)` filter, and it had two faults
+# that only showed up on a real machine:
+#
+#   The filter ran too late. rglob had already walked in, so a dangling symlink inside
+#   node_modules — an npm workspace link left behind by an abandoned git worktree — raised
+#   FileNotFoundError and took the whole run down. A validator that CRASHES on somebody's build
+#   output reports nothing about the corpus at all.
+#
+#   `node_modules/` matched only at the ROOT. `web/node_modules/` sailed straight through, which is
+#   where a monorepo actually keeps it.
+PRUNE_DIRS = frozenset({
+    ".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build",
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", ".next", ".turbo", ".idea", ".vscode",
+    "worktrees",   # .claude/worktrees/ — another checkout's tree is not this corpus
+})
+
+
+def _walk_corpus(root: Path, suffixes: tuple[str, ...]) -> list[Path]:
+    """Every file under `root` with one of `suffixes`, sorted, pruning PRUNE_DIRS as it goes.
+
+    Sorted because determinism is this script's contract: two runs over the same tree MUST report the
+    same thing in the same order.
+    """
+    out: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root, onerror=lambda _e: None):
+        dirnames[:] = sorted(d for d in dirnames if d not in PRUNE_DIRS)
+        for name in filenames:
+            if name.endswith(suffixes):
+                out.append(Path(dirpath) / name)
+    return sorted(out)
+
+
 def v24(c: Corpus, r: Result) -> None:
     """A path citation inside a document that STATES what currently holds MUST resolve.
 
@@ -935,9 +970,9 @@ def v24(c: Corpus, r: Result) -> None:
     there names a file nobody is allowed to fix.
     """
     scanned = 0
-    for path in sorted(c.root.rglob("*.md")) + sorted(c.root.rglob("*.yaml")):
+    for path in _walk_corpus(c.root, (".md", ".yaml")):
         rel = path.relative_to(c.root).as_posix()
-        if rel.startswith((".git/", "node_modules/", "_bmad-output/", ".claude/skills/bmad-")):
+        if rel.startswith(("_bmad-output/", ".claude/skills/bmad-")):
             continue
         if rel.startswith(PAST_RECORD) or rel.startswith(FROZEN) or rel.startswith(DERIVED):
             continue
