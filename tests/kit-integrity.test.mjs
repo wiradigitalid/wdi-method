@@ -102,3 +102,26 @@ test("the AGENTS.md block does not call the whole kit non-binding", () => {
       `this line applies a Reference-only rule to more than method/why/:\n  ${line.trim()}`);
   }
 });
+
+test("no Python bytecode anywhere in the package surface — 0.5.2 shipped 123 kB of it", () => {
+  // Running any kit script writes __pycache__ next to it, and the fixture tests do exactly that.
+  // `files: ["kit/"]` then swept it into the tarball. The published 0.5.2 embedded no machine path —
+  // CPython 3.14 no longer stores an absolute co_filename — but 3.11 did, which is why walkFiles
+  // already refuses .pyc for promote. Shipping it was luck. This test is what replaces the luck.
+  const found = [];
+  const walk = (dir) => {
+    if (!fs.existsSync(dir)) return;
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        if (e.name === "__pycache__") found.push(path.relative(ROOT, p).split(path.sep).join("/"));
+        else walk(p);
+      } else if (/\.py[co]$/.test(e.name)) {
+        found.push(path.relative(ROOT, p).split(path.sep).join("/"));
+      }
+    }
+  };
+  for (const d of ["kit", "kit-overlay", "scaffold", "lib", "bin"]) walk(path.join(ROOT, d));
+  assert.deepEqual(found, [],
+    `bytecode inside the published surface — run \`npm run clean\`:\n  ${found.join("\n  ")}`);
+});

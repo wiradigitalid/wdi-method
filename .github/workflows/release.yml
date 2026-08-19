@@ -1,0 +1,62 @@
+# Create a GitHub release when a v* tag is pushed.
+#
+# It does NOT run `npm publish`, and that is deliberate rather than an omission. A patch bump is
+# something an agent may do, and `npm version patch` is what creates the tag — so a workflow that
+# published on tag would hand npm releases to whoever bumped the patch. Publishing to npm stays a
+# decision somebody makes on purpose:
+#
+#   npm version patch          # commit + tag
+#   git push --follow-tags     # this workflow drafts the release
+#   npm publish                # yours
+#
+# `--follow-tags` matters: a plain `git push` does not send the tag npm version just made.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write        # the release itself; nothing else is needed
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # release notes are derived from history, so a shallow clone will not do
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - uses: astral-sh/setup-uv@v5
+
+      # A tag that cannot pass its own suite MUST NOT become a release. This is the same suite CI runs
+      # on a push; running it again here is what makes the tag, not the branch, the thing vouched for.
+      - run: npm test
+
+      # The tag and package.json disagreeing is a real mistake with a quiet failure mode: the release
+      # says one version and npm serves another. Cheaper to refuse than to explain later.
+      - name: the tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag v$tag does not match package.json $pkg"
+            exit 1
+          fi
+          echo "v$tag matches package.json"
+
+      - name: draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag
+          echo "release created — npm publish is still yours to run"
