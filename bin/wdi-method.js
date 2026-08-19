@@ -344,6 +344,7 @@ const METHOD_ARTICLES = [3, 4, 6, 7];
  * cutting is what nobody notices.
  */
 function splitProductConstitution(file) {
+  if (!fs.existsSync(file)) return null;
   const raw = fs.readFileSync(file, "utf8");
   const crlf = raw.includes("\r\n");
   const text = crlf ? raw.replaceAll("\r\n", "\n") : raw;
@@ -490,6 +491,17 @@ function syncConstitution(target) {
     // `status: Accepted` (which is what silently destroyed a half-written guide), and the room — and
     // the three disagreed about when a file was the product's. Seeded when absent, never written
     // again: the same rule as the language policy.
+    // ONE file in the room is the package's and is refreshed like any method file: the room's own
+    // README. It explains what the room is FOR and carries no product decision, so a stale copy does
+    // not preserve anybody's work — it just misinforms. worship-presenter-web proved that: its copy
+    // still pointed at `.constitution/codebase/*-guide.md`, a folder 0.5.0 deleted, and no update
+    // would ever have corrected it while the file claimed in its own text to be "authored in the
+    // package". Either the package writes it or it stops claiming authorship; this is the first.
+    if (rel === `${PROJECT_ROOM}README.md`) {
+      copyFile(file, dest);
+      written += 1;
+      continue;
+    }
     if (rel.startsWith(PROJECT_ROOM) && fs.existsSync(dest)) {
       skipped += 1;
       note(`keep ${rel} (yours — the project room)`);
@@ -824,7 +836,20 @@ function apply(target, agents,
   const was = readStampVersion(target);
   // MUST run before the kit is written: it moves the product's files out of the way of paths the kit
   // is about to occupy. Running it after would leave two copies of most guides.
-  const splitConstitution = migrateToTwoFolders(target);
+  const migrated = migrateToTwoFolders(target);
+  // The split MUST also be reachable without a migration. 0.5.2 only ran it from inside
+  // migrateToTwoFolders, which returns early when the old layout is absent — so a repo that took
+  // 0.5.0 or 0.5.1, whose project/constitution.md was moved WHOLE and never split, could never be
+  // fixed by any later update. That is precisely the repo that needs it. Running it here on every
+  // update closes that, and it is idempotent: after a split there are no method articles left to cut.
+  const lateSplit = splitProductConstitution(path.join(target, ".constitution", "project",
+                                                       "constitution.md"));
+  if (!migrated && lateSplit && lateSplit.cut.length) {
+    note(`project/constitution.md still carried Articles ${lateSplit.cut.join(", ")} — removed`);
+    note(`  they are the method's and live in method/constitution.md; kept ${lateSplit.kept.join(", ")}`);
+    if (lateSplit.relinked) note(`  repointed ${lateSplit.relinked} relative links`);
+  }
+  const splitConstitution = migrated;
   const { written, skipped } = syncConstitution(target);
   note(`constitution wrote ${written}, kept ${skipped}`);
   // A migrated repo also carries derived output stamped against the OLD layout: .control/generated/*
@@ -883,7 +908,9 @@ function verify(target, agents) {
   } else {
     missing.push(".control/ (folder missing — first install should have seeded it)");
   }
-  for (const required of ["AGENTS.md", path.join(".constitution", "constitution.md")]) {
+  // `.constitution/constitution.md` was the pre-0.5.0 path. Demanding it here made `verify` report a
+  // file MISSING that the split deliberately removed — a check telling the truth about the wrong world.
+  for (const required of ["AGENTS.md", path.join(".constitution", "project", "constitution.md")]) {
     if (!fs.existsSync(path.join(target, required))) missing.push(required.replaceAll(path.sep, "/"));
   }
   if (missing.length) {
@@ -892,6 +919,34 @@ function verify(target, agents) {
     process.exit(1);
   }
   ok(`method files present in ${target}`);
+
+  // Present-and-correct is not the same as consistent. These three are states `update` cannot fix on
+  // its own — it MUST NOT write over the room, and it cannot know what a product meant — so `verify`
+  // is where they get said out loud instead of waiting to be tripped over.
+  const judgement = [];
+  const room = path.join(target, ".constitution", "project", "constitution.md");
+  if (fs.existsSync(room)) {
+    const carried = [...fs.readFileSync(room, "utf8").matchAll(/^## Article (\d+)\b/gm)]
+      .map((m) => Number(m[1])).filter((n) => METHOD_ARTICLES.includes(n));
+    if (carried.length) {
+      judgement.push(`project/constitution.md still carries Articles ${carried.join(", ")} — the `
+        + "method's. They are duplicated in method/constitution.md and will drift. Run update again.");
+    }
+  }
+  const constRoot = path.join(target, ".constitution");
+  const loose = fs.existsSync(constRoot)
+    ? fs.readdirSync(constRoot, { withFileTypes: true })
+        .filter((e) => e.isFile() && e.name.endsWith(".md")).map((e) => e.name)
+    : [];
+  if (loose.length) {
+    judgement.push(`loose at .constitution/ root: ${loose.join(", ")} — .constitution/ holds two `
+      + "folders and nothing else the method knows about. Move it into project/, or name it from "
+      + "Article 2 so the next reader knows why it is there. repo-guide.md states the rule.");
+  }
+  if (judgement.length) {
+    console.log("");
+    for (const j of judgement) note(j);
+  }
   note("extra product files are expected and were not checked");
 }
 

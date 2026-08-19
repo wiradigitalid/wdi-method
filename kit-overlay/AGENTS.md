@@ -94,7 +94,7 @@ Read this instead of reasoning about what `.what/` and `.how/` mean.
 | `.work/` | Scratch; emptied when a task closes | Secrets, commercial figures, anything meant as authority |
 
 The placement test: **is this file still correct after its wave has passed?** Yes → the corpus. No →
-`_bmad-output/`. In doubt → `document/corpus-guide.md`.
+`_bmad-output/`. In doubt → `.constitution/method/document/corpus-guide.md`.
 
 The method does not use a `docs/` layer for corpus or rules. A leftover `docs/` folder is inventory
 to sort, not a second home.
@@ -109,7 +109,8 @@ to sort, not a second home.
 Per-component `mode` wins over global, and there is no third scope — `mode` MUST NOT be overridden per
 wave or per `SPEC.md`. A component at `mode: catalog` **skips G4 entirely**. Neither field MUST be
 derived from the other: one component MAY be thin on purpose and reviewed the hardest.
-`document/delivery-flow-guide.md` owns both; `method/rationale.md` says why they are separate.
+`.constitution/method/document/delivery-flow-guide.md` owns both;
+`.constitution/method/why/rationale.md` says why they are separate.
 
 ## The five gates and the fifteen skills
 
@@ -166,7 +167,7 @@ verifies the result, and lands the memlog.
 | Naming anything — a code identifier, a file, a database column | `.constitution/method/language-guide.md` |
 | Asking "which gate now, what next" | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-help` |
 | Setting or changing `mode` or `risk_accepted` | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-init` |
-| Invoking a BMad skill | `.constitution/method/document/bmad-guide.md` · `document/bmad-skill-register.md` |
+| Invoking a BMad skill | `.constitution/method/document/bmad-guide.md` · `.constitution/method/document/bmad-skill-register.md` |
 | Writing or reviewing a product brief | `.constitution/method/document/brief-guide.md` |
 | Writing or reviewing a PRD | `.constitution/method/document/prd-guide.md` |
 | Writing or reviewing UX | `.constitution/method/document/ux-guide.md` |
@@ -177,7 +178,7 @@ verifies the result, and lands the memlog.
 | Writing or reading a structure map | `.constitution/method/structure-guide.md` |
 | Looking for where code lives, or placing new code | `.control/structure-codebase.md` |
 | Looking for where a document lives | `.control/structure-document.md` |
-| Writing or reviewing code | `.constitution/project/codebase-stack-guide.md` · `codebase-conventions-guide.md` · `codebase-brownfield-guide.md` |
+| Writing or reviewing code | `.constitution/project/codebase-stack-guide.md` · `.constitution/project/codebase-conventions-guide.md` · `.constitution/project/codebase-brownfield-guide.md` |
 
 All three `.constitution/project/codebase-*-guide.md` start as `status: Draft`. While they are, their contents MAY be read
 as guidance but MUST NOT be used to reject a change.

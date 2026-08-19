@@ -151,8 +151,11 @@ test("update SEEDS the room once and never overwrites it again", () => {
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.equal(fs.readFileSync(mine, "utf8"), "belongs to the product\n",
       "update overwrote a product rule in its own room — that is exactly what this room exists to prevent");
-    assert.equal(fs.readFileSync(path.join(target, ".constitution", "project", "README.md"), "utf8"),
-      "EDITED\n", "update overwrote an existing room file; it MUST seed only when empty");
+    // README.md is the ONE exception, and deliberately so since the room README claimed in its own
+    // text to be the package's while update kept it forever — which left a real repo pointing at a
+    // folder 0.5.0 had deleted. It carries no product decision, so refreshing it loses nothing.
+    assert.doesNotMatch(fs.readFileSync(path.join(target, ".constitution", "project", "README.md"), "utf8"),
+      /^EDITED$/m, "the room README is the package's and MUST be refreshed, not kept");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
@@ -342,6 +345,71 @@ test("update migrates a pre-0.5.0 repo: nothing of the product's is lost, nothin
     // 5. derived output is named rather than silently left stale
     assert.match(out, /validate\.py --generate/, "the generated tables were not mentioned");
     assert.match(out, /wdi-init/, "the structure maps were not mentioned");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("update splits project/constitution.md even with NO migration — the 0.5.0 adopter's case", () => {
+  // 0.5.2 only ran the split from inside migrateToTwoFolders, which returns early when the pre-0.5.0
+  // layout is absent. So a repo that took 0.5.0 — whose constitution.md was moved WHOLE and never
+  // split — could never be fixed by any later update. That is exactly the repo that needs it, which
+  // makes this a reachability bug rather than a design choice. Found by an audit of a real 0.5.0 →
+  // 0.5.2 update, where the run printed nothing about the seven articles still sitting in the room.
+  const pkg = isolatedPackage();
+  const target = tmp("already-050");
+  const room = path.join(target, ".constitution", "project");
+  fs.mkdirSync(room, { recursive: true });
+  fs.mkdirSync(path.join(target, ".constitution", "method"), { recursive: true });
+  fs.writeFileSync(path.join(room, "constitution.md"), [
+    "---", "status: Accepted", "---", "",
+    "# Constitution — A Product", "",
+    "## Article 1 — Scope", "", "See [`repo-guide.md`](repo-guide.md).", "",
+    "## Article 2 — Content boundary", "", "MY BOUNDARY RULE", "",
+    "## Article 4 — Lifecycle", "", "The method's.", "",
+    "## Article 5 — The method", "", "Protects `codebase/stack-guide.md`.", "",
+    "## Article 6 — Decisions", "", "The method's.", "",
+  ].join("\n"));
+  try {
+    const out = execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+       "--agents", "claude"],
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    const mine = fs.readFileSync(path.join(room, "constitution.md"), "utf8");
+    assert.doesNotMatch(mine, /^## Article 4\b/m, "Article 4 is the method's and was not removed");
+    assert.doesNotMatch(mine, /^## Article 6\b/m, "Article 6 is the method's and was not removed");
+    assert.match(mine, /^## Article 2\b/m, "the product's own article was removed");
+    assert.match(mine, /MY BOUNDARY RULE/, "the product's own text was lost");
+    assert.match(mine, /\.\.\/method\/repo-guide\.md/, "a broken relative link was left in place");
+    assert.match(mine, /codebase-stack-guide\.md/, "the old codebase/ path was left in place");
+    assert.match(out, /still carried Articles/, "doing it silently is not enough");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("update refreshes the room's README — it is the package's, and a stale copy misinforms", () => {
+  // The README claimed in its own text to be "authored in the package", yet update kept it forever.
+  // worship-presenter-web's copy still pointed at .constitution/codebase/*-guide.md, a folder 0.5.0
+  // deletes, and nothing would ever have corrected it. Either the package writes it or it stops
+  // claiming authorship — this is the first.
+  const pkg = isolatedPackage();
+  const target = tmp("stale-readme");
+  const room = path.join(target, ".constitution", "project");
+  fs.mkdirSync(room, { recursive: true });
+  fs.writeFileSync(path.join(room, "README.md"), "STALE, pointing at .constitution/codebase/\n");
+  fs.writeFileSync(path.join(room, "mine.md"), "---\nscope: project\n---\nMINE\n");
+  try {
+    execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+       "--agents", "claude"],
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    assert.doesNotMatch(fs.readFileSync(path.join(room, "README.md"), "utf8"), /STALE/,
+      "the room README was kept stale — it is the package's and MUST be refreshed");
+    assert.match(fs.readFileSync(path.join(room, "mine.md"), "utf8"), /MINE/,
+      "a real product rule was overwritten — only README.md is the package's in this room");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

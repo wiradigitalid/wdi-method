@@ -22,7 +22,7 @@ them only an *example* does — not a rule.
 
 | File | What is this product's | What to do when carrying it |
 |---|---|---|
-| `../constitution.md` | Articles 1, 2, and 5 | **Rewrite 2 and 5.** Article 1 cites `index.yaml` `product.name`. Articles 3, 4, 6, 7 travel unchanged. `wdi-method promote` already replaces this file with the kit template |
+| `../../project/constitution.md` | Articles 1, 2, and 5 | **Rewrite 2 and 5.** Article 1 cites `index.yaml` `product.name`. Articles 3, 4, 6, 7 travel unchanged. `wdi-method promote` already replaces this file with the kit template |
 | `../document/architecture-guide.md` | Seed examples of stack and tree shape | Re-point the examples. Every rule around them travels |
 | `../document/corpus-guide.md` | Worked examples of `_platform` ownership | Re-point the examples. **Keep both kinds**: they teach the trap better than the rule alone |
 | `templates/design-system.md` | The pointer to wherever this project keeps its tokens | Re-point at that project's token file |
@@ -75,7 +75,7 @@ the steps that a runbook used to carry are now `wdi-init` intent `setup`. The or
 
 1. `npx bmad-method install` in the product repo.
 2. `npx wdi-method install` (optionally `--agents …`).
-3. Set `product.name` in `.control/registry/index.yaml`. Rewrite `../constitution.md` Articles 2 and 5.
+3. Set `product.name` in `.control/registry/index.yaml`. Rewrite `../../project/constitution.md` Articles 2 and 5.
 4. Merge the method routing into `AGENTS.md` if that file already existed.
 5. Run `wdi-init` intent `setup`.
 6. Sort what already existed. A file that is already the artifact one slot asks for goes into that
