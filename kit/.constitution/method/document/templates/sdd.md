@@ -6,7 +6,7 @@ created: '{YYYY-MM-DD}'
 updated: '{YYYY-MM-DD}'
 realizes: []             # UC ids this design realizes, from usecases.yaml
 binds: []                # AD ids from the spine that bind here
-reviewed:                # V13. Diisi hanya setelah bmad-review benar-benar dijalankan
+reviewed:                # V13. Filled only after wdi-review has actually run
   date: ''               # '{YYYY-MM-DD}'
   sha: ''                # commit it was reviewed at; without the SHA, staleness cannot be measured
   lenses: []             # the set risk_accepted names — NOT a fixed list

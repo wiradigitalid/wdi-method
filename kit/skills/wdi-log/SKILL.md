@@ -53,14 +53,14 @@ NOT restate those rules and MUST NOT override them. What this skill owns is **ho
 
 ### Looking one up
 
-1. Read the Berlaku table in full. It is short by design and MUST NOT be sampled with grep alone — a fact retired
+1. Read the In force table in full. It is short by design and MUST NOT be sampled with grep alone — a fact retired
    last week reads as current when only its row is seen.
-2. Check Tidak Berlaku Lagi for the same subject. A superseded entry names its replacement.
+2. Check No longer in force for the same subject. A superseded entry names its replacement.
 3. If the answer is absent, **say it is absent.** You MUST NOT infer a fact from a commit message, from
    `.control/memlog/`, or from a sibling repo and report it as recorded — those are leads for registering, not
    answers.
 
-An entry marked `[BELUM DIKONFIRMASI]` MUST be reported with that tag attached, never flattened into a plain
+An entry marked `[UNCONFIRMED]` MUST be reported with that tag attached, never flattened into a plain
 fact.
 
 ### Registering one
@@ -71,9 +71,9 @@ fact.
    a domain term, or an infrastructure asset detail, its own skill or repo runs first. A row here MAY then hold
    only the consequence for this product, pointing at that home.
 3. Assign the next `NT-NNN` from the highest id ever used, including retired ones. An id MUST NOT be reused.
-4. Fill every column. `Akibat` MUST name something in this repo — a gate, an `FR`, a prerequisite, a file.
-   `Sumber` MUST name a person, a repo and path, or another entry id.
-5. A fact whose source is hearsay MUST be written with `[BELUM DIKONFIRMASI]` **and** filed through
+4. Fill every column. `Effect` MUST name something in this repo — a gate, an `FR`, a prerequisite, a file.
+   `Source` MUST name a person, a repo and path, or another entry id.
+5. A fact whose source is hearsay MUST be written with `[UNCONFIRMED]` **and** filed through
    `wdi-question` in the same run. Recording it and leaving it unowned is the failure this step exists to stop.
 
 **One fact, one row.** A single event producing several facts — a domain bought, and a launch date it makes
@@ -83,14 +83,14 @@ possible — MUST become several rows, because they stop holding at different ti
 
 A fact that changed is **never** edited in place, and its row is never deleted.
 
-1. Move the old row to Tidak Berlaku Lagi, filling `Berhenti berlaku` with the date and `Digantikan` with the new
+1. Move the old row to No longer in force, filling `Stopped holding` with the date and `Superseded by` with the new
    id.
 2. Register the new fact as a fresh `NT-NNN`.
-3. Follow the old row's `Akibat` and check whatever it named. A fact that stops holding usually leaves a document
+3. Follow the old row's `Effect` and check whatever it named. A fact that stops holding usually leaves a document
    behind that still assumes it; that document MUST be raised, and if it sits under an `applied` decision, routed
    to `wdi-decision` intent `apply`.
 
-Correcting a typo or a wrong `Sumber` is not an update in this sense and MAY be edited in place.
+Correcting a typo or a wrong `Source` is not an update in this sense and MAY be edited in place.
 
 ## Rules
 
@@ -104,4 +104,4 @@ Correcting a typo or a wrong `Sumber` is not an update in this sense and MAY be 
 ## Output
 
 Intent taken · what was recorded, in one line · what was **routed** rather than recorded, and to which skill ·
-for `fact`, the `NT-` id and what its `Akibat` names.
+for `fact`, the `NT-` id and what its `Effect` names.

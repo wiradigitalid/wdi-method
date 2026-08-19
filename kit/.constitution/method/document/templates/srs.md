@@ -5,7 +5,7 @@ status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
 updated: '{YYYY-MM-DD}'
 satisfies: []            # FR / NFR ids this component carries, from requirements.yaml
-reviewed:                # V13. Diisi hanya setelah bmad-review benar-benar dijalankan
+reviewed:                # V13. Filled only after wdi-review has actually run
   date: ''               # '{YYYY-MM-DD}'
   sha: ''                # commit it was reviewed at; without the SHA, staleness cannot be measured
   lenses: []             # the set risk_accepted names — NOT a fixed list

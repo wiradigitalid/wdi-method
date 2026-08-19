@@ -125,3 +125,73 @@ test("no Python bytecode anywhere in the package surface — 0.5.2 shipped 123 k
   assert.deepEqual(found, [],
     `bytecode inside the published surface — run \`npm run clean\`:\n  ${found.join("\n  ")}`);
 });
+
+test("a backtick cite of a method file resolves INSIDE the kit — the net V24 gave up", () => {
+  // V24 no longer scans `.constitution/method/` in a product, and it should not: a consumer cannot
+  // fix a guide that `update` overwrites, and a guide citing `.control/product-glossary.md` is
+  // teaching where the glossary goes, not claiming this product already has one.
+  //
+  // But a guide citing a SIBLING guide is a real link, and dropping V24 there would have left it
+  // unchecked. So the check moves to where the fix would be made — here. Markdown links are already
+  // covered above; this is the backtick form, which that walker never saw.
+  const CITE = /`(\.constitution\/[A-Za-z0-9_./*-]+\.(?:md|yaml|yml|py))`/g;
+  const dead = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { walk(p); continue; }
+      if (!/\.(md|yaml|yml)$/.test(e.name)) continue;
+      const text = fs.readFileSync(p, "utf8");
+      for (const [, cited] of text.matchAll(CITE)) {
+        // A `*` is a deliberate family — `codebase-*-guide.md` names three files by shape, and the
+        // product decides how many exist. Resolve the family, not the literal string.
+        const target = path.join(ROOT, "kit", cited);
+        const hit = cited.includes("*")
+          ? fs.existsSync(path.dirname(target)) &&
+            fs.readdirSync(path.dirname(target)).some((f) =>
+              new RegExp(`^${path.basename(cited).replaceAll(".", "\\.").replaceAll("*", ".*")}$`)
+                .test(f))
+          : fs.existsSync(target);
+        if (!hit) dead.push(`${path.relative(ROOT, p).split(path.sep).join("/")} → \`${cited}\``);
+      }
+    }
+  };
+  walk(KIT_CONST);
+  assert.deepEqual(dead, [],
+    `a kit file cites a method path that does not ship:\n  ${dead.join("\n  ")}`);
+});
+
+test("what ships is English — the sweep missed 19 strings and nothing said so", () => {
+  // This package is public and its documented language is English. Two sweeps have now left
+  // Indonesian behind, and the second batch was worse than untidy: `wdi-log` told the agent to read
+  // a `Berlaku` table and fill `Akibat`, while the file it scaffolds has `In force` and `Effect`.
+  // A skill and the file it writes disagreeing is a defect no reader would think to look for.
+  //
+  // Function words only — they cannot appear inside English prose, so this cannot fire on a
+  // technical term left in English, which language-guide.md requires.
+  const WORDS = ["yang", "dengan", "untuk", "adalah", "dari", "pada", "tidak", "harus", "sudah",
+                 "belum", "atau", "dalam", "akan", "hanya", "diisi", "dijalankan", "keputusan",
+                 "berlaku", "sumber", "akibat", "digantikan", "beban", "paparan", "prioritas",
+                 "rilis", "catatan", "penomoran", "dikonfirmasi", "bergantung"];
+  const RE = new RegExp(`\\b(${WORDS.join("|")})\\b`, "gi");
+  // validate.py is the one exemption, and it is deliberate: SENSITIVE_MARKERS is a bilingual union
+  // and CRITICAL_YES matches `ya` as well as `yes`, because both read a PRODUCT's document, whose
+  // language the product chooses. Those are reader-side by design — see the comments there.
+  const EXEMPT = new Set(["kit/.constitution/method/scripts/validate.py"]);
+  const found = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { walk(p); continue; }
+      if (!/\.(md|ya?ml|toml|py|mjs|js|json)$/.test(e.name)) continue;
+      const rel = path.relative(ROOT, p).split(path.sep).join("/");
+      if (EXEMPT.has(rel)) continue;
+      for (const m of fs.readFileSync(p, "utf8").matchAll(RE)) {
+        found.push(`${rel}: ${m[0]}`);
+      }
+    }
+  };
+  for (const d of ["kit", "kit-overlay", "scaffold"]) walk(path.join(ROOT, d));
+  assert.deepEqual(found, [],
+    `Indonesian left in what ships:\n  ${[...new Set(found)].join("\n  ")}`);
+});

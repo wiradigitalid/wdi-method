@@ -11,7 +11,7 @@ updated: '{date}'
 binds: []                   # capability / unit IDs governed (from the driving spec; at epic altitude, also the inherited parent AD ids)
 sources: []
 companions: []
-reviewed:                # V13. Diisi hanya setelah bmad-review benar-benar dijalankan
+reviewed:                # V13. Filled only after wdi-review has actually run
   date: ''               # '{YYYY-MM-DD}'
   sha: ''                # commit it was reviewed at; without the SHA, staleness cannot be measured
   lenses: []             # structure · prose · edge-case-hunter · adversarial · verification-gap

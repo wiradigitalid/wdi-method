@@ -89,7 +89,7 @@ A published report is **frozen**. It states what was true on a date, exactly lik
 overwrite one (exit 4) rather than trusting anyone to remember.
 
 - You MUST NOT edit a published report. If it was wrong, the next report says so.
-- The `## Catatan` block is the one part a person writes, once, at publish time, before the commit.
+- The `## Note` block is the one part a person writes, once, at publish time, before the commit.
 - Commentary MUST cite rather than restate: a slip has a cause, and that cause already lives in a `DEC-`, an
   `OQ-`, a risk, or a defect.
 
@@ -144,11 +144,11 @@ is the ideal shape of a wave and because an `FR` has had a proof of done since b
 | `FR` | Its id |
 | Epic | The Product Component |
 | `mode` | That component's depth — this is what makes document load visible |
-| Paparan | `risk_accepted` + `risk_note` |
-| Beban | Mandays, derived from the parent `CAP`'s `estimate_mandays`, divided among its `FR` |
-| Prioritas | From the `CAP` |
-| Bergantung pada | From `depends_on` |
-| Rilis | The `CAP`'s `target_release` |
+| Exposure | `risk_accepted` + `risk_note` |
+| Effort | Mandays, derived from the parent `CAP`'s `estimate_mandays`, divided among its `FR` |
+| Priority | From the `CAP` |
+| Depends on | From `depends_on` |
+| Release | The `CAP`'s `target_release` |
 
 ## Step 4 — Say what it is, and what it is not
 

@@ -916,6 +916,27 @@ DESTINATION = (
     "_bmad-output/",
 )
 
+# Material the INSTALLER wrote, which this product neither authored nor may edit.
+#
+# `.constitution/method/` is portable explanation. Its citations teach where a thing GOES — "the
+# glossary lives at `.control/product-glossary.md`" — and are not this product's claim that it has
+# one yet. Scanning it made V24 unsatisfiable in both directions: a fresh install went RED on 69
+# such lines before G1 had run, and a mature one stayed quiet only by accident. A method guide that
+# cites a method file IS checked, but here in the package where it can be fixed — see
+# tests/kit-integrity.test.mjs. A product cannot fix a guide `update` overwrites.
+#
+# The BMad skill trees are the same class under whichever host the installer wrote them to. Both
+# hosts MUST be listed: `.claude/skills/bmad-` alone left the `.agents/` copy of one identical
+# template failing, which reads as a defect in that product rather than an omission here.
+#
+# `wdi-*` skills are OURS and are deliberately NOT here. They MUST NOT cite a product file that
+# does not exist unless the cite is a placeholder.
+INSTALLED = (
+    ".constitution/method/",
+    ".claude/skills/bmad-",
+    ".agents/skills/bmad-",
+)
+
 CITE_RE = re.compile(
     r"`((?:\.constitution|\.control|\.what|\.how|_bmad-output|\.work|src|web|public|deploy)"
     r"/[A-Za-z0-9_./-]+\.(?:md|yaml|yml|py|go|tsx|ts|js|mjs|sql|html|css|json))`")
@@ -963,8 +984,8 @@ def v24(c: Corpus, r: Result) -> None:
     while the routing line that points at it stays behind — no other validator sees it, because no
     id moved.
 
-    Deliberately SKIPPED: files that describe the past, corpus that has been frozen, and derived
-    output. A `DEC-` Trace that names material that has since been retired describes what was read on
+    Deliberately SKIPPED: files that describe the past, corpus that has been frozen, derived
+    output, and material the installer wrote (see INSTALLED). A `DEC-` Trace that names material that has since been retired describes what was read on
     that date; reporting it would demand history be rewritten to match the present. Derived output is
     skipped for a second reason on top of that: it MUST NOT be edited by hand, so a finding reported
     there names a file nobody is allowed to fix.
@@ -972,7 +993,7 @@ def v24(c: Corpus, r: Result) -> None:
     scanned = 0
     for path in _walk_corpus(c.root, (".md", ".yaml")):
         rel = path.relative_to(c.root).as_posix()
-        if rel.startswith(("_bmad-output/", ".claude/skills/bmad-")):
+        if rel.startswith("_bmad-output/") or rel.startswith(INSTALLED):
             continue
         if rel.startswith(PAST_RECORD) or rel.startswith(FROZEN) or rel.startswith(DERIVED):
             continue

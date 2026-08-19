@@ -134,3 +134,71 @@ test("a validator walks the corpus, not somebody's build output", (t) => {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// ---------------------------------------------------------------------------------------------
+// The fixture above is a product corpus with NO .constitution/ — which is why it stayed green
+// through a defect that made V24 unsatisfiable for every real consumer. A real install has the
+// method tree sitting inside it, and V24 was walking it: the guides cite `.control/...` and
+// `.what/...` to teach where a thing GOES, and V24 read every one as this product's claim to
+// already have it. Against this small fixture the pre-fix validator produced 25 findings; a
+// consumer saw 3 only because a mature corpus happens to own most of the cited files.
+//
+// So the tree under test here is the one that ships: fixture + kit/.constitution/ + a BMad
+// template under `.agents/`, the host that `.claude/skills/bmad-` never covered.
+function installedTree() {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-installed-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  fs.cpSync(path.join(ROOT, "kit", ".constitution"), path.join(tmp, ".constitution"),
+            { recursive: true });
+  // Verbatim from BMad's own template — not ours to fork, which is why the skip is by tree.
+  const refs = path.join(tmp, ".agents", "skills", "bmad-project-context", "references");
+  fs.mkdirSync(refs, { recursive: true });
+  fs.writeFileSync(path.join(refs, "template.md"),
+                   "Money lives in `src/lib/money.ts` and `src/routes/webhooks.ts`.\n");
+  return tmp;
+}
+
+function validateIn(cwd) {
+  try {
+    return execFileSync("uv", ["run", path.join(SCRIPTS, "validate.py"), "--root", "."],
+                        { cwd, encoding: "utf8", env: PY_ENV, stdio: ["ignore", "pipe", "pipe"] });
+  } catch (e) {
+    return `${e.stdout || ""}${e.stderr || ""}`;
+  }
+}
+
+test("a corpus with the method tree INSTALLED in it is green — the shape every consumer runs", (t) => {
+  if (requireUv(t)) return;
+  const tmp = installedTree();
+  try {
+    const out = validateIn(tmp);
+    assert.doesNotMatch(out, /Traceback/, `validate.py crashed:\n${out}`);
+    // Named individually rather than by a count: these three are the exact lines a consumer
+    // reported, and a count would go green again the moment a different guide grew a bad cite.
+    for (const cite of ["pool.go", "money.ts", "webhooks.ts"]) {
+      assert.doesNotMatch(out, new RegExp(`V24.*${cite.replace(".", "\\.")}`),
+        `V24 still fails on ${cite}, which no product is able to fix:\n${out}`);
+    }
+    assert.match(out, /GREEN — no findings/,
+      `a healthy install MUST be able to go green. A validator that cannot is lying:\n${out}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("the live-cite net survives that skip — a dangling cite in the product still fails", (t) => {
+  if (requireUv(t)) return;
+  // The absence-guard rule: this is worthless until it has been SEEN to fail. `.control/` is
+  // scanned, so a dangling cite planted there MUST come back RED. If widening the skip ever
+  // swallows `.control/`, `.how/`, or `.constitution/project/`, this is what says so.
+  const tmp = installedTree();
+  try {
+    const map = path.join(tmp, ".control", "structure-codebase.md");
+    fs.appendFileSync(map, "\nRouting note: see `.what/does-not-exist.md`.\n");
+    const out = validateIn(tmp);
+    assert.match(out, /V24\s+\.control\/structure-codebase\.md.*does-not-exist\.md/,
+      `V24 stopped catching a dangling cite in a live product file:\n${out}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
