@@ -22,6 +22,13 @@ Normative rules that hold **only in this product**, and are not code conventions
 - a naming or language policy that differs from the method default
 - a prohibition or obligation specific to this domain
 
+## Not a rule, but it lives here anyway
+
+`inventory-readers.py` — how this product's code is read, for the three inventories. It sits in the
+room for the same reason the rules do: the method's engine is generic, reading a stack is not, and
+`update` MUST NOT overwrite what a product wrote about its own code. It is seeded with one stack's
+patterns as a **starting point**, not a standard. `V27` does not look at it — only `.md` is a rule.
+
 ## What does not
 
 | The thing | Its home |

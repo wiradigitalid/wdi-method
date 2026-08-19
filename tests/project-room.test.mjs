@@ -58,10 +58,12 @@ function fakeLiveRepo(pkg) {
   return live;
 }
 
-test("the kit's room holds exactly the five files the package authors, and nothing a product wrote", () => {
-  // 0.5.0 moved two more things into the room: the product's Articles 1-2-5, and the three codebase
-  // guides that used to sit in their own folder. All five are authored HERE and seeded once; anything
-  // else appearing means a product's own rule was published.
+test("the kit's room holds exactly the six files the package authors, and nothing a product wrote", () => {
+  // 0.5.0 moved two things into the room: the product's Articles 1-2-5, and the three codebase
+  // guides that used to sit in their own folder. `inventory-readers.py` joined them later — the
+  // three pattern readers that used to sit inside the method's own inventory.py, where a product on
+  // another stack could not replace them. All six are authored HERE and seeded once; anything else
+  // appearing means a product's own rule was published.
   const room = path.join(ROOT, "kit", ".constitution", "project");
   assert.deepEqual(fs.readdirSync(room).sort(), [
     "README.md",
@@ -69,7 +71,8 @@ test("the kit's room holds exactly the five files the package authors, and nothi
     "codebase-conventions-guide.md",
     "codebase-stack-guide.md",
     "constitution.md",
-  ], "the room in the kit MUST hold exactly the package's own five files");
+    "inventory-readers.py",
+  ], "the room in the kit MUST hold exactly the package's own six files");
 });
 
 test("promote SKIPS the room: a product's own rule is not published, and the package README survives", () => {
@@ -156,6 +159,30 @@ test("update SEEDS the room once and never overwrites it again", () => {
     // folder 0.5.0 had deleted. It carries no product decision, so refreshing it loses nothing.
     assert.doesNotMatch(fs.readFileSync(path.join(target, ".constitution", "project", "README.md"), "utf8"),
       /^EDITED$/m, "the room README is the package's and MUST be refreshed, not kept");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("inventory-readers.py is seeded once, then belongs to the product forever", () => {
+  // The whole reason the readers left the method: a product on another stack could not replace
+  // patterns living inside a file `update` overwrites. That promise is only real if BOTH halves
+  // hold — it arrives without being asked for, and it is never written over afterwards.
+  const pkg = isolatedPackage();
+  const target = tmp("target");
+  const readers = path.join(target, ".constitution", "project", "inventory-readers.py");
+  const update = () => execFileSync(process.execPath,
+    [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check"],
+    { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  try {
+    update();
+    assert.ok(fs.existsSync(readers),
+      "the seed never arrived, so a fresh product has an engine and no way to feed it");
+    fs.appendFileSync(readers, "\n# this product reads its own stack\n");
+    update();
+    assert.match(fs.readFileSync(readers, "utf8"), /this product reads its own stack/,
+      "update overwrote the product's readers — the stack is back in the method's hands");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

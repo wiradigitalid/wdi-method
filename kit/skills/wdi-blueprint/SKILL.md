@@ -152,7 +152,7 @@ copy inside any SDD.
 | State | How each is born |
 |---|---|
 | No code yet | Written as a **plan** — the tables, endpoints, and screens intended. Nothing can be derived, because there is no source |
-| Code exists | **Derived first** by `.constitution/method/scripts/inventory.py` — migrations for tables, route registration for endpoints, pages for screens — then compared with the plan. The difference is a **finding**, not hand work |
+| Code exists | **Derived first** by `.constitution/method/scripts/inventory.py`, which reads this product's patterns from `.constitution/project/inventory-readers.py`, then compares with the plan. The difference is a **finding**, not hand work. A product with no reader file is told so and nothing is derived — it is never guessed |
 
 An inventory MUST NOT be assembled from a README or from route names that look plausible. Numbers are stable:
 a new row takes the next number, never a renumber.

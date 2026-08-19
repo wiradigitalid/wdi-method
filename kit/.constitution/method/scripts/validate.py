@@ -1194,6 +1194,9 @@ def v27(c: Corpus, r: Result) -> None:
 
     Demanding `scope:` and `purpose:` of those would be demanding a declaration of files whose
     role is already fixed by the layout. What V27 exists to guard is the file somebody ADDS.
+
+    Only `.md` is looked at. A script in the room — `inventory-readers.py` is the one the package
+    seeds — is not an ad-hoc rule and has nowhere to put frontmatter.
     """
     room = c.root / ".constitution" / "project"
     if not room.is_dir():

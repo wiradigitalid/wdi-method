@@ -78,15 +78,15 @@ const STACK = new RegExp(
   "typescript|react|vite|tailwind|shadcn|mariadb|mysql|postgres|sqlite|npm run|cargo|gradle|" +
   "django|rails|laravel)\\b", "gi");
 
-// Two exemptions, both deliberate and both stated rather than silent.
-const STACK_EXEMPT = new Map([
-  // KNOWN DEBT, not a decision: inventory.py derives tables from one migration folder, endpoints
-  // from a Gin router, and screens from react-router — so it works for exactly one stack and is
-  // shipped as if it were the method's. Making it configurable, or moving it to the product, is an
-  // open question for the owner. Exempted so the rest of the sweep can be enforced meanwhile.
-  ["kit/.constitution/method/scripts/inventory.py", "stack-coupled by construction — open question"],
-]);
+// The rule is that the METHOD names no stack. Two places are outside the method, and both are
+// scoped by what they are rather than named as debt.
 const STACK_EXEMPT_DIRS = [
+  // The room is the PRODUCT's. Everything the package puts here is a seed a product replaces, and
+  // `update` never overwrites it. `inventory-readers.py` is the whole point: the three pattern
+  // readers used to sit inside the method's own inventory.py, where a product on another stack had
+  // no way to replace them. Moving them here is what let this exemption stop being debt — the
+  // stack no longer lives in anything `update` overwrites.
+  "kit/.constitution/project/",
   // Code samples teaching a debugging technique have to be written in SOME language. These teach
   // the technique, not the stack, and no rule in them depends on the language they are written in.
   "kit/skills/wdi-systematic-debugging/references/",
@@ -100,7 +100,6 @@ test("the generic method names no language, framework, or database", () => {
       if (e.isDirectory()) { walk(p); continue; }
       if (!READABLE.test(e.name)) continue;
       const rel = path.relative(ROOT, p).split(path.sep).join("/");
-      if (STACK_EXEMPT.has(rel)) continue;
       if (STACK_EXEMPT_DIRS.some((d) => rel.startsWith(d))) continue;
       for (const m of fs.readFileSync(p, "utf8").matchAll(STACK)) found.push(`${rel} → ${m[0]}`);
     }
