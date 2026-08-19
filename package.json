@@ -1,7 +1,7 @@
 {
   "name": "wdi-method",
-  "version": "0.5.1",
-  "description": "WDI Method \u2014 software delivery method that wraps BMad",
+  "version": "0.5.2",
+  "description": "WDI Method — software delivery method that wraps BMad",
   "type": "module",
   "bin": {
     "wdi-method": "bin/wdi-method.js"
