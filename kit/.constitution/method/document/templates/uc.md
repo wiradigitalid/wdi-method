@@ -13,8 +13,8 @@ created: '{YYYY-MM-DD}'
 <!-- TEMPLATE GUIDE — act on these comments, then delete them.
 
      THE TITLE RULE, and G3 asks it as a starred question: the title MUST be a sentence a user would
-     actually say — "Mendaftar lewat tautan sponsor" — and MUST NOT be a system term — "Referral
-     attribution handler". A system-shaped title means the functional analysis has already leaked
+     actually say — "Sign up through an invitation link" — and MUST NOT be a system term —
+     "Invitation attribution handler". A system-shaped title means the functional analysis has already leaked
      into design.
 
      WHICH USE CASES GET ONE OF THESE FILES IS DECIDED BY `mode`, NOT BY `critical`:

@@ -29,8 +29,8 @@ useful as a starting point, not binding.
 |---|---|
 | "Every service authenticates through the same token format" | Yes — invariant |
 | "Money is stored as integer minor units, never float" | Yes — invariant |
-| "We use MariaDB 11 and Go 1.23" | No — seed. It informs, it does not forbid |
-| "The repo is laid out as `src/` and `web/`" | No — seed, and `structure-codebase.md` describes it |
+| "We use version 11 of our database and version 1.23 of our language" | No — seed. It informs, it does not forbid |
+| "The repo is laid out as one folder per deployable" | No — seed, and `structure-codebase.md` describes it |
 | "The member portal caches its dashboard for 60 seconds" | No — one component's design |
 
 Stack, tree shape, and data shapes are seeds and MUST be marked as such. Writing them as contracts makes the

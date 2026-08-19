@@ -96,8 +96,10 @@ Three rules this corpus adds. All three MUST be stated in the dispatch of any st
 - **The corpus is not the worker's to change.** A worker MUST NOT edit `.what/`, `.how/`, or an `applied`
   `DEC-`. A deviation from the SDD or an `AD-N` is **reported**, and it becomes a `DEC-` through
   `wdi-decision` — never absorbed as a code patch.
-- **Verification is run, not assumed.** `go build ./...` and `go test ./...` from `src/`, where `go.mod` lives;
-  `npm run check` from `web/`. A green `korpus.yml` MUST NOT be reported as proof the code compiles.
+- **Verification is run, not assumed.** The commands are this product's, and they live in
+  `.constitution/project/codebase-stack-guide.md` — build, test, and whatever the front end needs, each with
+  the directory it runs from. A skill MUST NOT carry one product's build line. A green registry workflow
+  MUST NOT be reported as proof the code compiles; they answer different questions.
 
 ### Step 1 — plan
 

@@ -159,11 +159,11 @@ outbound channel) · **endpoint** (`/health`, `robots.txt` — plumbing no `FR` 
 (none yet).
 
 Failing either half, it belongs to a Product Component — and the component is found by asking which `FR`
-would have to be withdrawn for the entity to stop being needed. Two examples of the trap, both real:
+would have to be withdrawn for the entity to stop being needed. Two examples of the trap:
 
 | Entity | Looks platform-shaped | Actually |
 |---|---|---|
-| `member_activity_events` | member-wide telemetry, several components write it | **`referral`** — `FR-65` promises a Sponsor sees the login and click counts of their downline. One `FR` explains it |
+| `activity_events` | product-wide telemetry, several components write it | **one component** — an `FR` promises somebody can SEE those counts, and withdrawing it is what would make the table unnecessary |
 | `email_logs` | one component sends first | **`_platform`** — it is the trace of one outbound channel that order notifications and password recovery both use, and neither promise is why the channel exists |
 
 **One guard, and it is what stops this becoming a drawer:** everything `_platform` owns — in any position —

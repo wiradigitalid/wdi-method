@@ -159,9 +159,9 @@ An unlabelled claim is read as verified. That is why the labels are mandatory an
 
 - A claim is raised to verified only after the evidence it names has actually been read. Reading the
   controller does not verify the repository.
-- The raise MUST record **what was read**. "Verified against `src/<module>/<file>.go` and its
-  integration test" is a raise; "verified" is not. The path here is a placeholder on purpose: a
-  guide is portable, and an example naming one product's tree teaches that product, not the rule.
+- The raise MUST record **what was read**. "Verified against `<the file that was read>` and its
+  integration test" is a raise; "verified" is not. There is no example path here on purpose: a guide
+  is portable, and naming a tree — or even a file extension — teaches one product's stack, not the rule.
 - `[PARTIAL]` MUST state what is **not** covered. A partial that only says "partial" is an unlabelled claim
   wearing a label.
 - A claim MUST NOT be raised because it has survived several readings. Familiarity is not evidence.

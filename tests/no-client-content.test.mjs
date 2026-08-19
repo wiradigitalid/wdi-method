@@ -50,7 +50,7 @@ test("no product-code path ships in the kit — the pool.go defect, as a test", 
     if (/^(src|web|public|deploy)\//.test(cited)) found.push(`${rel} → \`${cited}\``);
   });
   assert.deepEqual(found, [],
-    "a guide names one product's code tree. Write the shape instead — `src/<module>/<file>.go`:\n  " +
+    "a guide names one product's code tree. Say what was read, not where it lives:\n  " +
     found.join("\n  "));
 });
 
@@ -66,4 +66,47 @@ test("no component-named corpus path ships in the kit — a PC name is the clien
   });
   assert.deepEqual(found, [],
     "a guide names somebody's Product Component. Use `<pc>`:\n  " + found.join("\n  "));
+});
+
+// A path was only the visible half. The method is a generic workflow, so a LANGUAGE, a framework,
+// or a database named inside it is the same leak wearing different clothes: `go test ./... from
+// src/` sat in wdi-build as the verification step every product runs, and it is one product's
+// build line. Even a placeholder betrays it — `src/<module>/<file>.go` names no client and still
+// says this method assumes Go.
+const STACK = new RegExp(
+  "\\b(golang|goroutine|go\\.mod|go test|go build|[\\w/*<>{}.-]+\\.go|[\\w/*<>{}.-]*\\.tsx|" +
+  "typescript|react|vite|tailwind|shadcn|mariadb|mysql|postgres|sqlite|npm run|cargo|gradle|" +
+  "django|rails|laravel)\\b", "gi");
+
+// Two exemptions, both deliberate and both stated rather than silent.
+const STACK_EXEMPT = new Map([
+  // KNOWN DEBT, not a decision: inventory.py derives tables from one migration folder, endpoints
+  // from a Gin router, and screens from react-router — so it works for exactly one stack and is
+  // shipped as if it were the method's. Making it configurable, or moving it to the product, is an
+  // open question for the owner. Exempted so the rest of the sweep can be enforced meanwhile.
+  ["kit/.constitution/method/scripts/inventory.py", "stack-coupled by construction — open question"],
+]);
+const STACK_EXEMPT_DIRS = [
+  // Code samples teaching a debugging technique have to be written in SOME language. These teach
+  // the technique, not the stack, and no rule in them depends on the language they are written in.
+  "kit/skills/wdi-systematic-debugging/references/",
+];
+
+test("the generic method names no language, framework, or database", () => {
+  const found = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { walk(p); continue; }
+      if (!READABLE.test(e.name)) continue;
+      const rel = path.relative(ROOT, p).split(path.sep).join("/");
+      if (STACK_EXEMPT.has(rel)) continue;
+      if (STACK_EXEMPT_DIRS.some((d) => rel.startsWith(d))) continue;
+      for (const m of fs.readFileSync(p, "utf8").matchAll(STACK)) found.push(`${rel} → ${m[0]}`);
+    }
+  };
+  for (const t of TREES) walk(path.join(ROOT, t));
+  assert.deepEqual([...new Set(found)], [],
+    "the method assumes a stack. A product's own commands belong in " +
+    "`.constitution/project/codebase-stack-guide.md`:\n  " + [...new Set(found)].join("\n  "));
 });
