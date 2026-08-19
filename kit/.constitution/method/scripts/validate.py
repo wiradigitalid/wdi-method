@@ -937,9 +937,13 @@ INSTALLED = (
     ".agents/skills/bmad-",
 )
 
+# The extension list is deliberately WIDE. A narrow one does not make V24 safer — it makes it
+# silent: a product written in a language missing from the list has its code citations
+# unchecked, and nothing says so. Adding one is cheap; a gap is invisible.
 CITE_RE = re.compile(
     r"`((?:\.constitution|\.control|\.what|\.how|_bmad-output|\.work|src|web|public|deploy)"
-    r"/[A-Za-z0-9_./-]+\.(?:md|yaml|yml|py|go|tsx|ts|js|mjs|sql|html|css|json))`")
+    r"/[A-Za-z0-9_./-]+\.(?:md|txt|yaml|yml|toml|json|sql|html|css|scss|"
+    r"py|go|rs|rb|php|java|kt|cs|swift|ts|tsx|js|jsx|mjs|cjs|vue|svelte|ex|exs))`")
 
 
 # Directories that MUST be pruned DURING traversal, not filtered afterwards.

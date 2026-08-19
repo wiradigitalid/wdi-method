@@ -61,6 +61,15 @@ const AGENT_LABELS = {
 const BMAD_INSTALL = `npx bmad-method install`;
 const REPO_URL = "https://github.com/wiradigitalid/wdi-method";
 const HELP_SKILL = "wdi-help";
+const INIT_SKILL = "wdi-init";
+// The room's readers file is seeded as a skeleton and is useless until a product writes it. The
+// flag is the skeleton's own declaration, so this reads the same thing the engine does rather than
+// guessing from the file's size or its age.
+function readersAreSkeleton(target) {
+  const file = path.join(target, ".constitution", "project", "inventory-readers.py");
+  if (!fs.existsSync(file)) return false;
+  return /^SKELETON\s*=\s*True\b/m.test(fs.readFileSync(file, "utf8"));
+}
 const BMAD_REPO = "https://github.com/bmad-code-org/BMAD-METHOD";
 const WDI_REPO = "https://github.com/wiradigitalid/wdi-method";
 
@@ -800,6 +809,14 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
   }
   summaryLine("agents", agents.join(", ") || "none");
   console.log("");
+  // The readers are the one seeded file that does nothing until somebody writes it, and its
+  // silence is expensive: inventory.py refuses to run and the reason is a folder deep. One line
+  // here, only while it is still the skeleton, so it stops appearing once it is done.
+  if (readersAreSkeleton(target)) {
+    summaryLine("todo", `${DIM}.constitution/project/inventory-readers.py${RESET} is a skeleton — ` +
+                        `run the ${INIT_SKILL} skill, intent ${DIM}readers${RESET}, ` +
+                        `to write it for this repo's stack`);
+  }
   summaryLine("next", `invoke the ${HELP_SKILL} skill and ask what to do`);
   summaryLine("", REPO_URL);
   console.log(`${DIM}${"─".repeat(62)}${RESET}`);

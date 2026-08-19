@@ -68,6 +68,8 @@ used to reject a change.
 ## `scripts/`
 
 `validate.py` — registry gates and the `.control/generated/` generator. `timeline.py` — the time
-dimension from git history. `inventory.py` — derives the three inventories from code and reports the
-difference against the plan; it MUST NOT patch either side into agreement. All three run through
-`uv run`.
+dimension from git history. `inventory.py` — compares the three inventories against the code
+and reports the difference; it MUST NOT patch either side into agreement. It reads no code itself:
+the patterns live in `../project/inventory-readers.py`, because comparing is generic and reading a
+stack is not. That file ships as a skeleton and `wdi-init` intent `readers` writes it for the repo
+in front of it. All three run through `uv run`.

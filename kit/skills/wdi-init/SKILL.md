@@ -1,13 +1,13 @@
 ---
 name: wdi-init
-description: Use for anything that must exist before work can start or continue — scaffolding the registries at install, birthing Product Components after G2, setting or changing a component's mode, setting or reviewing its risk_accepted, and refreshing the two structure maps. Five intents. Never writes .what/ or .how/ content beyond a skeleton.
+description: Use for anything that must exist before work can start or continue — scaffolding the registries at install, birthing Product Components after G2, setting or changing a component's mode, setting or reviewing its risk_accepted, refreshing the two structure maps, and writing this product's inventory readers. Six intents. Never writes .what/ or .how/ content beyond a skeleton.
 ---
 
 # WDI Init
 
-Five intents, one skill, because all five answer the same question: **what has to exist before the
+Six intents, one skill, because all six answer the same question: **what has to exist before the
 next piece of work makes sense?** A registry row, a folder pair, a depth setting, a risk note, a map
-of where things are.
+of where things are, a reader that can see this product's code.
 
 | Intent | Does | Precondition | How often |
 |---|---|---|---|
@@ -16,6 +16,7 @@ of where things are.
 | `mode` | Change `mode` — global in `index.yaml`, or one component in `components.yaml`. Guided | — | any time |
 | `risk` | Set or review one component's `risk_accepted`, with disclosure of what it touches | the component exists | any time, usually before G4 |
 | `structure` | Re-derive `.control/structure-codebase.md` and `structure-document.md` from the tree on disk | — | when folders change, and at wave close |
+| `readers` | Write `.constitution/project/inventory-readers.py` for **this** repo's stack, then prove it by running the engine | code exists | once, and again when the code's shape moves |
 
 ## Two boundaries
 
@@ -131,11 +132,44 @@ caller is unsure: a map is cheap to check and expensive to get wrong.
 A hand-edited map MUST be treated as drift: re-derive, then say what the hand edit claimed that the tree
 does not support.
 
+## Intent `readers`
+
+`inventory.py` is two halves. Comparing what was derived against the plan, reporting the gap, keeping
+the numbers stable — that is the same in every stack and belongs to the method. **Reading the code is
+not**, so the package ships a skeleton and no example: an example is a guess about somebody else's
+stack, and the whole point of deriving rather than assembling is that nothing is guessed.
+
+The file is `.constitution/project/inventory-readers.py`. All of it is the product's — `update` never
+writes over it and `promote` never publishes it — so there is no protected region inside it and
+nothing to merge.
+
+1. **Read the repo before writing a line.** Where does the schema live, how are routes registered,
+   how are screens declared. A stack you have not confirmed on disk MUST NOT be assumed from a
+   filename or a dependency list.
+2. Fill `derive_db`, `derive_api`, and `derive_screen`. The contract, the injected names, and the
+   column order per kind are in the skeleton's own docstring and MUST NOT be restated here.
+3. **Delete the `SKELETON = True` line.** While it stands the engine refuses to run, and that is
+   deliberate: a skeleton returning nothing and a product owning nothing read identically.
+4. **Prove it, and this step is not optional.** Run `uv run .constitution/method/scripts/inventory.py`,
+   then open at least one file each reader claims to have read and confirm the rows match what is
+   actually written there. A regex that returns plausible rows from the wrong place is the failure
+   mode this intent invites, and running the engine is the only thing that catches it.
+5. Whatever a pattern cannot read goes to `unread`. You MUST NOT widen a pattern until it stops
+   reporting; an honest `unread` is worth more than a row nobody checked.
+6. Report what each reader reads, in one line per kind, and what it deliberately does not.
+
+A kind this product genuinely does not have returns `Derived()` — a real answer. You MUST NOT return
+it to make the output quiet.
+
+The rows themselves are **not** yours to land. This intent produces the reader; `wdi-blueprint` intent
+`platform` owns the three inventories, and a plan-versus-code gap is its finding to route.
+
 ## Rules
 
 - You MUST NOT write `.what/` or `.how/` content beyond a skeleton and its frontmatter. Behaviour is
   `wdi-blueprint` and `wdi-component`; mechanism is `wdi-component`.
-- You MUST NOT write into `.constitution/`.
+- You MUST NOT write into `.constitution/method/`. Intent `readers` writes exactly one file in
+  `.constitution/project/`, and nothing else there.
 - You MUST NOT fill `mode` or `risk_accepted` with a value the owner has not confirmed. Both are the
   owner's, and a proposal recorded as a decision is the one failure disclosure cannot survive.
 - You MUST NOT create a Product Component because a folder would look tidy. A PC no `FR` points at is a

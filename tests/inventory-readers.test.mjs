@@ -82,6 +82,44 @@ const TOY_READER = [
   "",
 ].join("\n");
 
+test("the SEEDED skeleton is refused too — silence would read as a finished reader", (t) => {
+  if (requireUv(t)) return;
+  // The dangerous state is not the missing file, which is obvious. It is the seeded skeleton: it
+  // loads, it defines all three functions, and it returns nothing — indistinguishable in the output
+  // from a product that genuinely stores no tables and serves no endpoints. Only one of those is
+  // true, so the skeleton declares itself and the engine refuses on the declaration.
+  const tmp = fixtureCopy();
+  try {
+    const room = path.join(tmp, ".constitution", "project");
+    fs.mkdirSync(room, { recursive: true });
+    fs.copyFileSync(path.join(ROOT, "kit", ".constitution", "project", "inventory-readers.py"),
+                    path.join(room, "inventory-readers.py"));
+    const { out, code } = runIn(tmp);
+    assert.equal(code, 2, "the seeded skeleton ran as if it were a written reader");
+    assert.match(out, /skeleton/i, `the message does not say WHY nothing was derived:\n${out}`);
+    assert.match(out, /wdi-init/,
+      `the message does not name the skill that writes it, so it is not actionable:\n${out}`);
+    assert.doesNotMatch(out, /rows read from code/,
+      `the skeleton produced a row count, which is the lie this flag exists to prevent:\n${out}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("the seeded skeleton is valid Python defining all three readers", () => {
+  // `wdi-init` intent `readers` fills this file in; it MUST start from something that parses and
+  // already has the right shape, or the skill's first act is repairing the package's seed.
+  const seed = fs.readFileSync(
+    path.join(ROOT, "kit", ".constitution", "project", "inventory-readers.py"), "utf8");
+  for (const fn of ["derive_db", "derive_api", "derive_screen"]) {
+    assert.match(seed, new RegExp(`^def ${fn}\\(`, "m"), `the seed defines no ${fn}`);
+  }
+  assert.match(seed, /^SKELETON\s*=\s*True\b/m,
+    "the seed does not declare itself a skeleton, so the engine would run it as a real reader");
+  assert.match(seed, /wdi-init/,
+    "the seed does not say what writes it — a reader who opens it is left to invent the patterns");
+});
+
 test("a product's OWN reader is loaded and used, with Row and Derived injected", (t) => {
   if (requireUv(t)) return;
   const tmp = fixtureCopy();

@@ -32,9 +32,10 @@ Everything else — the five gates, the two fields, the fifteen skills, the temp
 `inventory.py`, `../method-glossary.md`, and the three files beside this one — carries without edit.
 
 One half-exception, and it is by design: `inventory.py` is the generic engine and carries whole, but
-it reads no code itself. The three readers live in `../../project/inventory-readers.py`, which is
-seeded once and belongs to the product — a project on another stack rewrites that file and nothing
-else.
+it reads no code itself. The three readers live in `../../project/inventory-readers.py`, which ships
+as a skeleton and belongs to the product. A new project runs `wdi-init` intent `readers` once and
+rewrites that file, nothing else. No example ships, deliberately — an example is a guess about a
+stack nobody here has seen.
 
 ## What does NOT travel
 
@@ -43,7 +44,7 @@ else.
 | `.control/` | This product's state. A new project scaffolds its own through `wdi-init` intent `setup`, or receives empty stubs on first `install` |
 | `.what/` · `.how/` | This product's promises and build |
 | `.constitution/project/codebase-*-guide.md` | Written by the **project**, not the method. They ship as empty `Draft` stubs |
-| `.constitution/project/inventory-readers.py` | How THIS product's code is read. Seeded with one stack's patterns as a starting point; a project on another stack replaces it |
+| `.constitution/project/inventory-readers.py` | How THIS product's code is read. Seeded as a SKELETON — no patterns and no stack. `wdi-init` intent `readers` writes it against the repo in front of it |
 | `_bmad-output/` | Run workspace |
 | The `bmad-*` skills themselves | BMad's, installed by BMad. Only `_bmad/custom/*.toml` is ours |
 

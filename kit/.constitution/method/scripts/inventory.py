@@ -31,9 +31,11 @@ functions from the product:
     .constitution/project/inventory-readers.py    derive_db · derive_api · derive_screen
 
 That path is the room: `wdi-method update` never overwrites it and `promote` never publishes it, so
-a product owns how its own code is read while every product shares this engine. The package seeds
-one reader file as a STARTING POINT, written for one stack, and a product on another replaces it.
-No reader at all is reported, never guessed around.
+a product owns how its own code is read while every product shares this engine. What the package
+seeds there is a SKELETON — no patterns, no stack, and it says so. The `wdi-init` skill, intent
+`readers`, writes it against the repo actually in front of it, which is why no example ships: an
+example is a guess about somebody else's stack, and guessing is the thing this script exists to
+refuse. An unwritten reader is reported, never worked around.
 
 THE STATED-UP-FRONT LIMIT, which no stack changes: this is a pattern reader, not a compiler.
 Whatever a reader cannot read is reported as unread — NOT guessed, and NOT silently dropped. An
@@ -220,6 +222,16 @@ def load_readers(root: Path):
     return mod
 
 
+def is_skeleton(mod) -> bool:
+    """The seeded skeleton announces itself, because silence would be a lie.
+
+    A skeleton returns no rows, and so does a product that genuinely stores no tables. In the
+    output those are the same thing — "0 rows read from code" — and only one of them is true. The
+    flag is what keeps an unwritten reader from reading as a finished one.
+    """
+    return bool(getattr(mod, "SKELETON", False))
+
+
 def shaped(kind: str, result) -> Derived:
     """Refuse a reader's answer that is not the shape the engine renders.
 
@@ -261,15 +273,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     readers = load_readers(root)
-    if readers is None:
-        # NOT an error, and NOT a reason to guess. A product that has written no reader has said
-        # nothing about how its code is read, and inventing an answer here is the one failure this
-        # script exists to prevent.
-        print(f"inventory: this product has no {READERS.as_posix()}, so nothing can be derived "
-              f"from code.\n  The engine is generic; reading a stack is not. Seed that file with "
-              f"three functions —\n  derive_db, derive_api, derive_screen — each taking the repo "
-              f"root and returning a Derived.\n  A fresh install carries an example of it to start "
-              f"from.", file=sys.stderr)
+    # NOT an error, and NOT a reason to guess. A product that has not written its readers has said
+    # nothing about how its code is read, and inventing an answer here is the one failure this
+    # script exists to prevent. Both states get the same refusal and the same next step.
+    if readers is None or is_skeleton(readers):
+        state = ("has no" if readers is None else "still has the seeded skeleton at")
+        print(f"inventory: this product {state} {READERS.as_posix()}, so nothing can be derived "
+              f"from code.\n"
+              f"  The engine is generic; reading a stack is not. Write the three readers for this "
+              f"repo with\n"
+              f"  the `wdi-init` skill, intent `readers` — it reads the code in front of it rather "
+              f"than\n"
+              f"  starting from somebody else's stack.", file=sys.stderr)
         return 2
 
     kinds = args.kind or list(KINDS)

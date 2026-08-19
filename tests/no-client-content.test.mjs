@@ -78,15 +78,11 @@ const STACK = new RegExp(
   "typescript|react|vite|tailwind|shadcn|mariadb|mysql|postgres|sqlite|npm run|cargo|gradle|" +
   "django|rails|laravel)\\b", "gi");
 
-// The rule is that the METHOD names no stack. Two places are outside the method, and both are
-// scoped by what they are rather than named as debt.
+// ONE exemption is left, and the room is deliberately not it. Moving the readers out of the method
+// only relocated the stack; what removed it is that the package now ships no reader at all — the
+// seeded file is a skeleton, and `wdi-init` intent `readers` writes it against the repo actually in
+// front of it. So this guard sweeps everything the package publishes, room included.
 const STACK_EXEMPT_DIRS = [
-  // The room is the PRODUCT's. Everything the package puts here is a seed a product replaces, and
-  // `update` never overwrites it. `inventory-readers.py` is the whole point: the three pattern
-  // readers used to sit inside the method's own inventory.py, where a product on another stack had
-  // no way to replace them. Moving them here is what let this exemption stop being debt — the
-  // stack no longer lives in anything `update` overwrites.
-  "kit/.constitution/project/",
   // Code samples teaching a debugging technique have to be written in SOME language. These teach
   // the technique, not the stack, and no rule in them depends on the language they are written in.
   "kit/skills/wdi-systematic-debugging/references/",
