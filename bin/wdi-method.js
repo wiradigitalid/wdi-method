@@ -17,6 +17,17 @@ import {
   readProductIdentity,
   writeProductIdentity,
 } from "../lib/identity.mjs";
+import {
+  detectPlatforms,
+  formatPlatformList,
+  isKnownPlatform,
+  normalizePlatformIds,
+  platformSelectOptions,
+  platformUsesHook,
+  PREFERRED_PLATFORM_IDS,
+  skillDestinations,
+} from "../lib/platforms.mjs";
+import { opencodeCommandsDir, syncOpencodeCommands } from "../lib/opencode-commands.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const KIT = path.join(ROOT, "kit");
@@ -49,14 +60,6 @@ const GENERIC_FOLDER_PATTERNS = new Set([
   "architecture",
   PRD_SLUG_PLACEHOLDER,
 ]);
-
-const ALL_AGENTS = ["claude", "cursor", "codex", "antigravity"];
-const AGENT_LABELS = {
-  claude: "Claude Code  →  .claude/skills, CLAUDE.md",
-  cursor: "Cursor       →  .agents/skills, .cursorrules",
-  codex: "Codex        →  AGENTS.md",
-  antigravity: "Antigravity  →  .agents/skills, .agents/AGENTS.md",
-};
 
 const BMAD_INSTALL = `npx bmad-method install`;
 const REPO_URL = "https://github.com/wiradigitalid/wdi-method";
@@ -101,7 +104,8 @@ function usage() {
   promote <live-dir> --rescue   pull a method change back out of a consumer (not the normal flow)
 
   --yes                     non-interactive
-  --agents a,b              claude,cursor,codex,antigravity
+  --agents a,b              platform IDs (same as BMad --tools; legacy: claude = claude-code)
+  --list-agents             print supported platform IDs
   --product NAME            written to index.yaml product.name
   --client NAME             written to index.yaml product.client (optional)
   --doc-language <text>            prose of working documents; free text, default English
@@ -130,6 +134,10 @@ function parseArgs(argv) {
     usage();
     process.exit(0);
   }
+  if (rest[0] === "--list-agents") {
+    console.log(formatPlatformList());
+    process.exit(0);
+  }
   if (rest.length === 0) {
     args.cmd = "wizard";
     return args;
@@ -151,10 +159,11 @@ function parseArgs(argv) {
     else if (t === "--agents") {
       const raw = rest.shift();
       if (!raw) die("--agents needs a comma-separated list");
-      args.agents = raw.split(",").map((s) => s.trim()).filter(Boolean);
-      for (const a of args.agents) {
-        if (!ALL_AGENTS.includes(a)) die(`unknown agent: ${a}`);
-      }
+      args.agents = normalizePlatformIds(raw.split(",").map((s) => s.trim()).filter(Boolean));
+      const unknown = raw.split(",").map((s) => s.trim()).filter(Boolean)
+        .filter((a) => !isKnownPlatform(a));
+      if (unknown.length) die(`unknown platform: ${unknown.join(", ")} (run --list-agents)`);
+      if (!args.agents.length) die("--agents needs at least one known platform");
     } else if (t === "--product") args.product = rest.shift();
     else if (t === "--client") args.client = rest.shift();
     else if (t === "--doc-language" || t === "--doc-filename-language") {
@@ -244,25 +253,6 @@ function readBmadVersion(target) {
   return m ? m[1] : "";
 }
 
-function detectAgents(target) {
-  const found = [];
-  if (
-    fs.existsSync(path.join(target, ".claude", "skills", "wdi-init", "SKILL.md")) ||
-    fs.existsSync(path.join(target, ".claude", "skills", "bmad-help", "SKILL.md"))
-  ) {
-    found.push("claude");
-  }
-  if (
-    fs.existsSync(path.join(target, ".cursorrules")) ||
-    fs.existsSync(path.join(target, ".agents", "skills", "wdi-init", "SKILL.md"))
-  ) {
-    found.push("cursor");
-  }
-  if (fs.existsSync(path.join(target, "AGENTS.md"))) found.push("codex");
-  if (fs.existsSync(path.join(target, ".agents", "AGENTS.md"))) found.push("antigravity");
-  return found.length ? [...new Set(found)] : ALL_AGENTS.slice();
-}
-
 function gitHead(repo) {
   const r = spawnSync("git", ["-C", repo, "rev-parse", "--short", "HEAD"], {
     encoding: "utf8",
@@ -287,15 +277,6 @@ function requireTarget(dir) {
     die(`target is not a directory: ${target}`);
   }
   return target;
-}
-
-function skillDests(target, agents) {
-  const dests = [];
-  if (agents.includes("claude")) dests.push(path.join(target, ".claude", "skills"));
-  if (agents.includes("cursor") || agents.includes("antigravity")) {
-    dests.push(path.join(target, ".agents", "skills"));
-  }
-  return dests;
 }
 
 function bmadMissingMessage() {
@@ -524,10 +505,10 @@ function syncConstitution(target) {
 
 function syncSkills(target, agents) {
   let n = 0;
-  const dests = skillDests(target, agents);
+  const dests = skillDestinations(target, agents);
   if (dests.length === 0) {
-    note("no skill destinations for selected agents — AGENTS.md still applies");
-    return 0;
+    note("no skill destinations for selected platforms — AGENTS.md still applies");
+    return { files: 0, removed: 0 };
   }
   for (const name of WDI_SKILLS) {
     const src = path.join(KIT, "skills", name);
@@ -728,7 +709,7 @@ function readIndexIdentity(target) {
   return readProductIdentity(fs.readFileSync(file, "utf8"));
 }
 
-function upsertAgentFiles(target, agents, productName) {
+function upsertAgentFiles(target, platforms, productName) {
   const template = fs.readFileSync(path.join(OVERLAY, "AGENTS.md"), "utf8");
   const agentsFile = path.join(target, "AGENTS.md");
   let next;
@@ -743,8 +724,10 @@ function upsertAgentFiles(target, agents, productName) {
   fs.writeFileSync(agentsFile, next);
 
   const mirrors = [];
-  if (agents.includes("cursor")) mirrors.push(path.join(target, ".cursorrules"));
-  if (agents.includes("cursor") || agents.includes("antigravity")) {
+  if (platformUsesHook(platforms, "cursorrules")) {
+    mirrors.push(path.join(target, ".cursorrules"));
+  }
+  if (platformUsesHook(platforms, "agents-mirror")) {
     mirrors.push(path.join(target, ".agents", "AGENTS.md"));
   }
   for (const mirror of mirrors) {
@@ -759,7 +742,7 @@ function upsertAgentFiles(target, agents, productName) {
     }
   }
 
-  if (agents.includes("claude")) {
+  if (platformUsesHook(platforms, "claude-md")) {
     const claude = path.join(target, "CLAUDE.md");
     if (!fs.existsSync(claude)) {
       fs.writeFileSync(claude, "@AGENTS.md\n");
@@ -775,7 +758,7 @@ function summaryLine(label, value) {
   console.log(`  ${DIM}${label.padEnd(11)}${RESET}${value}`);
 }
 
-function printSummary(target, agents, { first, was, written, skipped, skills, tomls }) {
+function printSummary(target, agents, { first, was, written, skipped, skills, tomls, opencodeCmds }) {
   const now = PKG.version;
   const version = first
     ? `${now} — first install`
@@ -799,7 +782,8 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
   if (bmad) summaryLine("bmad", bmad);
   summaryLine("target", target);
   console.log("");
-  summaryLine("written", `${written} constitution · ${skills.files} skill files · ${tomls.files} bmad overrides`);
+  summaryLine("written", `${written} constitution · ${skills.files} skill files · ${tomls.files} bmad overrides`
+    + (opencodeCmds?.written ? ` · ${opencodeCmds.written} opencode commands` : ""));
   if (kept.length) summaryLine("kept", kept.join(" · "));
   if (skills.removed) {
     summaryLine("removed", `${skills.removed} retired wrapper${skills.removed === 1 ? "" : "s"}`);
@@ -807,7 +791,7 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
   if (first && policy.docLanguage) {
     summaryLine("language", `${policy.docLanguage} · filenames ${policy.docFilenameLanguage}`);
   }
-  summaryLine("agents", agents.join(", ") || "none");
+  summaryLine("platforms", agents.join(", ") || "none");
   console.log("");
   // The readers are the one seeded file that does nothing until somebody writes it, and its
   // silence is expensive: inventory.py refuses to run and the reason is a folder deep. One line
@@ -880,6 +864,14 @@ function apply(target, agents,
   }
   const skills = syncSkills(target, agents);
   note(`skills ${skills.files} files`);
+  let opencodeCmds = { written: 0, removed: 0 };
+  if (platformUsesHook(agents, "opencode-commands")) {
+    opencodeCmds = syncOpencodeCommands(target, WDI_SKILLS, path.join(KIT, "skills"));
+    note(`opencode commands ${opencodeCmds.written} files → ${opencodeCommandsDir()}/`);
+    if (opencodeCmds.removed) {
+      note(`removed ${opencodeCmds.removed} retired opencode command${opencodeCmds.removed === 1 ? "" : "s"}`);
+    }
+  }
   const tomls = syncTomls(target);
   note(`bmad custom ${tomls.files} toml → _bmad/custom/`);
   if (first) seedControlIfMissing(target);
@@ -888,7 +880,7 @@ function apply(target, agents,
   setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen: languageChosen });
   upsertAgentFiles(target, agents, product);
   writeStamp(target);
-  printSummary(target, agents, { first, was, written, skipped, skills, tomls });
+  printSummary(target, agents, { first, was, written, skipped, skills, tomls, opencodeCmds });
   printNextSteps({
     first,
     productSet: Boolean(product) && !identityIsPlaceholder(product),
@@ -905,8 +897,14 @@ function verify(target, agents) {
     if (!fs.existsSync(dest)) missing.push(`.constitution/${rel}`);
   }
   for (const name of WDI_SKILLS) {
-    for (const root of skillDests(target, agents)) {
+    for (const root of skillDestinations(target, agents)) {
       const dest = path.join(root, name, "SKILL.md");
+      if (!fs.existsSync(dest)) missing.push(posixRel(target, dest));
+    }
+  }
+  if (platformUsesHook(agents, "opencode-commands")) {
+    for (const name of WDI_SKILLS) {
+      const dest = path.join(target, opencodeCommandsDir(), `${name}.md`);
       if (!fs.existsSync(dest)) missing.push(posixRel(target, dest));
     }
   }
@@ -1179,12 +1177,17 @@ async function runWizard(pre) {
     "Language of document filename slugs — the `UC-` `DEC-` codes stay English",
     policy.docFilenameLanguage || pre.docFilenameLanguage || docLanguage);
 
+  const detected = pre.agents
+    ? normalizePlatformIds(pre.agents)
+    : detectPlatforms(target, fs);
   const selected = cancelIf(
-    await p.multiselect({
-      message: "Which agents get the skills? (space to select)",
-      options: ALL_AGENTS.map((id) => ({ value: id, label: AGENT_LABELS[id] })),
-      initialValues: pre.agents || detectAgents(target),
+    await p.autocompleteMultiselect({
+      message: "Which tools get the wdi-* skills? (⭐ = recommended)",
+      options: platformSelectOptions(detected),
+      initialValues: detected,
       required: true,
+      maxItems: 8,
+      placeholder: "Type to search…",
     }),
   );
 
@@ -1193,13 +1196,15 @@ async function runWizard(pre) {
       "The corpus folder names are fixed — they are not an install option:",
       "  .constitution  .control  .what  .how  .work  _bmad-output",
       "",
-      "What gets written for the agents you picked:",
-      selected.includes("claude") ? "  .claude/skills/wdi-*  CLAUDE.md" : "",
-      selected.includes("cursor") ? "  .agents/skills/wdi-*  .cursorrules" : "",
-      selected.includes("codex") || selected.includes("cursor") || selected.includes("antigravity")
-        ? "  AGENTS.md  (the BEGIN:wdi-method block)"
+      "What gets written for the platforms you picked:",
+      "  AGENTS.md  (the BEGIN:wdi-method block — always)",
+      platformUsesHook(selected, "claude-md") ? "  CLAUDE.md  →  @AGENTS.md" : "",
+      platformUsesHook(selected, "cursorrules") ? "  .cursorrules  (method block mirror)" : "",
+      platformUsesHook(selected, "agents-mirror") ? "  .agents/AGENTS.md  (method block mirror)" : "",
+      platformUsesHook(selected, "opencode-commands")
+        ? `  ${opencodeCommandsDir()}/wdi-*.md  (slash commands → skills)`
         : "",
-      selected.includes("antigravity") ? "  .agents/AGENTS.md" : "",
+      `  wdi-* skills  →  ${skillDestinations(target, selected).map((d) => posixRel(target, d)).join(", ") || "(none)"}`,
     ]
       .filter(Boolean)
       .join("\n"),
@@ -1228,7 +1233,7 @@ async function runWizard(pre) {
 
 function runNonInteractive(args) {
   const target = requireTarget(args.dir);
-  const agents = args.agents || detectAgents(target) || ALL_AGENTS.slice();
+  const agents = args.agents || detectPlatforms(target, fs) || PREFERRED_PLATFORM_IDS.slice();
   if (args.cmd === "verify") {
     verify(target, agents);
     return;
