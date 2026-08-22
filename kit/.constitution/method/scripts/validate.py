@@ -1510,7 +1510,11 @@ def page_blueprint(c: Corpus) -> str:
     for pc in c.pcs:
         pid = str(pc.get("id"))
         block = _section(c.root / f".what/{pid}/SRS-{pid}.md", "Actor Register")
-        parts.append(f"\n### {pid} — {pc.get('name', '')}\n")
+        # A Product Component carries no `name` in `components.yaml` — only a container does — so
+        # this heading rendered as `### settings — `, with an orphaned separator, for every
+        # component of every product. The separator belongs to the name, not to the heading.
+        name = str(pc.get("name") or "").strip()
+        parts.append(f"\n### {pid} — {name}\n" if name else f"\n### {pid}\n")
         parts.append(_demote(block) if block
                      else "_no § Actor Register in this component's SRS yet._")
 
