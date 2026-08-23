@@ -925,9 +925,12 @@ DESTINATION = (
 # cites a method file IS checked, but here in the package where it can be fixed — see
 # tests/kit-integrity.test.mjs. A product cannot fix a guide `update` overwrites.
 #
-# The BMad skill trees are the same class under whichever host the installer wrote them to. Both
-# hosts MUST be listed: `.claude/skills/bmad-` alone left the `.agents/` copy of one identical
-# template failing, which reads as a defect in that product rather than an omission here.
+# The BMad skill trees are the same class under whichever host the installer wrote them to. EVERY
+# host MUST be listed, and there are three: `.claude/skills/bmad-` alone left the `.agents/` copy of
+# one identical template failing, which reads as a defect in that product rather than an omission
+# here. Listing two then left the `.agent/` copy failing the same way — the singular host is a
+# separate directory from `.agents/`, not a prefix of it, and a product carrying all three saw the
+# same worked example reported once per host it was missing.
 #
 # `wdi-*` skills are OURS and are deliberately NOT here. They MUST NOT cite a product file that
 # does not exist unless the cite is a placeholder.
@@ -935,6 +938,7 @@ INSTALLED = (
     ".constitution/method/",
     ".claude/skills/bmad-",
     ".agents/skills/bmad-",
+    ".agent/skills/bmad-",
 )
 
 # The extension list is deliberately WIDE. A narrow one does not make V24 safer — it makes it
