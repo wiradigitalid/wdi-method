@@ -332,7 +332,7 @@ their rows join the catalogue and the three inventories, and **G3 reopens over t
 | Agent at G1–G3 | Writes the brief, the PRD, and the blueprint | Decide depth or accept risk |
 | Agent at G4 | Writes one component's behaviour and mechanism | Write code |
 | Builder | One story through to a green PR | Change `.what/`, `.how/`, or an `applied` decision |
-| Review panel | Two different CLI families, neither the builder's | Give a final verdict — findings are adjudicated by the coordinator |
+| Review panel | Reviews the diff independently of the builder | Give a final verdict — findings are adjudicated by the coordinator |
 
 Panel composition and CLI/model selection are governed by the global Agent Rules and MUST NOT be restated
 here.

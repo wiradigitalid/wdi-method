@@ -124,8 +124,9 @@ Three rules this corpus adds. All three MUST be stated in the dispatch of any st
 
 Panel composition follows `risk_accepted`: at `low` a two-reviewer panel is **required** on the code; at
 `medium` and `high` it is available and SHOULD be used when the diff touches money, personal data, or a third
-party. The Agent Rules `bmad-code-review panel` section defines the pairing, and it MUST be followed exactly —
-the worker's own review layers are same-family by construction and never satisfy it.
+party. The local Agent Rules govern which CLIs and models staff the panel. A reviewer MUST be a dispatch
+separate from the builder — the worker's own review layers are self-review by construction and never satisfy
+the panel.
 
 - MUST adjudicate every contested finding by reading the cited lines. Votes MUST NOT settle a finding. A finding
   neither reviewer can locate in the diff is dismissed with that reason stated.
@@ -227,7 +228,7 @@ Run in this order and stop at the first failure:
 - Opening a PR with an unresolved must-fix, or before the story-closing checklist is answered
 - Editing a guard, a test, or an assertion to turn something green
 - Reporting green without checking the head SHA, or reading green `korpus.yml` as a passing build
-- A reviewer from the same CLI family as the builder
+- Counting the builder's own review layers as a panel reviewer
 - Dispatching a worker without its Unattended flag
 - Closing the wave without the registry catch-up in Phase 4 — that is where five checklist items now live
 - Letting `SPEC.md` state something `.what/` and `.how/` do not

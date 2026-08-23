@@ -162,7 +162,7 @@ the corpus. No → `_bmad-output/`. In doubt, `../document/corpus-guide.md`.
 |---|---|
 | Decisions — proposing a slicing, wording a `DEC-`, preparing a gate | `opus@high` |
 | Writing, derivation, a review-fix pass | `sonnet@high` |
-| Code review panel | Two different CLI families, and never the family that wrote the code |
+| Code review panel | Reviewers dispatched separately from the builder — the local Agent Rules govern CLI/model pairing |
 
 In a derivation pass, quality comes from the input rather than the model. Running a "find the gap" lens with
 the most careful model produces the most gaps, and each one becomes an open question — a cost nobody sees

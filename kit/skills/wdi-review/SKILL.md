@@ -13,7 +13,7 @@ artifact but of the component's `risk_accepted`, and defaulting to structure + p
 one lens that matters for behaviour; and `bmad-review` is class D — it writes nothing, so nothing proves
 it ran.
 
-You MUST NOT use this for code or diffs. That is `bmad-code-review` and the two-family Review Panel.
+You MUST NOT use this for code or diffs. That is `bmad-code-review` and the Review Panel.
 
 ## What it covers
 

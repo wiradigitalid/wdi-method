@@ -1,5 +1,5 @@
-# Review Panel: two reviewers from two different CLI families, and neither may come from the
-# family that ran the implementation.
+# Review Panel: two reviewers, each dispatched separately from the builder. Which CLIs and models
+# staff the panel is governed by the local Agent Rules, not by this kit.
 #
 # WARNING: the adversarial and edge-case lenses here are read from the bundled copy of
 # review-prompts/, NOT from the bmad-review skill. An override on bmad-review will not be visible
