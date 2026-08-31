@@ -79,6 +79,14 @@ governs it, and the four failures worth looking for are the ones no ID chain rec
 | A layer written by a skill that does not own it | The ownership table in `corpus-guide.md` |
 | A rule stated in a `.constitution/method/` file | `status: Reference` — it explains, it MUST NOT bind |
 | A `Reference` file contradicting a guide | The guide wins, and the contradiction is a defect to report |
+| `CONTEXT.md` or `CONTEXT-MAP.md` outside `_bmad-output/` | A second home for the vocabulary and for where each context lives. The homes are `.control/product-glossary.md`, `components.yaml`, and the two structure maps |
+| A `docs/` folder holding corpus or rules — `docs/adr/` above all | **Article 3**: this method has no `docs/` layer, and a leftover one is inventory to sort rather than a second home |
+
+**The last two are hunted by artifact, not by author, and that is deliberate.** An engine invoked outside its
+WDI wrapper still writes what it always writes — `wdi-blueprint` points `domain-modeling` at
+`_bmad-output/`, but a skill that calls it directly does not. Policing who invoked what is impossible from
+here; noticing the file that appeared is not. Inside `_bmad-output/` all three are legitimate working output
+and MUST NOT be reported.
 
 You MUST NOT invent a rule to fail an artifact against. Every finding here MUST quote the guide it comes
 from. A file at `status: Draft` MAY be read as guidance but MUST NOT be used to reject anything — that
