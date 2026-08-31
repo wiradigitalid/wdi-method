@@ -29,18 +29,34 @@ The sprint route was dropped because it keeps status in a hand-edited file. Two 
 parallel then contend for one file, and status becomes something a worker declares about itself.
 Reading status from story-file frontmatter removes both problems — V18 checks it.
 
-## Not every engine is BMad
+## When an engine earns being invoked at all
 
-The wrapper rule is about **position, verification, and landing** — not about who wrote the engine. So it
-holds for any engine this method invokes, BMad or otherwise: it is invoked through the WDI skill that owns
-the artifact, and that skill lands the result in this method's template.
+BMad is a **dependency of this package**: the installer checks for it, `--skip-bmad-check` exists to say so
+out loud, and five artifacts here have no other author. Any *further* engine is a different question, and it
+has one test:
 
-A non-BMad engine is named in the **skill that wraps it**, not in `bmad-skill-register.md` — that register
-is BMad's inventory, and putting somebody else's skill in it makes the register a lie. Where an engine
-carries artifacts of its own that this corpus already has homes for, the wrapping skill MUST name them and
-MUST NOT land them; `wdi-blueprint` does this for `mattpocock-skills:domain-modeling`, whose four own
-artifacts are class C working output here — and one of them, `docs/adr/`, is a folder Article 3 forbids
-outright, which is why an engine's write location is checked **before** it runs and not after.
+> **Does it produce something this corpus keeps?**
+
+Yes → it MAY be wrapped, and the wrapper rule applies: invoked through the WDI skill that owns the artifact,
+which checks position, verifies against the guide, and lands the result in this method's template. A
+non-BMad engine is named in **that skill**, never in `bmad-skill-register.md` — that register is BMad's
+inventory, and putting somebody else's skill in it makes the register a lie.
+
+No → **absorb the discipline and invoke nothing.** An engine that only carries instructions, whose own
+output formats this corpus rejects, is not an engine — it is prose we could have written, and wrapping it
+buys a dependency instead of a capability. The tell is the override count: a wrapper overriding most of an
+engine's instructions is not wrapping it, it is fighting it.
+
+Two hard consequences of this package being public and installed into other people's repos:
+
+- **A skill MUST NOT depend on a plugin that is not part of the install.** `wdi-method` lands in repos that
+  will never have that plugin, and an instruction nobody can follow is worse than an absent one.
+- **An optional engine's absence MUST NOT be reported as a finding.** Optional means the work is complete
+  without it.
+
+`wdi-blueprint` is the worked example: its four domain-modelling disciplines are its own, and
+`mattpocock-skills:domain-modeling` is named there as a MAY, with the four instructions of its own that stay
+overridden.
 
 ## Skill classes
 
