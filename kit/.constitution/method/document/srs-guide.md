@@ -142,6 +142,8 @@ artifacts move.
   roll-up in `.control/generated/blueprint.md` regenerated. V1, V2, V6, and V15 green — V2 is the ★
   question: every `FR` has at least one `UC`, unless it carries `no_uc:` with a stated reason.
 - At **G4**: whatever this component's `mode` requires, and nothing beyond it.
-- `wdi-review` MUST have run with the lens set `risk_accepted` names. The `reviewed:` trace is stamped only
-  on components at `risk_accepted` `low` or `medium` — V13.
+- `wdi-review` MUST have run with the lens set `risk_accepted` names for a **first** review or a review
+  opening this gate; a later re-review runs the lighter set, and `wdi-review` owns when. The `reviewed:`
+  trace is stamped only on components at `risk_accepted` `low` or `medium` — V13, where absence fails and
+  staleness is advisory between gates.
 - A `UC` that exists but is wrong passes V2 and fails `wdi-reconcile`. Run it before the gate, not after.

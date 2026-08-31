@@ -548,7 +548,19 @@ def v13(c: Corpus, r: Result) -> None:
 
     Narrowed to components with `risk_accepted` `low` or `medium`. At `high` the owner has already
     stated they accept the risk, and demanding a trace there is bookkeeping with no buyer.
+
+    Two narrowings answer the same complaint — that review had become a treadmill:
+
+      ABSENCE still fails. A binding artifact with no trace at all has never been reviewed.
+      STALENESS is ADVISORY. A trace has to be fresh at a gate and at wave close, and V13 cannot see
+        a gate; firing on every commit turned every edit into a re-review. G4's fourth star question
+        is what holds the gate on a stale review, and it is asked by a human who can see one.
+      LENS SET is demanded BEFORE the component's G4 has passed. That is the first review and the
+        review that opens the gate — the two the heavy lens is bought for. A re-review after G4 may
+        legitimately run structure + prose, so demanding edge-case-hunter there would force either a
+        pointless run or a false trace, and a false trace is worse.
     """
+    stale_advisory: list[str] = []
     watched = [pc for pc in c.pcs
                if str(pc.get("risk_accepted") or "").strip() in ("low", "medium")]
     if not watched:
@@ -570,8 +582,13 @@ def v13(c: Corpus, r: Result) -> None:
         # theater — exactly the ceremony this redesign cut, and a review that cannot fail proves
         # nothing. Once G4 passes, the demand comes back and it is meaningful.
         passed = str(pc.get("g4_passed") or "").strip().lower()
-        if c.mode_of(pc) != "catalog" and passed not in ("", "false", "no", "belum"):
-            targets.append((c.root / f".how/{pid}/SDD-{pid}.md", need))
+        gate_open = passed in ("", "false", "no", "belum")
+        # Before G4 passes, the risk-mandated lens set is demanded: that covers the first review and the
+        # review that opens the gate. After it passes, a re-review naming any lens satisfies V13.
+        if not gate_open:
+            targets[-1] = (targets[-1][0], set())
+        if c.mode_of(pc) != "catalog" and not gate_open:
+            targets.append((c.root / f".how/{pid}/SDD-{pid}.md", set()))
 
     for path, need in targets:
         fm = frontmatter(path)
@@ -583,15 +600,18 @@ def v13(c: Corpus, r: Result) -> None:
         if isinstance(block, dict) and block.get("sha"):
             stale = _stale_since(c, rel, str(block["sha"]))
             if stale:
-                r.fail("V13", rel,
-                       f"changed at {stale[:7]} after being reviewed at {str(block['sha'])[:7]} — "
-                       f"stale review")
+                stale_advisory.append(
+                    f"{rel} (changed at {stale[:7]}, reviewed at {str(block['sha'])[:7]})")
 
     for wave in c.wave_list:
         if not wave.get("epics"):
             continue
         _reviewed_ok(r, f"waves.yaml:{wave.get('id')}", wave.get("spec_reviewed"),
                      {"edge-case-hunter"})
+
+    if stale_advisory:
+        r.skip("V13", "advisory — trace stale, re-run before the next gate or wave close: "
+               + ", ".join(sorted(stale_advisory)))
 
 
 def cap_stories(c: Corpus) -> dict[str, list[dict]]:

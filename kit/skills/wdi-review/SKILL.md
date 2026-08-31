@@ -28,14 +28,57 @@ You MUST NOT use this for code or diffs. That is `bmad-code-review` and the Revi
 type.** `delivery-flow-guide.md` owns the mapping and it MUST NOT be restated as a second copy here; what
 this skill owns is reading it and refusing to run a lighter set than it names.
 
-| `risk_accepted` | Lenses | And on the code |
-|---|---|---|
-| `low` | structure · prose · **edge-case-hunter** | a two-reviewer panel is required |
-| `medium` | structure · prose · **edge-case-hunter** | — |
-| `high` | structure · prose | — |
+| `risk_accepted` | First review, and the review before a gate | Every re-review after that | On the code |
+|---|---|---|---|
+| `low` | structure · prose · **edge-case-hunter** | structure · prose | a two-reviewer panel is required |
+| `medium` | structure · prose · **edge-case-hunter** | structure · prose | — |
+| `high` | structure · prose | structure · prose | — |
 
-`SPEC.md` always carries `edge-case-hunter`: it is the contract a builder works from, and a branch missed
-there surfaces as a bug at G5 instead.
+**`edge-case-hunter` is bought once, at the moment it pays for itself** — the first review of an artifact,
+and the review that opens a gate. Running it again over a paragraph that changed is what made review feel
+like a tax. A re-review MUST put it back when the delta touches money, personal data, an irreversible
+action, or a third party; there the branch it hunts is the whole point.
+
+`SPEC.md` always carries `edge-case-hunter`, first run and re-run alike: it is the contract a builder works
+from, and a branch missed there surfaces as a bug at G5 instead.
+
+## When a review has to run again — and when it does not
+
+Four rules, and together they are what keeps this skill from becoming a treadmill. Every one of them has a
+precedent elsewhere in the method; none of them lowers what a review looks for.
+
+- **The trace has to be fresh at a gate and at wave close. Between those points a stale trace is
+  advisory.** V13 reports it and does not fail, the same way V19 is advisory on wave `S`/`M`. What catches a
+  gate opening on a stale review is G4's ★ question — *validators green **and** the review leaving no open
+  finding* — not a validator firing on every commit.
+- **A wording-only change MUST NOT trigger a re-run.** This is the split `prd-guide.md` already owns:
+  changing an `FR`'s **promise** reopens gates, changing its **wording** costs one Revision History row and
+  nothing else. Re-stamping `date` and `sha` without re-running is allowed **here and nowhere else**, and
+  the Revision History row is what makes it checkable. Anything touching behaviour, a rule, a boundary, a
+  contract, or a use case flow is material, and material changes re-run.
+- **A re-review covers the delta, not the artifact.** Read what changed since the reviewed `sha`, review
+  that and whatever it reaches. Re-reading four hundred lines of SRS to check one changed paragraph is the
+  ceremony this rule exists to stop — and the same principle already governs G3, which reopens over the
+  delta when a new PRD arrives.
+- **One apply, one review.** A `DEC-` or an answered `OQ-` applied across several artifacts is **one**
+  review of the delta across all of them, never one review per artifact. The trace lands on each artifact
+  touched, naming the same `sha`.
+
+## Findings have a budget, and it is not a new one
+
+A review with no upper bound is what produced two hundred findings from one pass and ids reaching `OQ-146`;
+`rationale.md` records it. The budget is the one `wdi-question` already carries, so nothing new is invented:
+
+| Class | Where it goes | Target |
+|---|---|---|
+| Holds the gate | `.control/questions/blocking.md` | **≤3 per Product Component** |
+| Does not hold anything | `.control/questions/assumptions.md`, one line each | **≤15** |
+
+**A review that exceeds both MUST stop and say so.** What it reports is not a finding list but a verdict:
+this artifact needs rewriting, not reviewing. Handing an owner sixty findings is not thoroughness — it is a
+review that failed to reach a conclusion, and the owner pays for it twice.
+
+You MUST NOT register a finding as blocking to be safe. That habit is what produced the flood.
 
 **V13 stamps only components at `risk_accepted` `low` or `medium`.** At `high` the owner has already said
 they accept the risk, and demanding the trace there is bookkeeping with no buyer.
@@ -107,8 +150,9 @@ reviewed:
   and no `reviewed:` block is written.
 - You MUST NOT stamp on behalf of a review someone else ran earlier. Re-run it; the run is cheap and
   the claim is not.
-- When the artifact changed after the review, the trace is stale by definition. You MUST re-run
-  rather than bump the date.
+- When the artifact changed **materially** after the review, the trace is stale and you MUST re-run
+  rather than bump the date. A wording-only change is the one exception, and §*When a review has to run
+  again* owns it.
 - When findings reveal the requirement itself is wrong rather than the writing, this stops being a
   review. Route to `wdi-decision`, and let the `DEC-` change the artifact.
 

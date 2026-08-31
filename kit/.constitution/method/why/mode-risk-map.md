@@ -133,5 +133,5 @@ Two more mechanics, neither of which reads `risk_accepted`:
 |---|---|---|
 | Raising or lowering `mode` | nothing. No justification | Lowering **deletes nothing** — a written file stops being required, and that is all |
 | Raising `mode` on a component whose code already runs | the evidence labels in `sdd-guide.md` | What comes out is an **as-built record**, not a design |
-| Lowering `risk_accepted` toward `low` | a review that now has to actually run | A stale trace MUST be re-earned, never re-dated |
+| Lowering `risk_accepted` toward `low` | a review that now has to actually run | A stale trace MUST be re-earned, never re-dated — except for a wording-only change, which `wdi-review` lets you re-stamp |
 | Raising `risk_accepted` to `high` on a sensitive component | a `DEC-` of `type: risk-acceptance` | V23 checks the `DEC-` exists, and it discloses rather than vetoes |

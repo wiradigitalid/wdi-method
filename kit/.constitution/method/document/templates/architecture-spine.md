@@ -14,7 +14,9 @@ companions: []
 reviewed:                # V13. Filled only after wdi-review has actually run
   date: ''               # '{YYYY-MM-DD}'
   sha: ''                # commit it was reviewed at; without the SHA, staleness cannot be measured
-  lenses: []             # structure · prose · edge-case-hunter · adversarial · verification-gap
+  lenses: []             # what ACTUALLY ran at this sha: structure · prose · edge-case-hunter ·
+                         # adversarial · verification-gap. Heavy lenses belong to a first or
+                         # gate-opening review; a re-review runs the lighter set over the delta
 ---
 
 # Architecture Spine — {name}

@@ -28,7 +28,11 @@ reviewed:                # V13. Filled only after wdi-review has actually run
      what is absent there is 04-usecases/UC-<n>-<slug>.md — the step-by-step flows.
 
      `reviewed.lenses` MUST match what this component's risk_accepted names in components.yaml —
-     edge-case-hunter at low and medium, structure + prose at high. It is NOT read off `mode`. -->
+     edge-case-hunter at low and medium, structure + prose at high. It is NOT read off `mode`.
+
+     That set is what a FIRST review and a gate-opening review carry. A later re-review runs
+     structure + prose, covers only the delta since `sha`, and puts edge-case-hunter back when that
+     delta touches money, personal data, an irreversible action, or a third party. wdi-review owns it. -->
 
 ## Decision Summary · [G3]
 

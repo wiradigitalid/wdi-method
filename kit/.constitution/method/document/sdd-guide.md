@@ -201,7 +201,8 @@ Only what this component's `mode` demands, and nothing beyond it:
 - At `deep`: Robustness Analysis done; every `critical` use case mirrored at the technical altitude under
   the same ids; contract specs answering all five lanes; the data dictionary present.
 - Always: unresolved `[NEEDS CONFIRMATION]` filed through `wdi-question`, no unresolved `[MISSING]`, and
-  `wdi-review` run with the lens set `risk_accepted` names.
+  `wdi-review` run with the lens set `risk_accepted` names for a gate-opening review — a re-review after
+  the gate runs the lighter set, and `wdi-review` owns which.
 
 The spine comes first and `bmad-spec` comes last. An SDD written before the spine will be rewritten; a SPEC
 written before the SDD has nothing to project.

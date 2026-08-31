@@ -29,6 +29,9 @@ reviewed:                # V13. Filled only after wdi-review has actually run
      That is a FINISHED state, not an unfinished one: G4 is skipped at catalog, and the code is written
      from the use case catalogue, the three inventories, and C4.
 
+     `reviewed.lenses` carries what ACTUALLY ran at that sha. The risk-mandated set applies to a first
+     review and a gate-opening review; a re-review runs the lighter set over the delta only.
+
      `reviewed.lenses` MUST match what risk_accepted names, NOT what `mode` says. One component MAY sit
      at catalog and still be reviewed the hardest. -->
 

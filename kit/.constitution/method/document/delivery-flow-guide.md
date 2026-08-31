@@ -86,11 +86,17 @@ is the lightest.
 
 `structure` and `prose` are the baseline everywhere. What `risk_accepted` decides is what is **added**:
 
-| Value | Lenses on the documents | On the code |
-|---|---|---|
-| `low` | `structure` · `prose` · **`edge-case-hunter`** | a two-reviewer panel is **required** |
-| `medium` | `structure` · `prose` · **`edge-case-hunter`** | — |
-| `high` | `structure` · `prose` | — |
+| Value | First review, and the review before a gate | Every re-review after | On the code |
+|---|---|---|---|
+| `low` | `structure` · `prose` · **`edge-case-hunter`** | `structure` · `prose` | a two-reviewer panel is **required** |
+| `medium` | `structure` · `prose` · **`edge-case-hunter`** | `structure` · `prose` | — |
+| `high` | `structure` · `prose` | `structure` · `prose` | — |
+
+The heavy lens is bought **once per artifact and once per gate**, not once per edit. A re-review MUST put
+it back when the delta touches money, personal data, an irreversible action, or a third party. And a
+review trace has to be fresh **at a gate and at wave close** — between those points a stale trace is
+advisory, not a failure. `wdi-review` owns the mechanics of both, including the one case where re-stamping
+without re-running is allowed: a change to wording only.
 
 Review lenses are decided here and **nowhere else**. They MUST NOT be read off `mode`: one component MAY
 sit at `mode: catalog` and still be reviewed the hardest.
