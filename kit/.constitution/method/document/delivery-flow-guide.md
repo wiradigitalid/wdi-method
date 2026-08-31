@@ -4,11 +4,11 @@ status: Accepted
 
 # Delivery Flow Guide
 
-**Loaded when:** opening or closing a gate, opening or closing a wave, setting `mode` or
+**Loaded when:** opening or closing a gate, opening or closing a spec, setting `mode` or
 `risk_accepted`, and any time something already agreed has to change
 
 This is the flow itself: five gates, the one knob that sets document depth, the one field that sets
-review intensity, wave sizing, and what happens when a settled thing has to move. Every other guide
+review intensity, spec sizing, and what happens when a settled thing has to move. Every other guide
 describes one document; this one describes the order they arrive in.
 
 ## Two fields, and the separation between them is the point
@@ -42,9 +42,9 @@ where both fields are defined.
 Raising and lowering are both **free and need no justification** — it is a preference, and a preference
 does not have to be defended.
 
-**There is no third scope.** `mode` MUST NOT be overridden per wave or per `SPEC.md`. A wave MAY cross
-several components, so a per-wave override would give one component two different depths depending on
-which wave touched it — while the document is one, and living.
+**There is no third scope.** `mode` MUST NOT be overridden per spec or per `SPEC.md`. A spec MAY cross
+several components, so a per-spec override would give one component two different depths depending on
+which spec touched it — while the document is one, and living.
 
 > Depth belongs to the component, not to the work.
 
@@ -94,7 +94,7 @@ is the lightest.
 
 The heavy lens is bought **once per artifact and once per gate**, not once per edit. A re-review MUST put
 it back when the delta touches money, personal data, an irreversible action, or a third party. And a
-review trace has to be fresh **at a gate and at wave close** — between those points a stale trace is
+review trace has to be fresh **at a gate and at spec close** — between those points a stale trace is
 advisory, not a failure. `wdi-review` owns the mechanics of both, including the one case where re-stamping
 without re-running is allowed: a change to wording only.
 
@@ -118,7 +118,7 @@ these five points only; between them the agents work alone.
 | **G2 Product** | What is built, and how it feels to use | once per PRD | 45' | unchanged | 3 of 7 at `catalog` |
 | **G3 Blueprint** | The whole portrait: which use cases, their entities, tables, endpoints, screens, and the invariants binding them | **once per product** | 45' | unchanged | 3 of 7 at `catalog` |
 | **G4 Component** | How one Product Component is built, and what the choice costs | **once per Product Component** | 20–30' | **skipped entirely at `catalog`** | 4 of 7, and 30' at `deep` |
-| **G5 Release** | Whether it is done and proven | once per wave | 10' | unchanged | 2 of 7 at `catalog` |
+| **G5 Release** | Whether it is done and proven | once per spec | 10' | unchanged | 2 of 7 at `catalog` |
 
 Two different things move, and reading them as one is what makes this table easy to get wrong:
 
@@ -230,93 +230,105 @@ Skipped entirely at `mode: catalog`.
 3. ★ What stops us starting tomorrow? (MUST be empty)
 4. ★ Validators green **and** the review leaving no open finding? (both — one is fact, one is judgement)
 5. Does any choice here lock us to one vendor or technology for more than a year?
-6. From the DAG: which story blocks the most other stories?
+6. From the DAG: which ticket blocks the most other tickets?
 7. Top risk: who owns it, and what is the pivot trigger to turn or give up?
 
 ### G5 Release · 10'
 
-1. ★ Is every RTM row for this wave green?
-2. ★ Is every story's acceptance criteria proven by a test, not by an agent's statement?
+1. ★ Is every RTM row for this spec green?
+2. ★ Is every ticket's acceptance criteria proven by a test, not by an agent's statement?
 3. What was dropped from the plan, and where is it recorded?
 4. Are new risks found while building in the Risk Register?
-5. What one thing made this wave take longer than expected?
+5. What one thing made this spec take longer than expected?
 6. What does the client need to know before this goes live?
 7. What is watched in the first week?
 
-## Units of work — `FR`, wave, `SPEC`, story
+## Units of work — `FR`, spec, `SPEC`, ticket
 
 | Unit | Is | Lifetime |
 |---|---|---|
 | `FR-N` | One **feature** — one promise to a user. Born at G2 | permanent, lives across releases |
-| wave | One **unit of work**. Opens at G4 or G5, closes at G5 | one slice of work |
-| `SPEC.md` | The machine contract for **one wave**. A projection of `.what/` + `.how/`, and MUST NOT contain anything new | one wave |
-| story | One piece taken by one builder to a green PR | one wave |
+| spec | One **unit of work**: the tickets that reach one outcome. Opens at G4 or G5, closes at G5 | one slice of work |
+| `SPEC.md` | The **document** of one spec: a projection of `.what/` + `.how/` that MUST NOT contain anything new. **Not written at size `S`** | one spec |
+| ticket | One **tracer-bullet vertical slice**: complete through every layer, verifiable on its own, sized to one fresh context window, carrying the tickets that block it | one spec |
 
-**One wave = one `SPEC` = one tracker Task.** One to one to one, with no compound joins.
+**One spec = one set of tickets = one parent issue.** One to one to one, with no compound joins. `SPEC.md`
+joins that identity from size `M` up; at `S` there is no document and **the tickets are the contract.**
 
-A wave's scope is flexible and **ideally one `FR`**, because an `FR` is human-testable from birth — it has a
-proof of done. One `FR` MAY span several waves, one wave MAY carry several small neighbouring `FR`, and a
-wave MAY be a standalone slice of one large `FR`.
+A spec's scope is flexible and **ideally one `FR`**, because an `FR` is human-testable from birth — it has a
+proof of done. One `FR` MAY span several specs, one spec MAY carry several small neighbouring `FR`, and a
+spec MAY be a standalone slice of one large `FR`.
 
-A wave MAY cross several Product Components. One condition: **G4 has passed for every component the wave
+A spec MAY cross several Product Components. One condition: **G4 has passed for every component the spec
 touches**, or that component is at `mode: catalog`, whose G4 is skipped by design (V22). That is why G4 and
-the wave are deliberately different units — G4 decides *how one component is built*, a wave decides *which
+the spec are deliberately different units — G4 decides *how one component is built*, a spec decides *which
 work happens now*.
 
-`SPEC.md` and story files **are not read by humans.** Both are machine contracts, and no review burden MAY
+A ticket is **vertical, never horizontal**: it cuts a narrow but complete path through schema, API, UI, and
+tests, and a finished one is demoable on its own. A slice of one layer is not a ticket. **The one exception
+is a wide refactor** — a mechanical change whose blast radius breaks call sites everywhere at once, where no
+vertical slice can land green. That is sequenced **expand → migrate in batches → contract**, each batch its
+own ticket blocked by the expand, and the contract blocked by every batch.
+
+`SPEC.md` and ticket files **are not read by humans.** Both are machine contracts, and no review burden MAY
 be moved onto them. The human review surface stops at the PRD, `.what/`, and `.how/`.
 
 ### Mapping to a tracker
 
-| Jira | WDI | Lifetime |
+| Tracker | WDI | Lifetime |
 |---|---|---|
 | Epic | Product Component | permanent — an Epic never closes |
-| Task | **wave = `SPEC.md`** | one wave |
-| Sub-task | story | one wave |
+| **Parent issue** | **spec** | one spec |
+| **Issue, carrying native blocking edges** | **ticket** | one spec |
 | Fix Version | release | one release |
-| Label / custom field | the `CAP-N` and `FR-N` the wave satisfies | — |
+| Label / custom field | the `CAP-N` and `FR-N` the spec satisfies | — |
 | — a document, not an issue | `.what/` · `.how/` · `SPEC.md` | — |
 
-**`FR` is not a Task.** It sits at the level of *promise*, not of *work*: one `FR` MAY be delivered by
-stories in two waves, and one story MAY satisfy part of two `FR`. Mapping promise onto work-issue forces a
-1:1 that does not exist, and produces Tasks opened at G2 that hang across releases. `FR` travels as a label
-on the Task.
+A ticket is an **issue**, not a sub-task, because its blocking edges are what make the frontier visible in
+the tracker's own UI — the set of tickets whose blockers are all closed, and therefore takeable now. A
+sub-task cannot carry that relation.
 
-**The corpus stays the source of truth; the tracker is a view.** Story status is read from story-file
-frontmatter, never copied into two places.
+**`FR` is not an issue.** It sits at the level of *promise*, not of *work*: one `FR` MAY be delivered by
+tickets in two specs, and one ticket MAY satisfy part of two `FR`. Mapping promise onto work-issue forces a
+1:1 that does not exist, and produces issues opened at G2 that hang across releases. `FR` travels as a label.
 
-**Parallelism.** Between stories through the `depends_on` and `touches` DAG; between waves through
-`depends_on` at wave level. A wave that declares no dependency runs in parallel.
+**The corpus stays the source of truth; the tracker is a view.** Ticket status is read from **the ticket
+itself**, never copied into two places — and `specs.yaml` holds the **index**, not the bodies: one row per
+ticket with `satisfies`, `depends_on`, `touches`, and its test names. That is what RTM and the validators
+read; the ticket's prose stays where the tracker put it.
 
-## Wave size, and what it does not decide
+**Parallelism.** Between tickets through their blocking edges plus the `touches` check; between specs
+through `depends_on` at spec level. A spec that declares no dependency runs in parallel.
+
+## Spec size, and what it does not decide
 
 | Size | Shape | Effect |
 |---|---|---|
-| **S** | ≤3 stories, no new `FR` | G4 and G5 merge into one 20-minute session |
-| **M** | 4–12 stories | as usual |
-| **L** | >12 stories, or a new container | the retrospective runs |
+| **S** | ≤3 tickets, no new `FR` | G4 and G5 merge into one 20-minute session · **`SPEC.md` is not written** — the tickets are the contract |
+| **M** | 4–12 tickets | `SPEC.md` written first, because the seams and the testing decisions have to be settled before tickets are cut |
+| **L** | >12 tickets, or a new container | as `M`. Its one distinct effect was the retrospective, which is retired |
 
-Size is recorded in `waves.yaml`. It MAY be raised mid-flight; it MUST NOT be lowered.
+Size is recorded in `specs.yaml`. It MAY be raised mid-flight; it MUST NOT be lowered.
 
 **Size does not choose which gates are active** — that is `mode`'s job. It only governs session merging and
 whether the retrospective is required.
 
 **Fast Path** skips every gate. It is available for a fix that changes no `FR`, `UC`, `AD-N`, or domain
-model, is at most one story, and touches no money, personal data, or third-party integration. If an `FR`
-turns out to be touched, work MUST stop and become a wave `S`.
+model, is at most one ticket, and touches no money, personal data, or third-party integration. If an `FR`
+turns out to be touched, work MUST stop and become a spec `S`.
 
-## Story-closing checklist — three items
+## Ticket-closing checklist — three items
 
-Answered as each story finishes, before the next is picked up.
+Answered as each ticket finishes, before the next is picked up.
 
-1. A decision worth remembering? → `wdi-decision`. A story that contradicts an `AD-N` **stops** rather than
+1. A decision worth remembering? → `wdi-decision`. A ticket that contradicts an `AD-N` **stops** rather than
    closing; that is the one case where recording is mandatory.
 2. A trap for the next agent? → recorded where the next agent will read it.
-3. Test names matching what `waves.yaml` records?
+3. Test names matching what `specs.yaml` records?
 
-Five items left this list and did not disappear — they moved to **wave close**, where the information is
+Five items left this list and did not disappear — they moved to **spec close**, where the information is
 actually available: `LC` registration (V12), the `touches` check, SPEC companion distillation, and the
-structure-map refresh. Registering an `LC` before a story was `ready-for-dev` demanded the answer at the
+structure-map refresh. Registering an `LC` before a ticket was `ready-for-agent` demanded the answer at the
 moment it was thinnest.
 
 ## When something settled has to change
@@ -327,20 +339,20 @@ names.
 | What changes | MUST be re-reviewed | Gate reopened |
 |---|---|---|
 | Business Goal | The whole chain beneath it | G1 |
-| `FR` — its **promise** | Related `UC`, decisions naming it, stories not yet `in-progress`, RTM rows | G2 then G3 |
+| `FR` — its **promise** | Related `UC`, decisions naming it, tickets not yet started, RTM rows | G2 then G3 |
 | `FR` — its **wording** only | Nothing. The skill at work fixes it, one Revision History row per pass | none |
 | `NFR` | Its enforcing decisions and tests | G4 |
-| UX flow | Related use case specifications, stories not yet `in-progress` | G3 |
+| UX flow | Related use case specifications, tickets not yet started | G3 |
 | Business rule | `UC` using it, related tests | G3 for a cross-component rule, G4 for a local one |
-| An `AD-N` | Affected C4 components, stories not yet `in-progress` | G4 |
-| Story acceptance criteria | That story's tests, its RTM row | none — the row going green again is enough |
+| An `AD-N` | Affected C4 components, tickets not yet started | G4 |
+| Ticket acceptance criteria | That ticket's tests, its RTM row | none — the row going green again is enough |
 
 The promise-versus-wording split is owned by `prd-guide.md` and MUST NOT be re-decided here.
 
-- A story already `in-progress` MUST NOT have its contract changed. Stop it, return it to `ready-for-dev`,
-  then change it.
+- A ticket already **started** MUST NOT have its contract changed. Stop it, return it to
+  `ready-for-agent`, then change it.
 - Superseded artifacts are never deleted. Their status becomes `superseded` and points at the replacement.
-- A change that cancels more than 30% of a wave's stories MUST go through `wdi-decision`, which wraps
+- A change that cancels more than 30% of a spec's tickets MUST go through `wdi-decision`, which wraps
   `bmad-correct-course`, rather than being patched.
 
 **A new PRD arriving after G3 amends the blueprint; it does not repeat it.** The new components are born,
@@ -354,7 +366,7 @@ their rows join the catalogue and the three inventories, and **G3 reopens over t
 | Product Owner | Answers the checklists, decides at the five gates, sets `mode` and `risk_accepted`, owns risk | Write artifacts, read machine contracts |
 | Agent at G1–G3 | Writes the brief, the PRD, and the blueprint | Decide depth or accept risk |
 | Agent at G4 | Writes one component's behaviour and mechanism | Write code |
-| Builder | One story through to a green PR | Change `.what/`, `.how/`, or an `applied` decision |
+| Builder | One ticket through to a green PR | Change `.what/`, `.how/`, or an `applied` decision |
 | Review panel | Reviews the diff independently of the builder | Give a final verdict — findings are adjudicated by the coordinator |
 
 Panel composition and CLI/model selection are governed by the global Agent Rules and MUST NOT be restated
