@@ -42,21 +42,22 @@ which checks position, verifies against the guide, and lands the result in this 
 non-BMad engine is named in **that skill**, never in `bmad-skill-register.md` — that register is BMad's
 inventory, and putting somebody else's skill in it makes the register a lie.
 
-No → **absorb the discipline and invoke nothing.** An engine that only carries instructions, whose own
-output formats this corpus rejects, is not an engine — it is prose we could have written, and wrapping it
-buys a dependency instead of a capability. The tell is the override count: a wrapper overriding most of an
-engine's instructions is not wrapping it, it is fighting it.
+No → **absorb the discipline and invoke nothing.** Prose we could have written is not an engine.
 
-Two hard consequences of this package being public and installed into other people's repos:
+An engine whose output this corpus keeps is invoked even when it is a **plugin rather than part of this
+package's install** — `mattpocock-skills:domain-modeling` is the case, and `wdi-blueprint` invokes it. Two
+rules make that safe in a repo that does not have it:
 
-- **A skill MUST NOT depend on a plugin that is not part of the install.** `wdi-method` lands in repos that
-  will never have that plugin, and an instruction nobody can follow is worse than an absent one.
-- **An optional engine's absence MUST NOT be reported as a finding.** Optional means the work is complete
-  without it.
+- **A missing plugin is a state, not a defect.** Report it once, name the standard the work is still held
+  to, and do the work. You MUST NOT block a gate on it, and you MUST NOT report its absence as a finding.
+- **The wrapper carries the standard, never the plugin.** What the engine is invoked *for* MUST be written
+  in the wrapping skill as behaviours to verify — so the same bar is met either way, and a run that
+  produced none of them is reported as a transcription rather than landed.
 
-`wdi-blueprint` is the worked example: its four domain-modelling disciplines are its own, and
-`mattpocock-skills:domain-modeling` is named there as a MAY, with the four instructions of its own that stay
-overridden.
+An engine's **own** artifacts and tests are a separate matter, and the wrapping skill MUST name every one
+this corpus already has a home for. `wdi-blueprint` names four for `domain-modeling`, one of which —
+`docs/adr/` — is a folder **Article 3 forbids outright**. That is why an engine's write location is pointed
+somewhere safe **before** it runs rather than corrected after.
 
 ## Skill classes
 

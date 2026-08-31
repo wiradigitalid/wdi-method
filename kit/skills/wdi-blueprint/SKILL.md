@@ -12,7 +12,7 @@ Two intents, run in this order:
 
 | Intent | Writes | Wraps |
 |---|---|---|
-| `catalog` | Per `<pc>`: § Actor Register · § UC Catalogue · `03-domain/domain-model.md`. Product level: `.what/business-rules.md` · `.control/product-glossary.md` · `usecases.yaml` | — |
+| `catalog` | Per `<pc>`: § Actor Register · § UC Catalogue · `03-domain/domain-model.md`. Product level: `.what/business-rules.md` · `.control/product-glossary.md` · `usecases.yaml` | `mattpocock-skills:domain-modeling` |
 | `platform` | `.how/_platform/`: the spine · C4 L1/L2/L3 · `cross-cutting.md` · the three inventories. Registry: `containers` | `bmad-architecture` |
 
 **Blueprint content is untouched by `mode` and by `risk_accepted`.** Everything above exists at every mode,
@@ -65,39 +65,59 @@ whose nouns nobody defined.
 the count passes a third of a component's use cases, derive it again — `delivery-flow-guide.md` owns the rule
 and it MUST NOT be negotiated.
 
-### Domain modelling is active, not transcription
+### Domain modelling is active, and `mattpocock-skills:domain-modeling` is its engine
 
-The domain model is not written by taking dictation. Four things MUST happen while it is being derived, and
-this skill does them itself — **no engine is required for any of them, and none MUST be made a dependency.**
+The domain model is not written by taking dictation. **You MUST invoke
+`mattpocock-skills:domain-modeling`** to derive it, the same way the spine goes through
+`bmad-architecture` — this skill never does the deriving itself, it positions the engine, verifies the
+result against `srs-guide.md`, and lands it in this method's template.
 
-1. **Challenge a term the moment it conflicts.** When the owner uses a word the glossary already defines
-   differently, say so there and then: *"the glossary defines cancellation as X, you seem to mean Y — which
-   is it?"* Step 1 already demands that two words for one thing be resolved in the same pass; this is when.
-2. **Split fuzzy language.** *"You said account — do you mean the Customer or the User?"* Two words for one
-   thing is drift and Step 1 catches it. **One word for two things is worse and nothing else catches it**,
-   because both readings survive review looking correct.
-3. **Stress-test relationships with invented edge scenarios.** Push on the boundary between two concepts
-   until the owner has to be precise. This feeds two things already asked for here: the `critical`
-   derivation, and the branches that become `05-scenarios/` at `deep`.
-4. **Cross-reference the model against the code**, where code exists, and surface every contradiction:
-   *"the code cancels whole orders, but you just said partial cancellation is possible."* `wdi-reconcile`
-   compares documents with documents and `inventory.py` compares the three inventories with code —
-   **nothing compares the domain model with the code**, so this check has no other home.
+Four behaviours are what the engine is invoked for. Verify each one actually happened before landing
+anything; an engine run that produced none of them is a transcription, and the run MUST be reported as such:
 
-The result lands as the entity table's `Code name` and `Never called` columns plus the glossary entry each
-row cites; `language-guide.md` owns which language the code name is written in. And one rule holds whatever
-produced the content: the conceptual layer stays conceptual. A column type appearing in `03-domain/` means
-the model has quietly become physical, and `templates/model.md` owns that.
+1. **A term challenged the moment it conflicted** with what the glossary already defines.
+2. **Fuzzy language split** — *"you said account: the Customer or the User?"* Two words for one thing is
+   drift and Step 1 catches it. **One word for two things is worse and nothing else catches it**, because
+   both readings survive review looking correct.
+3. **Relationships stress-tested with invented edge scenarios.** This feeds two things asked for elsewhere
+   here: the `critical` derivation, and the branches that become `05-scenarios/` at `deep`.
+4. **The model cross-referenced against the code**, where code exists, with every contradiction surfaced.
+   `wdi-reconcile` compares documents with documents and `inventory.py` compares the three inventories with
+   code — **nothing else compares the domain model with the code.**
 
-**On `mattpocock-skills:domain-modeling.`** It carries the same four disciplines, and it MAY be used when a
-repo happens to have it. It MUST NOT be invoked as a requirement, and its absence MUST NOT be reported as
-anything — this package installs into repos that will never have it, and a wrapper cannot depend on a plugin
-that is not part of the install. Four of its instructions are also **overridden** here and MUST stay
-overridden: it writes `CONTEXT.md` (our vocabulary lives in `.control/product-glossary.md`), a
-`CONTEXT-MAP.md` (ours is `components.yaml` plus the two structure maps), a `docs/adr/` folder (**Article 3**
-forbids a `docs/` layer outright), and an ADR — whose own test is *narrower* than ours, so it stays silent on
-decisions this method wants kept. `decision-guide.md` asks only whether the answer is readable from the code
-in three months, and that question deliberately keeps the ones that sound small.
+#### Where it MUST NOT write, and which of its rules MUST NOT be followed
+
+It writes **as it goes, at the repo root**, by its own instruction — *"update `CONTEXT.md` right there,
+don't batch these up"* — creating its folders lazily. So its write location MUST be pointed at
+`_bmad-output/` **before** it starts, not corrected after. Four of its artifacts are class C working output
+here, and **none MUST be landed**:
+
+| Its artifact | Where the fact goes instead |
+|---|---|
+| `CONTEXT.md` — its own rule makes it *"a glossary and nothing else"*, so the mapping is exact | `.control/product-glossary.md` |
+| `CONTEXT-MAP.md` — where each bounded context lives | `components.yaml` + the two structure maps |
+| `docs/adr/` — **Article 3** forbids a `docs/` layer for corpus or rules outright | `.control/decisions/` |
+| An ADR file — the name is retired here | a `DEC-` through `wdi-decision` |
+
+**Its ADR test is narrower than ours and MUST NOT be used.** It offers an ADR only when a decision is hard
+to reverse **and** surprising **and** the result of a real trade-off. `decision-guide.md` asks one question
+instead — *"in three months, is the answer readable from the code?"* — which deliberately keeps the decisions
+that sound small. So it will stay silent on decisions this method wants recorded: apply our test to what it
+surfaces, and MUST NOT read its silence as *"nothing worth recording happened"*.
+
+#### When it is not installed
+
+`bmad-guide.md` §*When an engine earns being invoked at all* owns the general rule. For this engine: it is a
+**plugin, not part of this package's install**, so its absence is a real state and not a defect. Report it
+once, name the four behaviours above as the standard the derivation is still held to, and carry them out
+here. You MUST NOT block G3 on a missing plugin, and you MUST NOT report its absence as a finding.
+
+#### What lands, whatever produced it
+
+The entity table's `Code name` and `Never called` columns, plus the glossary entry each row cites —
+`language-guide.md` owns which language the code name is written in. And one rule holds regardless of engine:
+**the conceptual layer stays conceptual.** A column type appearing in `03-domain/` means the model has
+quietly become physical, and `templates/model.md` owns that.
 
 **A method term MUST NOT be written into `.constitution/method/method-glossary.md`.** A product term binds one
 project; a method term binds every project the method is installed in. Raise it as a proposal, state where it
