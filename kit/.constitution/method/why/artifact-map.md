@@ -11,7 +11,7 @@ wins and the disagreement is a defect to report.
 
 It answers three questions and nothing else: which files exist at each `mode`, who owns each one, and how
 the units of work line up. The **rules** about depth live in `../document/delivery-flow-guide.md`; what is
-here is the map.
+here is the map. What `mode` and `risk_accepted` do **together**, cell by cell, is in `mode-risk-map.md`.
 
 ## The one thing to read first
 

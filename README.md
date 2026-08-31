@@ -121,6 +121,10 @@ Depth is a preference and needs no defence. Accepting risk on something that tou
 data, or an irreversible action is **not** free: it requires a recorded decision, and a validator checks
 that the decision exists.
 
+All twelve combinations are legal. The installed kit carries
+`.constitution/method/why/mode-risk-map.md`, which puts them side by side — what each cell costs at G4,
+which review lenses run, and which review traces a validator will demand.
+
 ---
 
 ## Five gates, fifteen skills

@@ -67,8 +67,9 @@ to its component, however platform-shaped the table looks.
 ## Intents `mode` and `risk` — disclose, then propose
 
 `mode` controls **document depth** and nothing else. `risk_accepted` controls **review intensity** and
-nothing else. Their definitions live in `delivery-flow-guide.md`. What this skill owns is the
-conversation around changing them.
+nothing else. Their definitions live in `delivery-flow-guide.md`, and what the two chosen together cost is
+laid out cell by cell in `.constitution/method/why/mode-risk-map.md` — show it when the owner asks what a
+combination buys. What this skill owns is the conversation around changing them.
 
 **You do not judge. You disclose, then propose.** Read the `FR` that fall to the component, then name
 what it touches:

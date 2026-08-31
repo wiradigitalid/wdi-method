@@ -28,6 +28,10 @@ depth you wanted. Recording what is accepted is the entire reason that field exi
 Project size MUST NOT appear as an input anywhere. Size decides how many components there are, not how
 deep each one goes.
 
+All twelve combinations of the two are legal, and what each one costs is laid out side by side in
+`.constitution/method/why/mode-risk-map.md`. It explains and MUST NOT be cited as a rule — this guide is
+where both fields are defined.
+
 ### `mode` — two scopes, and the per-component one wins
 
 | Scope | Where | Means |

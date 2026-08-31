@@ -49,7 +49,7 @@ so a status there would land in the artifact and mean something else entirely.
 A missing header anywhere else is a **finding**, not an implicit anything.
 
 `Reference` exists so that the *explanation* of a rule can live beside the rule without competing with it —
-`method/why/` holds four such files. Where a `Reference` file and an `Accepted` one disagree, the `Accepted`
+`method/why/` holds five such files. Where a `Reference` file and an `Accepted` one disagree, the `Accepted`
 one wins, and the disagreement MUST be reported as a defect rather than resolved by preferring whichever was
 opened first. A rule MUST NOT be born in a `Reference` file; when one is noticed there, it is stated as a
 finding and written in the guide that owns it.

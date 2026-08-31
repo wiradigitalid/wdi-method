@@ -9,9 +9,10 @@ status: Reference
 This file **explains**. It does not bind — `../document/*-guide.md` does, and where the two disagree the guide
 wins and the disagreement is a defect to report.
 
-Five minutes. Three files in this folder: this one for orientation, `artifact-map.md` for *"where does this
-file go"*, `rationale.md` for *"why is it like this"* — open that one before changing a rule, so you know
-what you are about to break.
+Five minutes. Four more files sit beside this one: `artifact-map.md` for *"where does this file go"*,
+`mode-risk-map.md` for *"I set a `mode` and a `risk_accepted` — what changes?"*, `portability.md` for which
+files are the method's and which are the product's, and `rationale.md` for *"why is it like this"* — open
+that last one before changing a rule, so you know what you are about to break.
 
 ## What the method is
 
