@@ -38,8 +38,9 @@ the artifact, and that skill lands the result in this method's template.
 A non-BMad engine is named in the **skill that wraps it**, not in `bmad-skill-register.md` — that register
 is BMad's inventory, and putting somebody else's skill in it makes the register a lie. Where an engine
 carries artifacts of its own that this corpus already has homes for, the wrapping skill MUST name them and
-MUST NOT land them; `wdi-blueprint` does this for `mattpocock-skills:domain-modeling`, whose `CONTEXT.md`
-and ADR are class C working output here.
+MUST NOT land them; `wdi-blueprint` does this for `mattpocock-skills:domain-modeling`, whose four own
+artifacts are class C working output here — and one of them, `docs/adr/`, is a folder Article 3 forbids
+outright, which is why an engine's write location is checked **before** it runs and not after.
 
 ## Skill classes
 
