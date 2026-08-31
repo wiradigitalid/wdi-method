@@ -79,6 +79,28 @@ demanded in **every** cell: V13 asks for `spec_reviewed` carrying `edge-case-hun
 epics, whatever `risk_accepted` says. Reading a `nothing` in that column as *"no trace is demanded
 anywhere in this cell"* is the one misreading it invites, and it is wrong.
 
+## Before the components exist — G1 and G2
+
+The question this section exists to answer: *"at G1 and G2, is every combination treated the same?"*
+
+For `risk_accepted`, yes — and not as a policy choice. **The field has no value yet.** It is born per
+component when `wdi-init` intent `component` runs at the **tail of G2**, so nothing before that point can read
+it. One consequence worth knowing: the brief and the PRD are artifacts with no component, so their review is
+`structure · prose` whatever any component is later set to, and no `reviewed:` trace is written on them at all.
+
+For `mode`, almost — and the exception is real:
+
+| At G1 and G2 | Identical at every setting? |
+|---|---|
+| What the gate decides, its budget (20' · 45'), how often it runs | **yes** |
+| The artifacts: `brief.md` · `_product-brief/addendum.md` · `prd.md` · `_prd/<initiative>/addendum.md` | **yes** — `always` at all four modes |
+| Checklist length | **no** — at `catalog` G1 asks 2 of 7 and G2 asks 3 of 7 |
+
+Only the **global** `mode` can be in play there; the per-component one does not exist yet. And among the G2
+questions that stop being required at `catalog` is *"which `FR` touch money, personal data, or the client's
+reputation?"* — which does not open a hole: `wdi-init` intents `mode` and `risk` MUST read the `FR` falling to
+the component and name what is touched before proposing any value. The disclosure moves, it does not vanish.
+
 ## Where the two fields actually meet
 
 Four points, and they are the whole reason this file exists. Everywhere else the fields are independent

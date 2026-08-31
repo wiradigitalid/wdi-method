@@ -106,16 +106,24 @@ component at `mode: deep` and `risk_accepted: low` whatever the global setting s
 A gate is named for **what is decided there**, never for the work that precedes it. Owner time is spent at
 these five points only; between them the agents work alone.
 
-| Gate | Decides | How often | Budget | Varies by `mode`? |
-|---|---|---|---|---|
-| **G1 Problem** | What the problem is, whose it is, why it earns work | once | 20' | no |
-| **G2 Product** | What is built, and how it feels to use | once per PRD | 45' | no |
-| **G3 Blueprint** | The whole portrait: which use cases, their entities, tables, endpoints, screens, and the invariants binding them | **once per product** | 45' | no |
-| **G4 Component** | How one Product Component is built, and what the choice costs | **once per Product Component** | 20–30' | **yes — the only one** |
-| **G5 Release** | Whether it is done and proven | once per wave | 10' | flags only |
+| Gate | Decides | How often | Budget | The session itself | Its checklist |
+|---|---|---|---|---|---|
+| **G1 Problem** | What the problem is, whose it is, why it earns work | once | 20' | unchanged | 2 of 7 at `catalog` |
+| **G2 Product** | What is built, and how it feels to use | once per PRD | 45' | unchanged | 3 of 7 at `catalog` |
+| **G3 Blueprint** | The whole portrait: which use cases, their entities, tables, endpoints, screens, and the invariants binding them | **once per product** | 45' | unchanged | 3 of 7 at `catalog` |
+| **G4 Component** | How one Product Component is built, and what the choice costs | **once per Product Component** | 20–30' | **skipped entirely at `catalog`** | 4 of 7, and 30' at `deep` |
+| **G5 Release** | Whether it is done and proven | once per wave | 10' | unchanged | 2 of 7 at `catalog` |
 
-**Only one gate changes shape with `mode`.** That is what makes this holdable in one head: four of the five
-are always the same, whatever the setting.
+Two different things move, and reading them as one is what makes this table easy to get wrong:
+
+- **What a gate decides, how often it runs, and its budget never change.** All five, at every setting.
+- **G4 is the only gate that can disappear.** At `catalog` its session does not happen at all; the other four
+  always run.
+- **Checklist length is the one thing `mode` shortens everywhere.** At `catalog` only the ★ questions are
+  required, at G1 and G5 as much as at G4 — see the checklists below.
+
+That is what makes this holdable in one head: four of the five sessions are always there, and the only
+question is how long their checklist is.
 
 The word "area" is not used anywhere. There is only Product Component.
 
@@ -165,8 +173,13 @@ MUST NOT be negotiated.
 
 Each question is answered **yes / no / change**. One "no" on a ★ question holds the gate.
 
-**On `mode: catalog`, only the ★ questions are asked** — fourteen across all five gates. The rest stay here
-as material, and asking them is never wrong; requiring them is.
+**On `mode: catalog`, only the ★ questions are required.** There are fourteen ★ across the five gates, but
+four of them belong to G4 — which `catalog` skips — so what actually gets asked there is **ten**. The rest
+stay here as material, and asking them is never wrong; requiring them is.
+
+Which `mode` the rule reads depends on the gate. **G1 and G2 can only read the global `mode`**, because no
+component exists yet and `risk_accepted` has no value at all until `wdi-init` intent `component` runs at the
+tail of G2. G4 reads the `mode` of the component in front of it.
 
 ### G1 Problem · 20'
 

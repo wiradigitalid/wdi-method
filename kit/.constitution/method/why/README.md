@@ -36,8 +36,10 @@ A gate is named for **what is decided there**, never for the work before it.
 | **G4 Component** | How one Product Component is built, and what the choice costs | once per **component** | 20–30' |
 | **G5 Release** | Whether it is done and proven | once per wave | 10' |
 
-**Only G4 changes shape.** The other four are always the same, whatever the settings — and that is what lets
-the whole system be held in one head.
+**Only G4 can disappear.** At `mode: catalog` its session does not happen at all; the other four always run,
+and what each decides never changes. What `mode` does shorten everywhere is the **checklist**: at `catalog`
+only the ★ questions are required, at G1 and G5 as much as at G4. Sessions fixed, checklist elastic — that is
+what lets the whole system be held in one head.
 
 ## Two settings, and they control different things
 
