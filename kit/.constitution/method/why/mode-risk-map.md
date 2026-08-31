@@ -44,20 +44,22 @@ content, born at G3, which the depth knob does not reach.
 
 ## Axis 2 — what moves when only `risk_accepted` moves
 
-| `risk_accepted` | Lenses on the documents | On the code | V13 review trace |
+| `risk_accepted` | Lenses on the documents | On the code | V13 trace on the component's docs |
 |---|---|---|---|
 | `low` | structure · prose · **edge-case-hunter** | a **two-reviewer panel is required** | demanded |
 | `medium` | structure · prose · **edge-case-hunter** | — | demanded |
 | `high` | structure · prose | — | not demanded — the risk is already accepted on the record |
 
-`SPEC.md` always carries `edge-case-hunter` whatever the field says: it is the contract a builder works
-from, and a branch missed there surfaces as a bug at G5.
+`SPEC.md` sits outside that last column entirely, and it is the one artifact this field never reaches:
+it always carries `edge-case-hunter`, and V13 always demands `spec_reviewed` on every wave that carries
+epics — `high` included. SPEC is not a component, so `risk_accepted` has no say over it. It is the
+contract a builder works from, and a branch missed there surfaces as a bug at G5.
 
 ## The twelve cells
 
 `g4` = the G4 session · `panel` = the two-reviewer code panel · V13 targets assume the file is born.
 
-| `mode` + `risk_accepted` | Owner time at G4 | Document review | Code | Trace demanded on | Also |
+| `mode` + `risk_accepted` | Owner time at G4 | Document review | Code | Component trace on | Also |
 |---|---|---|---|---|---|
 | `catalog` + `low` | none — skipped | structure · prose · edge-case-hunter | **panel** | `SRS` only | The cell the split exists for: thin on purpose, reviewed hardest |
 | `catalog` + `medium` | none — skipped | structure · prose · edge-case-hunter | — | `SRS` only | The cheapest cell that still hunts edge cases |
@@ -71,6 +73,11 @@ from, and a branch missed there surfaces as a bug at G5.
 | `deep` + `low` | 30' | structure · prose · edge-case-hunter | **panel** | `SRS` · `SDD` after G4 | The floor an outside deliverable is put at. Not a preference there |
 | `deep` + `medium` | 30' | structure · prose · edge-case-hunter | — | `SRS` · `SDD` after G4 | — |
 | `deep` + `high` | 30' | structure · prose | — | nothing | Depth bought, scrutiny declined. Legal, and worth saying out loud once |
+
+**The trace column is scoped to a component's own documents.** `SPEC.md` is left out of it because it is
+demanded in **every** cell: V13 asks for `spec_reviewed` carrying `edge-case-hunter` on every wave with
+epics, whatever `risk_accepted` says. Reading a `nothing` in that column as *"no trace is demanded
+anywhere in this cell"* is the one misreading it invites, and it is wrong.
 
 ## Where the two fields actually meet
 
