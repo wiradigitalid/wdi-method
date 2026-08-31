@@ -20,7 +20,7 @@ reverse holds too. The test: would this term still apply on a different product?
 | **`.what/`** | What was promised |
 | **`.how/`** | How it is built |
 | **Workspace** | `_bmad-output/` — work in progress, committed but not curated |
-| **Placement test** | Is this file still true after its wave has passed? Yes → corpus. No → workspace |
+| **Placement test** | Is this file still true after its spec has passed? Yes → corpus. No → workspace |
 
 ## Units
 
@@ -52,10 +52,10 @@ there is only Product Component.
 | **`mode`** | The one knob for **document depth**, and nothing else. `catalog` · `outline` · `guarded` · `deep`, default `catalog`. Two scopes — global in `index.yaml`, per component in `components.yaml`, and the per-component one wins. **No third scope** |
 | **`risk_accepted`** | The one field for **review intensity**, and nothing else. `low` · `medium` · `high`. It MUST NOT be derived from `mode`, nor `mode` from it |
 | **Blueprint** | The whole-product portrait decided once at G3: one line per use case, table, endpoint, and screen, plus entities, actors, the spine, C4, and cross-component rules. It names a **gate and a skill**, never a document or a folder |
-| **Wave** | One unit of delivered work. Opens at G4 or G5, closes at G5, recorded in `waves.yaml` |
-| **Release** | What a PRD promises. One release MAY span several waves; the relation is data, never inferred from numbering |
-| **Wave size** | `S` ≤3 stories no new FR · `M` 4–12 · `L` >12 or a new container. MAY be raised mid-flight, MUST NOT be lowered. It does **not** choose which gates are active — that is `mode` |
-| **Fast Path** | A fix that skips all gates: ≤1 story, no FR/UC/`AD-N`/domain-model change, no money, personal data, or third-party integration |
+| **Spec** | One unit of delivered work: the tickets that reach one outcome. Opens at G4 or G5, closes at G5, recorded in `specs.yaml`. Its document is `SPEC.md`, **optional at size `S`** — one term, one entry, and the document is named after the unit the way a `DEC-` file is named after its decision |
+| **Release** | What a PRD promises. One release MAY span several specs; the relation is data, never inferred from numbering |
+| **Spec size** | `S` ≤3 tickets no new FR · `M` 4–12 · `L` >12 or a new container. MAY be raised mid-flight, MUST NOT be lowered. It does **not** choose which gates are active — that is `mode`. It decides two things: whether G4 and G5 merge into one session (`S`), and whether `SPEC.md` is written at all (`M` and up) |
+| **Fast Path** | A fix that skips all gates: ≤1 ticket, no FR/UC/`AD-N`/domain-model change, no money, personal data, or third-party integration |
 | **Step** | One of the five points inside `wdi-build`'s ship pipeline — plan · build · panel · publish · CI. It is **not** a gate and not a stage, and the word MUST NOT be used for anything at gate altitude |
 
 ## Artifacts
@@ -72,8 +72,8 @@ there is only Product Component.
 | **`DESIGN.md`** | UX per PC, in `.how/<pc>/01-ux/` |
 | **`EXPERIENCE.md`** | The user-facing journey, in `.what/<pc>/04-usecases/` |
 | **`DEC-`** | One decision worth remembering, numbered globally. Lives in `.control/decisions/`. Recording is **not mandatory**; it freezes at `applied`, not at `accepted` |
-| **SPEC** | The machine contract for **one wave**. A projection of `.what/` + `.how/`, and MUST NOT contain anything new. Not read by humans |
-| **Story** | One unit of build. Status is read from its own frontmatter, never copied elsewhere |
+| **SPEC** | The document of **one spec**: a projection of `.what/` + `.how/` that MUST NOT contain anything new. Not read by humans, and **not written at size `S`** — there the tickets are the contract |
+| **Ticket** | One unit of build: a tracer-bullet vertical slice, complete through every layer, verifiable on its own, sized to one fresh context window. Carries the tickets that **block** it. Status is read from the ticket itself, never copied elsewhere |
 | **Structure map** | `.control/structure-codebase.md` and `structure-document.md` — where things actually are today |
 | **Memlog** | The record of *why* while an artifact was written. Never copied into a document; a source when writing a `DEC-`. It is a **run log**, and it MUST NOT be searched as an index of decisions — `.control/generated/decisions.md` is that |
 
@@ -94,7 +94,7 @@ there is only Product Component.
 | `V1`–`V25` | Validators. `V10` fell and its number is not reused |
 
 IDs are allocated **globally** and never restart per document, per component, or per release. The chain
-that must hold end to end: `BG → FR → UC → story → test`.
+that must hold end to end: `BG → FR → UC → ticket → test`.
 
 `ADR-` is **retired**. It was renamed to `DEC-` on 2026-08-18 with the numbers unchanged, so `ADR-004`
 inside a document frozen before that date is an alias for `DEC-004`, and those documents MUST NOT be
@@ -116,10 +116,10 @@ where BMad's own meaning is wider, the narrower one here wins.
 
 | Term | Means |
 |---|---|
-| **Stories mode** | The route this method uses: SRS + SDD + PRD → `SPEC.md` + `stories.yaml` → build |
+| **Stories mode** | **Retired.** It was BMad's route — `SPEC.md` + `stories.yaml` produced by `bmad-spec`. The engine layer below G5 no longer runs it; `bmad-guide.md` says what replaced it |
 | **Skill class** | `A` living document, straight to the corpus · `B` living but wrongly granular, lands neutral then is placed · `C` spent after its work · `D` no artifact |
 | **Companion** | A side file a BMad skill produces next to its main output. The lasting ones are promoted by the distillation table |
-| **Distillation** | Promoting what is durable out of `_bmad-output/` before a wave closes. What is not promoted dies with the folder |
+| **Distillation** | Promoting what is durable out of `_bmad-output/` before a spec closes. What is not promoted dies with the folder |
 | **`persistent_facts`** | Files a skill always reads. Routing alone does not achieve this |
 | **`doc_standards`** | Rule files a skill checks its output against. Facts MUST NOT be installed here, and neither MUST anything at `status: Reference` |
 | **`{project_knowledge}`** | The config variable pointing at `.control/` |
@@ -134,7 +134,7 @@ where BMad's own meaning is wider, the narrower one here wins.
 | `SCP-` | A `DEC-` of `type: course-correction` |
 | `layer:` on a decision | `touches:`, filled from what actually changed |
 | "Stage 1"…"Stage 5" as flow vocabulary | The five gates |
-| `epics.md` · `sprint-status.yaml` · `bmad-sprint-planning` · `bmad-create-epics-and-stories` | The stories route: `SPEC.md` + `stories.yaml`, status in story frontmatter |
+| `epics.md` · `sprint-status.yaml` · `bmad-sprint-planning` · `bmad-create-epics-and-stories` · `stories.yaml` | Tickets, each carrying its own status and its blocking edges |
 | Validator `V10` | Nothing. Its number is not reused |
 | `bmad-help` as the answer to "where am I" | `wdi-help` |
 | The skills `wdi-analysis` · `wdi-architecture` · `wdi-design` · `wdi-glossary` · `wdi-structure` · `wdi-apply` · `wdi-correct-course` · `wdi-wave` · `wdi-ship-story` · `wdi-product-brief` · `wdi-meeting` · `wdi-project-log` | The fifteen in `why/README.md`. `why/rationale.md` says which absorbed which, and why |
@@ -150,12 +150,25 @@ A synonym for a term that already has an entry is drift, and `wdi-reconcile` hun
 | infrastructure · third-party · dependency, for something inside the boundary | **container** with `built: false` | Calling it something else is how a container ends up with no row, no owner, and no NFR |
 | container, for something whose runtime we do not deploy | **external system** | It has no `built`, no L3, and no heading. Registering it as a container promises a section of the codebase map that will never exist |
 | module · package, for a unit of build | **Logical Component** | `components.yaml` names it, and V12 resolves against that name |
-| epic · sprint, for a batch of work | **wave** | Both belong to the sprint route this method dropped |
+| epic · sprint, for a batch of work | **spec** | Both belong to the sprint route this method dropped |
+| **wave**, for a unit of delivered work | **spec** | Retired when the engine layer below G5 changed. See the retired-alias rule below |
+| **story**, for a unit of build | **ticket** | Same retirement. A ticket is a vertical slice that blocks and is blocked; a story was a row in a file BMad owned |
 | area, for a domain slice | **Product Component** | The word "area" is not used anywhere in this method |
 | platform, for a Product Component | **`_platform`**, and only for what is not one | Registering `_platform` as a PC gives it a `mode`, an SRS, and a G4 it has no use for |
 | profile · tier · level, for document depth | **`mode`** | One knob, four values, and no matrix behind it |
 | feature, for a domain slice | **Product Component** | A feature is a promise; a PC is a folder pair with an owner |
 | requirements document | **PRD** or **SRS** | They cut different axes — time versus space — and merging the names merges the documents |
+
+## Retired terms keep their frozen documents
+
+`wave` and `story` are **retired aliases** of `spec` and `ticket`. A `wave` or a `story` appearing in a
+document frozen before the change — a closed `DEC-`, an `RTR-`, minutes, `why/rationale.md`'s record of what
+happened — reads as its replacement, and those documents **MUST NOT be rewritten for the term.** This is the
+same rule Article 6 already applies to `ADR-NNN` → `DEC-NNN`, and for the same reason: a frozen record that
+cites a name is evidence, and rewriting evidence to tidy a vocabulary destroys the thing that made it useful.
+
+What MUST use the new term: every `Accepted` guide, every skill, every registry, and anything written from
+here on.
 
 ## Rules
 
