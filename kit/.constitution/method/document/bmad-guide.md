@@ -29,6 +29,18 @@ The sprint route was dropped because it keeps status in a hand-edited file. Two 
 parallel then contend for one file, and status becomes something a worker declares about itself.
 Reading status from story-file frontmatter removes both problems — V18 checks it.
 
+## Not every engine is BMad
+
+The wrapper rule is about **position, verification, and landing** — not about who wrote the engine. So it
+holds for any engine this method invokes, BMad or otherwise: it is invoked through the WDI skill that owns
+the artifact, and that skill lands the result in this method's template.
+
+A non-BMad engine is named in the **skill that wraps it**, not in `bmad-skill-register.md` — that register
+is BMad's inventory, and putting somebody else's skill in it makes the register a lie. Where an engine
+carries artifacts of its own that this corpus already has homes for, the wrapping skill MUST name them and
+MUST NOT land them; `wdi-blueprint` does this for `mattpocock-skills:domain-modeling`, whose `CONTEXT.md`
+and ADR are class C working output here.
+
 ## Skill classes
 
 The criterion is **lifetime**, not importance:

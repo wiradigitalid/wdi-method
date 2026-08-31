@@ -12,7 +12,7 @@ Two intents, run in this order:
 
 | Intent | Writes | Wraps |
 |---|---|---|
-| `catalog` | Per `<pc>`: § Actor Register · § UC Catalogue · `03-domain/domain-model.md`. Product level: `.what/business-rules.md` · `.control/product-glossary.md` · `usecases.yaml` | — |
+| `catalog` | Per `<pc>`: § Actor Register · § UC Catalogue · `03-domain/domain-model.md`. Product level: `.what/business-rules.md` · `.control/product-glossary.md` · `usecases.yaml` | `mattpocock-skills:domain-modeling` |
 | `platform` | `.how/_platform/`: the spine · C4 L1/L2/L3 · `cross-cutting.md` · the three inventories. Registry: `containers` | `bmad-architecture` |
 
 **Blueprint content is untouched by `mode` and by `risk_accepted`.** Everything above exists at every mode,
@@ -64,6 +64,29 @@ whose nouns nobody defined.
 `critical` means the use case touches **money, personal data, or an irreversible action**. Nothing else. If
 the count passes a third of a component's use cases, derive it again — `delivery-flow-guide.md` owns the rule
 and it MUST NOT be negotiated.
+
+### The domain model's engine, and the two files it MUST NOT land
+
+`mattpocock-skills:domain-modeling` is the engine for sharpening entities, relationships, and the terminology
+around them. It is invoked **through this skill**, never directly — the same rule every engine here follows,
+and for the same reason: the wrapper is what checks position, verifies the result against
+`srs-guide.md`, and lands the output in this method's own template.
+
+That engine produces two artifacts of its own, and **neither MUST be landed in the corpus**:
+
+| Its artifact | Why not | Where the fact goes instead |
+|---|---|---|
+| `CONTEXT.md` | It is a second home for the domain model and its vocabulary | `.what/<pc>/03-domain/` + `.control/product-glossary.md` |
+| An `ADR` | The name is **retired** here, and `DEC-` already holds the shape, the global numbering, and the `draft → accepted → applied` ladder | `wdi-decision` writes a `DEC-` |
+
+Both are **working output**: they live in `_bmad-output/` and die with the run — class C in
+`bmad-guide.md`. Landing either one gives one fact two homes, which is the drift `wdi-reconcile` hunts.
+
+What the engine is genuinely worth buying is the **terminology pass**: one word per concept, and the
+synonyms named so nobody reintroduces them. The glossary rule in Step 1 already demands that resolution; the
+engine is what makes it cheap. Its result lands as the `Code name` and `Never called` columns of the entity
+table plus the glossary entry each row cites — and `language-guide.md` owns which language the code name is
+written in.
 
 **A method term MUST NOT be written into `.constitution/method/method-glossary.md`.** A product term binds one
 project; a method term binds every project the method is installed in. Raise it as a proposal, state where it

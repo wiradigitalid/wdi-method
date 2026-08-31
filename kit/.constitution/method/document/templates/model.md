@@ -25,10 +25,24 @@ updated: '{YYYY-MM-DD}'
 ## Entities
 
 <!-- One row per thing. For a conceptual model the description is what it IS to the business, not
-     how it is stored. -->
+     how it is stored.
 
-| Entity | What it is | Identified by |
-| --- | --- | --- |
+     `Code name` closes the loop this table used to leave open. The conceptual model is written for
+     the Product Owner, so its Entity column carries the word the BUSINESS uses — which is not always
+     the identifier code must use. Naming both, in one row, is what stops an agent inventing a third
+     word. `../language-guide.md` owns which language the code name is written in, and the one
+     exception for an Indonesian administrative or legal noun.
+
+     `Never called` is the synonym that was rejected, kept on purpose. A term resolved silently comes
+     back: the losing word is still in somebody's head, in an old document, and in the client's
+     email. Naming it here is what makes reintroducing it a finding instead of a habit. Leave the
+     cell empty when no synonym ever competed — an invented one is noise.
+
+     Every row's definition MUST live in `.control/product-glossary.md`, not here. This table points;
+     the glossary defines. -->
+
+| Entity | What it is | Identified by | Code name | Never called |
+| --- | --- | --- | --- | --- |
 
 ## Relationships
 
