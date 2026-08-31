@@ -9,11 +9,19 @@ One unit of work, one invocation. A wave used to need four calls — open it, ru
 close it — and three of those were bookkeeping. They are all in here now, because a unit of work that needs
 four invocations gets three of them skipped.
 
-**REQUIRED SUB-SKILL:** MUST dispatch, wait, and escalate through `orchestration`. Worker CLI/model/effort MUST
-come from the Orca Agent Dispatch tables in the user's Agent Rules; this skill MUST NOT restate them.
+**No orchestration tool is required, and this skill MUST NOT name one.** How the work is carried out is the
+session's own arrangement: an orchestration skill, this CLI's native subagent tooling, or the coordinator doing
+a step itself. Which CLI, which model, and which effort staff a step come from the local Agent Rules, and MUST
+NOT be restated here. Every rule below holds whatever the mechanism — they are about the artifact and who
+judges it, not about how an agent is launched.
 
-The coordinator (this session) holds every judge call, the registries, and every remote git action. Dispatched
-workers hold the spec and the code.
+Two roles exist regardless. The **coordinator** — this session — holds every judge call, the registries, and
+every remote git action. The **builder** of a step holds the spec and the code.
+
+When the coordinator is also the builder, the separation the pipeline rests on is absent. That MUST be reported
+as absent rather than worked around: a step judged by whoever wrote it is a self-report. One consequence is
+hard — see Step 3: at `risk_accepted: low` the panel requires reviewers who are not the builder, and a session
+that cannot provide them is **blocked**, not excused.
 
 ## Precondition, and the one that is easy to miss
 
@@ -63,7 +71,7 @@ moved onto them. `wdi-review` MAY still be dispatched over the SPEC; its trace l
 ## Phase 3 — Ship each story
 
 Steps 1–2 run `bmad-build-auto` under **folder+id dispatch**: the coordinator supplies `spec_folder` and
-`story_id`, and the worker resolves everything else from `{spec_folder}/stories.yaml` and `SPEC.md`.
+`story_id`, and the builder resolves everything else from `{spec_folder}/stories.yaml` and `SPEC.md`.
 
 | # | Step | Engine | Exit condition |
 |---|---|---|---|
@@ -75,25 +83,27 @@ Steps 1–2 run `bmad-build-auto` under **folder+id dispatch**: the coordinator 
 
 ### Engine rules
 
-- MUST judge a step from the spec's frontmatter `status`. A worker's chat report MUST NOT settle it.
-- Every step MUST go to a **fresh** worker, and a fix round MUST NOT go back to the worker that produced the
-  code. The spec carries everything the next worker needs, and inherited context is how a step stops judging
-  the artifact on its own merits.
-- MUST launch every worker with its Unattended flag, and MUST confirm each started from observed activity —
-  never from a readiness match alone.
-- MUST NOT dispatch to a CLI that cannot spawn subagents. `blocked / no subagents` is a CLI capability failure,
-  not a story failure: re-dispatch the same step on the other CLI in that row.
+- MUST judge a step from the spec's frontmatter `status`. A builder's chat report MUST NOT settle it.
+- Every step MUST start from a **fresh context**, and a fix round MUST NOT go back to whoever produced the
+  code. The spec carries everything the next builder needs, and inherited context is how a step stops judging
+  the artifact on its own merits. Where one session runs consecutive steps itself, it MUST re-read the artifact
+  rather than trust what it remembers writing.
+- A step handed to a separate agent MUST be launched so it cannot sit waiting for input nobody will give, and
+  its start MUST be confirmed from observed activity — never from a readiness match alone.
+- A step that fails because the agent could not spawn what it needed is a **capability** failure, not a story
+  failure. MUST retry it somewhere that can, and MUST NOT record it against the story.
 - MUST NOT reorder or drop a step. A step with nothing to do MUST be reported as such, not skipped silently.
 - A spec already at `status: blocked` MUST be repaired and its status reset before re-dispatch.
 
-### What every worker brief MUST carry
+### What every builder brief MUST carry
 
-Three rules this corpus adds. All three MUST be stated in the dispatch of any step that writes code.
+Three rules this corpus adds. All three MUST reach whoever writes code in this wave — in the dispatch when a
+step is dispatched, and in the session's own working instructions when it is not.
 
 - **Debugging is conditional, never a phase.** When a test or build fails and the cause is not known, the
-  worker MUST run `wdi-systematic-debugging` before proposing any fix. A third failed fix attempt is the signal
+  builder MUST run `wdi-systematic-debugging` before proposing any fix. A third failed fix attempt is the signal
   to escalate, not to try a fourth.
-- **The corpus is not the worker's to change.** A worker MUST NOT edit `.what/`, `.how/`, or an `applied`
+- **The corpus is not the builder's to change.** A builder MUST NOT edit `.what/`, `.how/`, or an `applied`
   `DEC-`. A deviation from the SDD or an `AD-N` is **reported**, and it becomes a `DEC-` through
   `wdi-decision` — never absorbed as a code patch.
 - **Verification is run, not assumed.** The commands are this product's, and they live in
@@ -103,30 +113,32 @@ Three rules this corpus adds. All three MUST be stated in the dispatch of any st
 
 ### Step 1 — plan
 
-- MUST include `Halt after planning.` Without it the worker runs straight through implementation and Step 2
+- MUST include `Halt after planning.` Without it the builder runs straight through implementation and Step 2
   loses its gate.
 - Validation is not a separate step. Step-02's READY-FOR-DEVELOPMENT gate verifies the spec, repairs it once,
   and re-verifies. MUST NOT wrap a second validation loop around it.
 - `blocked / spec failed ready-for-development standard` means that repair did not converge. MUST escalate the
   failing criteria; MUST NOT hand-patch the spec into a pass.
-- `blocked / intent gap` MUST reach the owner with the worker's unanswered questions verbatim.
+- `blocked / intent gap` MUST reach the owner with the builder's unanswered questions verbatim.
 
 ### Step 2 — build
 
-- MUST dispatch with the spec file path and the three brief rules above. The worker commits locally and **never
+- The builder MUST be given the spec file path and the three brief rules above. It commits locally and **never
   pushes**.
 - `blocked / review repair loop exceeded 5 iterations` means its internal loop did not converge. MUST escalate;
   MUST NOT re-dispatch for a sixth.
-- On `blocked / intent gap` the worker has reverted the code and saved a patch file. MUST retrieve that patch
+- On `blocked / intent gap` the builder has reverted the code and saved a patch file. MUST retrieve that patch
   path from the triage log before escalating — the work is recoverable, and losing it costs the whole step.
 
 ### Step 3 — panel, then judge
 
 Panel composition follows `risk_accepted`: at `low` a two-reviewer panel is **required** on the code; at
 `medium` and `high` it is available and SHOULD be used when the diff touches money, personal data, or a third
-party. The local Agent Rules govern which CLIs and models staff the panel. A reviewer MUST be a dispatch
-separate from the builder — the worker's own review layers are self-review by construction and never satisfy
-the panel.
+party. The local Agent Rules govern which CLIs and models staff the panel. **A reviewer MUST be a different
+agent from the builder** — the builder's own review layers are self-review by construction and never satisfy
+the panel. This is the one separation in the pipeline that MUST NOT be collapsed: where the session cannot
+provide it and `risk_accepted` is `low`, the story is blocked and the owner MUST be told, because the field
+they set is what makes the panel required.
 
 - MUST adjudicate every contested finding by reading the cited lines. Votes MUST NOT settle a finding. A finding
   neither reviewer can locate in the diff is dismissed with that reason stated.
@@ -182,9 +194,9 @@ The five items that left this list moved to Phase 4, where the information actua
 
 ### Parallel stories
 
-Stories without a `depends_on` path between them MAY run at once, but four conditions MUST hold: each worker in
-its own worktree; V11 green for every pair released together; the first story of an epic already `done` so later
-stories inherit its code map; and no shared registry write in flight.
+Stories without a `depends_on` path between them MAY run at once, but four conditions MUST hold: each
+concurrent builder in its own worktree; V11 green for every pair released together; the first story of an epic
+already `done` so later stories inherit its code map; and no shared registry write in flight.
 
 The pattern that MUST be preferred: run the biggest blocker alone first, let its shape decisions land, then fan
 out.
@@ -223,13 +235,14 @@ Run in this order and stop at the first failure:
 - Judging a step from a chat report instead of the spec's frontmatter `status`
 - Dispatching Step 1 without `Halt after planning.`
 - Editing content inside `<intent-contract>` on the owner's behalf
-- A worker editing `.what/`, `.how/`, or an `applied` `DEC-` to make its code fit
+- A builder editing `.what/`, `.how/`, or an `applied` `DEC-` to make its code fit
 - Fixing a failing test without knowing why it failed
 - Opening a PR with an unresolved must-fix, or before the story-closing checklist is answered
 - Editing a guard, a test, or an assertion to turn something green
 - Reporting green without checking the head SHA, or reading green `korpus.yml` as a passing build
 - Counting the builder's own review layers as a panel reviewer
-- Dispatching a worker without its Unattended flag
+- Leaving a dispatched step able to stall on a question nobody is there to answer
+- Naming an orchestration tool as this skill's requirement, or restating a CLI/model mapping the Agent Rules own
 - Closing the wave without the registry catch-up in Phase 4 — that is where five checklist items now live
 - Letting `SPEC.md` state something `.what/` and `.how/` do not
 

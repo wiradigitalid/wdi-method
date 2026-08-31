@@ -21,9 +21,9 @@ Use for any technical issue: test failure, production bug, unexpected behavior, 
 build failure, integration failure.
 
 **Its home is G5, but its trigger is not positional.** Most invocations happen while coding, and
-that is why `AGENTS.md`, `bmad-build`, and the ship-story orchestration carry this rule in their
-worker context. What actually fires it is a pair of conditions — *something is broken* **and** *the
-cause is unknown* — so it MAY be invoked in any stage, by anyone, to investigate: a red
+that is why `AGENTS.md`, `bmad-build`, and `wdi-build`'s builder brief all carry this rule.
+What actually fires it is a pair of conditions — *something is broken* **and** *the cause is
+unknown* — so it MAY be invoked in any stage, by anyone, to investigate: a red
 `validate.py` while writing an SRS at G3, a `wdi-reconcile` report that makes no sense, a
 generator producing an empty timeline. None of those wait for G5, and none of them are a
 misuse of this skill.
