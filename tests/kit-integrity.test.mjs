@@ -195,3 +195,38 @@ test("what ships is English — the sweep missed 19 strings and nothing said so"
   assert.deepEqual(found, [],
     `Indonesian left in what ships:\n  ${[...new Set(found)].join("\n  ")}`);
 });
+
+// 0.5.35 shipped a DEADLOCK, and nothing said anything — which is the same shape as the two defects at
+// the top of this file. Three statements, each reasonable alone, closed into a cycle:
+//
+//   wdi-ux         required Product Components before a run
+//   wdi-init       requires "G2 passed" before Product Components are born
+//   ux-guide       says G2 reads EXPERIENCE.md — which only a UX run produces
+//
+// So UX waited on components, components waited on G2, and G2 waited on UX. A project at that version
+// could not open G2 at all once it needed UX. No validator can see this: every precondition lives in
+// prose, in a different file, and each is correct on its own.
+//
+// The test is narrow on purpose. It does not try to parse the whole flow — it asserts that the one edge
+// which closes the cycle stays broken.
+test("wdi-ux does not wait for Product Components — that edge closes a deadlock", () => {
+  const ux = lf(fs.readFileSync(path.join(ROOT, "kit", "skills", "wdi-ux", "SKILL.md"), "utf8"));
+  const init = lf(fs.readFileSync(path.join(ROOT, "kit", "skills", "wdi-init", "SKILL.md"), "utf8"));
+  const guide = lf(fs.readFileSync(path.join(KIT_CONST, "method", "document", "ux-guide.md"), "utf8"));
+
+  // The two edges that make the third one fatal. If either ever stops being true the cycle is gone and
+  // this test should be reconsidered rather than worked around — so assert them, and say so.
+  assert.match(init, /`component`.*\*\*G2 passed\*\*/,
+    "wdi-init no longer requires G2 passed before component birth. The deadlock this test guards may "
+    + "no longer exist — re-derive the ordering before relaxing anything.");
+  assert.match(guide, /Product Owner actually\s*\n?reads is `prd\.md` and `EXPERIENCE\.md`/,
+    "G2 no longer reads EXPERIENCE.md. Same note as above — re-derive before relaxing.");
+
+  // The edge that must stay broken.
+  assert.doesNotMatch(ux, /MUST NOT run|refuses to run/,
+    "wdi-ux refuses to run again. It MUST NOT gate on Product Components: G2 reads its EXPERIENCE.md, "
+    + "and components are not born until G2 has passed. UX runs first, and the two <pc>-scoped halves "
+    + "land when wdi-init births the components.");
+  assert.match(ux, /MUST NOT wait for Product Components|needs a PRD and nothing else/,
+    "wdi-ux no longer states that a run needs only a PRD — the rule that keeps the cycle open.");
+});

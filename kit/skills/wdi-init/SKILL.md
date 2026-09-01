@@ -82,6 +82,12 @@ what it touches:
 
 Only after that do you propose `mode` and `risk_accepted`.
 
+**Land whatever UX is waiting, in this same act.** A UX run at G2 leaves `EXPERIENCE.md` and `DESIGN.md`
+in `_bmad-output/ux/` because their paths contain `<pc>` and there was no `<pc>` yet. Birthing the
+components is the moment that ends. Landing goes through `wdi-ux` — it owns those two paths and no other
+skill MAY write them — but it is dispatched from here rather than left for the owner to remember. It is
+the only deferral left in the flow, and this is where it closes.
+
 **Containers MAY be registered here when they are genuinely already known** — an app, an API, a database
 the product plainly has. Then a screen `LC` gets its container the moment it is born and there is no debt
 at all. They MUST NOT be guessed to achieve that: `wdi-blueprint` intent `platform` owns the real answer

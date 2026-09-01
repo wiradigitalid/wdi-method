@@ -34,10 +34,14 @@ promise.
   other skill MAY land these files.
 - Nothing is placed until the run is finalised. Half-placed UX output is worse than unplaced output,
   because it looks distributed.
-- **A run MUST NOT start before there is a `<pc>` to place it into**, and once there is one it lands
-  **whole**. The order is PRD → components → UX, all at G2, and `wdi-ux` refuses to run without the
-  component list. Nothing waits in `_bmad-output/ux/` any more: parking half a run until a home appeared
-  left an artifact somebody had to return to, and it let the method recommend a step that could not run.
+- **A run MUST NOT wait for a `<pc>`, and MUST NOT be blocked on one.** The order is PRD → UX → **G2**
+  → components, and it is forced: G2 reads `EXPERIENCE.md` (below), while `wdi-init` intent `component`
+  requires G2 passed. Making a run wait for components closes that into a cycle nothing can open.
+- **`design-system.md` lands at G2**, immediately. It crosses components by definition and its path has
+  no `<pc>` in it.
+- **`EXPERIENCE.md` and `DESIGN.md` wait, and only because their paths contain `<pc>`.** That is the one
+  remaining deferral in the flow, and it is not the owner's to remember: `wdi-init` intent `component`
+  lands them in the same act as birthing the components.
 - **A container is not required to land UX.** `.how/<pc>/01-ux/` has no container in its path; only a
   screen's `LC` row needs one, and that row is registered with `container:` empty and filled at G3 by
   `wdi-blueprint` intent `platform`, in the same act that registers the containers. V25 stays silent on
@@ -63,9 +67,15 @@ Registry conversion is part of placement, not a follow-up.
 
 ## Vocabulary
 
-Every user-facing noun in either document MUST already exist in `.control/product-glossary.md`, used
-verbatim. A new domain noun introduced by a UX run MUST be added through `wdi-blueprint` intent
-`catalog` in the same pass, which owns the glossary.
+Every user-facing noun in either document MUST use `.control/product-glossary.md` verbatim **where an
+entry exists**. A new domain noun introduced by a UX run MUST be routed to `wdi-question` and listed in
+the run's report.
+
+**It MUST NOT be added to the glossary in the same pass, because it cannot be.** The glossary belongs to
+`wdi-blueprint` intent `catalog`, which needs Product Components, which need G2 passed — and this run is
+what G2 reads. The rule used to say "added in the same pass" and was unsatisfiable at the only moment it
+applied; a UX run failing that check was reporting the method, not the product. `wdi-blueprint` writes
+the entries at G3 and closes those questions there.
 
 This is where vocabulary drift usually enters the corpus: UX writes the words the user actually sees,
 and those words are the ones that stick. When the SRS says `Anggota` and the screen says `Pengguna`,

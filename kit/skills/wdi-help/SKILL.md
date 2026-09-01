@@ -53,8 +53,7 @@ mis-route in this flow, because every other gate is the same for every component
 | A brief exists, and no PRD covers the area in play | `wdi-product` intent `prd` |
 | A PRD covers it but the promise has moved | `wdi-product` intent `update` — never a second PRD for the same area |
 | Only the **wording** of an `FR` is wrong | Nobody. Whichever skill is at work fixes it directly; putting it behind a gate is how three earlier corrections were dropped |
-| A PRD exists, the interface is a large part of what it promises, and **no** Product Component is born yet | `wdi-init` intent `component` **first**. You MUST NOT route to `wdi-ux` here — it refuses to run, and recommending a step that cannot run is worse than recommending nothing |
-| The same, with the components born | `wdi-ux` — optional |
+| A PRD exists and the interface is a large part of what it promises | `wdi-ux` — optional, and it runs **before G2**, which reads its `EXPERIENCE.md`. It needs no Product Component: `design-system.md` lands at once, and the two `<pc>`-scoped halves land when `wdi-init` intent `component` runs |
 | A PRD exists, no `product_components` yet | `wdi-init` intent `component` — the slicing is born here, at the tail of G2 |
 | Components exist, `mode` or `risk_accepted` unset | `wdi-init` intents `mode` and `risk` — both are the owner's, and G4 cannot be read without them |
 | Components exist, no UC catalogue or no spine | `wdi-blueprint` — intent `catalog` first, then `platform` |

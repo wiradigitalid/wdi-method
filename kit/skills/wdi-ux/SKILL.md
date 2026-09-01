@@ -9,18 +9,28 @@ description: Use when UX is produced or landed — dispatching bmad-ux for a PRD
 came back, and — because `bmad-ux` is **class B** — lands its output into the two layers it splits
 across. No other skill MAY land these files.
 
-**Precondition: the Product Components exist.** If `components.yaml` has no `product_components`, this
-skill MUST NOT run. Route to `wdi-init` intent `component` and stop — do not run the UX and park the
-output.
+**A run needs a PRD and nothing else.** It MUST NOT wait for Product Components, and a skill that made
+it wait would deadlock the whole flow: G2 reads `EXPERIENCE.md` — `ux-guide.md` § Passing G2 — and
+`wdi-init` intent `component` requires **G2 passed**. UX before components is not a preference; it is the
+only order that closes.
 
-Two acts, and one pass does both: **run** the UX, and **land** it. They used to be separable, and a run
-was allowed before the components existed, with the output waiting in `_bmad-output/ux/` until a home
-appeared. That is repealed. Waiting output is a half-finished thing somebody has to come back to, and
-every screen this produces has to become an `LC` against a component anyway — so a run with no component
-is a run whose result cannot be finished.
+    PRD  →  UX runs  →  **G2**  →  components born  →  G3
 
-The order is: PRD → `wdi-init` intent `component` → **UX**. Nothing MAY recommend UX before the component
-list exists; recommending a step that cannot run is the failure this precondition replaces.
+Two acts: **run** the UX, and **land** it. A run is complete the moment the three documents are written.
+Landing is split by what each half's path actually needs, and only one half waits:
+
+| Lands | Needs | So it lands |
+|---|---|---|
+| `design-system.md` → `.how/_platform/` | nothing but the run being final — it crosses components by definition | **immediately**, at G2 |
+| `EXPERIENCE.md` → `.what/<pc>/04-usecases/` | the `<pc>` in its path to exist | when components are born |
+| `DESIGN.md` → `.how/<pc>/01-ux/` + screen `LC` rows | the same `<pc>`. **Not a container** — see below | when components are born |
+
+**The wait is a path, not a rule**, and it is the only one left: those two paths literally contain
+`<pc>`, so there is nowhere to write them until a `<pc>` exists. Nothing else defers.
+
+**And the wait is not the owner's to remember.** `wdi-init` intent `component` lands whatever is waiting
+in `_bmad-output/ux/` in the same act as birthing the components — one pass, no tracked to-do. Report
+what is waiting and name that act; do not ask the owner to come back.
 
 You MUST NOT write or edit `DESIGN.md` or `EXPERIENCE.md` yourself. If a check fails, name what is
 missing and re-dispatch — a hand-patched UX document makes the memlog lie about how it got that way.
