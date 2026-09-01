@@ -202,3 +202,87 @@ test("the live-cite net survives that skip — a dangling cite in the product st
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// ---------------------------------------------------------------------------------------------
+// The delivery half of the registry — one spec, two tickets — was rewritten wholesale when `wave`
+// became `spec` and `story` became `ticket`. Eight validators walk it, and until the fixture
+// carried real rows every one of them was passing over an empty list, which is not the same thing
+// as passing. These are the mutations that were run by hand during that rewrite, kept so the next
+// change to any of them has to be seen failing too.
+
+/** Run validate.py over a throwaway copy of the fixture, after `mutate(dir)` has broken something. */
+function afterMutation(mutate) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-mutate-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  try {
+    mutate(tmp);
+    return validateIn(tmp);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+
+const SPECS = (dir) => path.join(dir, ".control", "registry", "specs.yaml");
+const editSpecs = (dir, from, to) =>
+  fs.writeFileSync(SPECS(dir), fs.readFileSync(SPECS(dir), "utf8").replace(from, to));
+
+test("V18 fails when a ticket's status is copied into specs.yaml — the one thing it exists for", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) =>
+    editSpecs(dir, "      - id: SPEC-1-01", "      - id: SPEC-1-01\n        status: done"));
+  assert.match(out, /V18\s+SPEC-1-01.*status.*specs\.yaml/,
+    `a status in the registry beside a status in the ticket file is two homes for one fact:\n${out}`);
+});
+
+test("V18 fails when the ticket file is missing, and when it states no status at all", (t) => {
+  if (requireUv(t)) return;
+  // The file is found by the NUMBER at the tail of the id: SPEC-1-02 -> issues/02-*.md. If that
+  // derivation ever breaks, every ticket reports as missing and this is what says so.
+  const gone = afterMutation((dir) =>
+    fs.rmSync(path.join(dir, "_bmad-output", "specs", "spec-1-checkout", "issues",
+                        "02-reopen-an-order.md")));
+  assert.match(gone, /V18\s+SPEC-1-02.*no ticket file/,
+    `V18 did not notice a ticket with no file:\n${gone}`);
+
+  // `**Status:**` is a BODY line, not frontmatter — a ticket file is a tracker payload, and
+  // trackers do not read YAML. Reading only frontmatter would make every engine-written ticket
+  // report as statusless.
+  const silent = afterMutation((dir) => {
+    const f = path.join(dir, "_bmad-output", "specs", "spec-1-checkout", "issues",
+                        "01-place-an-order.md");
+    fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace(/^\*\*Status:\*\*.*\r?\n/m, ""));
+  });
+  assert.match(silent, /V18\s+SPEC-1-01.*states no status/,
+    `V18 accepted a ticket file that states no status anywhere:\n${silent}`);
+});
+
+test("V7 fails on a blocked_by cycle — a frontier that is empty from the first tick", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => editSpecs(dir, "        blocked_by: []", "        blocked_by: [SPEC-1-02]"));
+  assert.match(out, /V7\s+SPEC-1-0[12].*blocked_by.*cycle/,
+    `two tickets blocking each other were accepted; no work can ever start:\n${out}`);
+});
+
+test("V11 fails when two tickets share a `touches` with no blocking edge between them", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => editSpecs(dir, "        blocked_by: [SPEC-1-01]", "        blocked_by: []"));
+  assert.match(out, /V11\s+SPEC-1-01 \+ SPEC-1-02.*money/,
+    `V11 reads the ticket-level edge as \`blocked_by\` now, not \`depends_on\`:\n${out}`);
+});
+
+test("V22 fails when a spec touches a component whose G4 has not passed", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => {
+    const f = path.join(dir, ".control", "registry", "components.yaml");
+    fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace(/g4_passed: .*/, "g4_passed: false"));
+  });
+  assert.match(out, /V22\s+SPEC-1 \/ checkout.*g4_passed/,
+    `work was allowed to start on a component that has not been through its gate:\n${out}`);
+});
+
+test("V3 fails when a UC of an already-touched component is scheduled to no ticket", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => editSpecs(dir, "        satisfies: [UC-2]", "        satisfies: []"));
+  assert.match(out, /V3\s+UC-2.*not scheduled to any ticket/,
+    `a promise was left behind by a spec that had already opened its component:\n${out}`);
+});

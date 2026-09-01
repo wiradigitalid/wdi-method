@@ -31,12 +31,13 @@ from pathlib import Path
 
 import yaml
 
-from validate import (FM, Corpus, _story_status, cap_stories, dump, git,
-                      listy, load_yaml)
+from validate import (FM, Corpus, _ticket_files, _ticket_status, cap_tickets, dump, git,
+                      listy, load_yaml, status_in)
 
-# Frontmatter statuses that do not yet mean "in progress". A story still in this set has no
-# actual_start, no matter how old the file is.
-NOT_STARTED = {"", "draft", "backlog", "todo", "planned"}
+# Statuses that do not yet mean "in progress". A ticket still in this set has no
+# actual_start, no matter how old the file is. `ready-for-agent` is the engine's own opening
+# state — a ticket published and not yet picked up — so it belongs here too.
+NOT_STARTED = {"", "unknown", "draft", "backlog", "todo", "planned", "ready-for-agent"}
 
 TIMELINE_COLUMNS = [
     "id", "text", "size", "priority", "owner", "target_release",
@@ -88,24 +89,19 @@ def yaml_of(text: str) -> dict:
 # ------------------------------------------------------------- time derivation
 
 
-def story_path(c: Corpus, story: dict) -> str | None:
-    folder = str(story.get("spec_folder") or "").strip()
-    if not folder:
-        return None
-    matches = sorted((c.root / folder / "stories").glob(f"{story.get('id')}-*.md"))
-    if not matches:
-        return None
-    return matches[0].relative_to(c.root).as_posix()
+def ticket_path(c: Corpus, spec: dict, ticket: dict) -> str | None:
+    matches = _ticket_files(c, spec, ticket)
+    return matches[0].relative_to(c.root).as_posix() if matches else None
 
 
-def story_span(c: Corpus, story: dict) -> dict:
-    """When a story started being worked on and when it went `done`, read from its file history.
+def ticket_span(c: Corpus, spec: dict, ticket: dict) -> dict:
+    """When a ticket started being worked on and when it went `done`, read from its file history.
 
     A file that exists on disk but has never been committed is marked `uncommitted` instead
-    of being given a made-up date. A finished story that has not been committed is a state that
+    of being given a made-up date. A finished ticket that has not been committed is a state that
     MUST be visible, not one that gets patched over.
     """
-    rel = story_path(c, story)
+    rel = ticket_path(c, spec, ticket)
     if rel is None:
         return {"start": None, "end": None, "uncommitted": False, "path": None}
     revs = history(c.root, rel)
@@ -113,7 +109,7 @@ def story_span(c: Corpus, story: dict) -> dict:
         return {"start": None, "end": None, "uncommitted": True, "path": rel}
     start = end = None
     for _sha, date, text in revs:
-        status = str(fm_of(text).get("status") or "").strip().lower()
+        status = status_in(text).lower()
         if start is None and status not in NOT_STARTED:
             start = date
         if status == "done":
@@ -122,18 +118,18 @@ def story_span(c: Corpus, story: dict) -> dict:
     return {"start": start, "end": end, "uncommitted": False, "path": rel}
 
 
-def fr_stories(c: Corpus) -> dict[str, list[dict]]:
-    """FR -> story, through its UCs. cap_stories()'s twin, one level down."""
+def fr_tickets(c: Corpus) -> dict[str, list[dict]]:
+    """FR -> ticket, through its UCs. cap_tickets()'s twin, one level down."""
     ucs_of: dict[str, list[str]] = {}
     for uc in c.ucs:
         for fid in listy(uc, "satisfies"):
             ucs_of.setdefault(fid, []).append(str(uc.get("id")))
-    all_stories = [s for _, _, s in c.stories()]
+    all_tickets = [t for _, t in c.tickets()]
     out: dict[str, list[dict]] = {}
     for fr in c.frs:
         fid = str(fr.get("id"))
         wanted = set(ucs_of.get(fid, []))
-        out[fid] = [s for s in all_stories if wanted & set(listy(s, "satisfies"))]
+        out[fid] = [t for t in all_tickets if wanted & set(listy(t, "satisfies"))]
     return out
 
 
@@ -141,8 +137,8 @@ def span_of(c: Corpus, items: list[dict], spans: dict[str, dict]) -> tuple[str |
     """(earliest start, latest end, closed). Closed only when ALL are finished."""
     if not items:
         return None, None, False
-    starts = [spans[str(s.get("id"))]["start"] for s in items]
-    ends = [spans[str(s.get("id"))]["end"] for s in items]
+    starts = [spans[str(t.get("id"))]["start"] for t in items]
+    ends = [spans[str(t.get("id"))]["end"] for t in items]
     closed = all(e for e in ends)
     return (min([x for x in starts if x], default=None),
             max([x for x in ends if x], default=None) if closed else None,
@@ -174,9 +170,10 @@ def state_of(planned_end: str, actual_start: str | None, closed: bool, asof: dt.
 
 
 def gen_timeline(c: Corpus, asof: dt.date) -> dict:
-    spans = {str(s.get("id")): story_span(c, s) for _, _, s in c.stories()}
-    by_cap = cap_stories(c)
-    by_fr = fr_stories(c)
+    spans = {str(t.get("id")): ticket_span(c, sp, t) for sp, t in c.tickets()}
+    spec_of = {str(t.get("id")): sp for sp, t in c.tickets()}
+    by_cap = cap_tickets(c)
+    by_fr = fr_tickets(c)
     fr_of_cap: dict[str, list[dict]] = {}
     for fr in c.frs:
         fr_of_cap.setdefault(str(fr.get("capability", "")), []).append(fr)
@@ -210,19 +207,20 @@ def gen_timeline(c: Corpus, asof: dt.date) -> dict:
             children.append({
                 "id": fid,
                 "text": str(fr.get("text") or ""),
-                "stories": sorted(str(s.get("id")) for s in f_items),
+                "tickets": sorted(str(t.get("id")) for t in f_items),
                 "actual_start": f_start or "",
                 "actual_end": f_end or "",
                 "state": state_of("", f_start, f_closed, asof),
             })
         row["children"] = children
         row["waiting_on"] = sorted(
-            str(s.get("id")) for s in items if _story_status(c, s) != "done"
+            str(t.get("id")) for t in items
+            if _ticket_status(c, spec_of.get(str(t.get("id")), {}), t) != "done"
         ) if not closed else []
         out.append(row)
 
     stray = sorted(sid for sid, span in spans.items() if span["uncommitted"])
-    return {"asof": asof.isoformat(), "capabilities": out, "uncommitted_stories": stray}
+    return {"asof": asof.isoformat(), "capabilities": out, "uncommitted_tickets": stray}
 
 
 # ------------------------------------------------------------------ generated/report
@@ -266,16 +264,16 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
     since, since_name = last_report(c, asof)
     rtm = (load_yaml(c.root / ".control/generated/rtm.yaml").get("rtm") or [])
     status = load_yaml(c.root / ".control/generated/status.yaml")
-    spans = {str(s.get("id")): story_span(c, s) for _, _, s in c.stories()}
+    spans = {str(t.get("id")): ticket_span(c, sp, t) for sp, t in c.tickets()}
 
     proven = []
     for row in rtm:
-        sid = str(row.get("story") or "")
+        sid = str(row.get("ticket") or "")
         end = spans.get(sid, {}).get("end")
         if row.get("green") and in_period(end, since, asof):
-            proven.append({"FR": row.get("FR"), "UC": row.get("UC"), "story": sid,
+            proven.append({"FR": row.get("FR"), "UC": row.get("UC"), "ticket": sid,
                            "test": row.get("test"), "closed": end})
-    proven.sort(key=lambda x: (str(x["closed"]), str(x["story"])))
+    proven.sort(key=lambda x: (str(x["closed"]), str(x["ticket"])))
 
     moved = []
     for row in timeline["capabilities"]:
@@ -297,7 +295,7 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
         overdue_by = days_between(asof.isoformat(), row["planned_end"])
         late.append({"id": row["id"], "text": row["text"], "owner": row["owner"],
                      "planned_end": row["planned_end"], "days_late": overdue_by,
-                     "waiting_on": row["waiting_on"] or ["no story yet"]})
+                     "waiting_on": row["waiting_on"] or ["no ticket yet"]})
     late.sort(key=lambda x: (-(x["days_late"] or 0), x["id"]))
 
     closures = first_seen(c, ".control/registry/defects.yaml", "defects",
@@ -342,10 +340,10 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
         "since_report": since_name or "",
         "sha": head,
         "registry_dirty": dirty,
-        # A done story that has not been committed still counts in the RTM — its status is read
+        # A done ticket that has not been committed still counts in the RTM — its status is read
         # from the working tree — but it will never appear under "Proven", which needs a date from
         # git. That gap MUST be visible in the report, not only in the timeline.
-        "uncommitted_stories": timeline["uncommitted_stories"],
+        "uncommitted_tickets": timeline["uncommitted_tickets"],
         "promise_progress": status.get("promise_progress", "n/a"),
         "rtm_rows": status.get("rtm_rows", {}),
         "work_progress": status.get("work_progress", []),
@@ -442,19 +440,19 @@ def render_timeline(timeline: dict) -> str:
           "—" if r["delta_days"] is None else f"{r['delta_days']:+d}",
           r["state"]] for r in timeline["capabilities"]]))
 
-    children = [[r["id"], ch["id"], ch["text"], ch["stories"],
+    children = [[r["id"], ch["id"], ch["text"], ch["tickets"],
                  f"{ch['actual_start'] or '—'} → {ch['actual_end'] or '—'}", ch["state"]]
                 for r in timeline["capabilities"] if r["size"] == "L" for ch in r["children"]]
     if children:
         out.append("\n## FR detail for CAPs sized L\n\n")
         out.append("A CAP sized `L` is drawn as one summary bar; this is what is inside it.\n\n")
-        out.append(table(["CAP", "FR", "Title", "Story", "Actual", "State"], children))
+        out.append(table(["CAP", "FR", "Title", "Ticket", "Actual", "State"], children))
 
-    if timeline["uncommitted_stories"]:
-        out.append("\n## Stories with no git history\n\n")
+    if timeline["uncommitted_tickets"]:
+        out.append("\n## Tickets with no git history\n\n")
         out.append("The file exists on disk but has never been committed, so its date "
                    "MUST NOT be derived. Commit it first, then run again.\n\n")
-        out.append("".join(f"- `{sid}`\n" for sid in timeline["uncommitted_stories"]))
+        out.append("".join(f"- `{sid}`\n" for sid in timeline["uncommitted_tickets"]))
     return "".join(out)
 
 
@@ -470,10 +468,10 @@ def render_report(report: dict, title: str = "Report") -> str:
         out.append(" **The registry has uncommitted changes — the numbers below "
                    "may not reflect what is on `main`.**")
     out.append("\n\n")
-    if report["uncommitted_stories"]:
-        out.append("> **Warning.** The following stories have a status read from the working "
+    if report["uncommitted_tickets"]:
+        out.append("> **Warning.** The following tickets have a status read from the working "
                    "tree but have never been committed: "
-                   + ", ".join(f"`{s}`" for s in report["uncommitted_stories"])
+                   + ", ".join(f"`{s}`" for s in report["uncommitted_tickets"])
                    + ". They still count toward promise progress, but MUST NOT appear in the "
                      "Proven section — there, the date must come from git. Commit them first, "
                      "then run again.\n\n")
@@ -485,7 +483,7 @@ def render_report(report: dict, title: str = "Report") -> str:
                f"{counts.get('excluded_no_uc', 0)} excluded for having `no_uc`). "
                f"It measures what is **proven**, not what has been worked on.\n\n")
     out.append(table(["Other measure", "Value", "Answers"], [
-        ["Work progress", ", ".join(f"{w.get('wave')} {w.get('work_progress')}"
+        ["Work progress", ", ".join(f"{w.get('spec')} {w.get('work_progress')}"
                                     for w in report["work_progress"]) or "n/a",
          "how much has been worked on"],
         ["Gate readiness", report["gate_readiness"], "whether the next gate can open"],
@@ -493,8 +491,8 @@ def render_report(report: dict, title: str = "Report") -> str:
 
     out.append("\n## 1. Proven\n\n")
     out.append("RTM rows that turned green within this period.\n\n")
-    out.append(table(["FR", "UC", "Story", "Test", "Date"],
-                     [[p["FR"], p["UC"], p["story"], p["test"], p["closed"]]
+    out.append(table(["FR", "UC", "Ticket", "Test", "Date"],
+                     [[p["FR"], p["UC"], p["ticket"], p["test"], p["closed"]]
                       for p in report["proven"]]))
 
     out.append("\n## 2. Moved\n\n")
@@ -652,12 +650,12 @@ def main(argv: list[str] | None = None) -> int:
           f"   ·   as of: {asof.isoformat()}")
     for row in overdue:
         print(f"  LATE  {row['id']} — planned end {row['planned_end']}, "
-              f"waiting on {', '.join(row['waiting_on']) or 'no story yet'}")
+              f"waiting on {', '.join(row['waiting_on']) or 'no ticket yet'}")
     if report["registry_dirty"]:
         print("\nthe registry has uncommitted changes — the numbers above may not "
               "reflect what is on main")
-    if timeline["uncommitted_stories"]:
-        print(f"stories with no git history: {', '.join(timeline['uncommitted_stories'])}")
+    if timeline["uncommitted_tickets"]:
+        print(f"tickets with no git history: {', '.join(timeline['uncommitted_tickets'])}")
     return 0
 
 

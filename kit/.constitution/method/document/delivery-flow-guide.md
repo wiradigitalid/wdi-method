@@ -294,8 +294,18 @@ tickets in two specs, and one ticket MAY satisfy part of two `FR`. Mapping promi
 
 **The corpus stays the source of truth; the tracker is a view.** Ticket status is read from **the ticket
 itself**, never copied into two places — and `specs.yaml` holds the **index**, not the bodies: one row per
-ticket with `satisfies`, `depends_on`, `touches`, and its test names. That is what RTM and the validators
+ticket with `satisfies`, `blocked_by`, `touches`, and its test names. That is what RTM and the validators
 read; the ticket's prose stays where the tracker put it.
+
+**Two edge fields, and the difference is not cosmetic.** A spec `depends_on` another spec — an ordering
+between units of delivery. A ticket is `blocked_by` other tickets, which is the word the tracker uses for
+the same relation and the field the frontier is read from. V7 walks both graphs; V11 reads the ticket one.
+
+**Where a ticket lives, and what it is called.** `{spec_folder}/issues/<NN>-<slug>.md`. Only the root is
+ours: the folder, the numbering from `01` in dependency order, and the file's shape belong to the engine
+that writes them. A ticket's `id` in `specs.yaml` is `<spec-id>-<NN>` — `SPEC-3-01` — because the engine's
+number is unique only inside one spec and the RTM needs a key that is unique across the corpus. V18 finds
+the file from the number at the tail of the id.
 
 **Parallelism.** Between tickets through their blocking edges plus the `touches` check; between specs
 through `depends_on` at spec level. A spec that declares no dependency runs in parallel.
@@ -306,12 +316,12 @@ through `depends_on` at spec level. A spec that declares no dependency runs in p
 |---|---|---|
 | **S** | ≤3 tickets, no new `FR` | G4 and G5 merge into one 20-minute session · **`SPEC.md` is not written** — the tickets are the contract |
 | **M** | 4–12 tickets | `SPEC.md` written first, because the seams and the testing decisions have to be settled before tickets are cut |
-| **L** | >12 tickets, or a new container | as `M`. Its one distinct effect was the retrospective, which is retired |
+| **L** | >12 tickets, or a new container | as `M`. Its one distinct effect was the retrospective, which is retired, and `V19` with it |
 
 Size is recorded in `specs.yaml`. It MAY be raised mid-flight; it MUST NOT be lowered.
 
-**Size does not choose which gates are active** — that is `mode`'s job. It only governs session merging and
-whether the retrospective is required.
+**Size does not choose which gates are active** — that is `mode`'s job. It decides two things: whether G4
+and G5 merge into one session (`S`), and whether `SPEC.md` is written at all (`M` and up).
 
 **Fast Path** skips every gate. It is available for a fix that changes no `FR`, `UC`, `AD-N`, or domain
 model, is at most one ticket, and touches no money, personal data, or third-party integration. If an `FR`

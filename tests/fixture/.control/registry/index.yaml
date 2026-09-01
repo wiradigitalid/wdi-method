@@ -25,9 +25,9 @@ question_budget:
   blocking_per_component: 3
   assumptions_per_gate: 15
 
-wave_sizes:
-  S: { stories: "<=3", note: "no new FR; G4 and G5 merge into one 20-minute session" }
-  M: { stories: "4-12", note: "as usual" }
-  L: { stories: ">12",  note: "or a new container; a retrospective runs" }
+spec_sizes:
+  S: { tickets: "<=3", note: "no new FR; G4 and G5 merge into one session; no SPEC.md is written" }
+  M: { tickets: "4-12", note: "SPEC.md is written first — seams and testing decisions settled before tickets are cut" }
+  L: { tickets: ">12",  note: "or a new container; otherwise as M" }
 
 touches_vocabulary: [money, personal-data, irreversible]

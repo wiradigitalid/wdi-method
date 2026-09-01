@@ -58,10 +58,15 @@ that is where they are born.
 | `depends_on` | At **spec** level. A spec declaring none runs in parallel with its neighbours |
 | `spec_folder` | One per spec, not one per spec × component |
 | `tickets` | Flat, one row per ticket: `id` · `component` · `satisfies: [UC]` · `blocked_by` · `touches` · test names |
+| a ticket `id` | `<spec-id>-<NN>` — `SPEC-3-01`. The engine numbers its files from `01` per feature, which is unique only inside one spec; the RTM needs a key that is unique across the corpus |
 
 **`tickets` is an index, not a store.** The ticket's prose lives where the tracker put it; the row carries only
 what RTM and the validators read. And ticket **status** MUST NOT be copied here — it is read from the ticket
 itself when `.control/generated/` regenerates (V18). Two homes for one fact is how registries start lying.
+
+V18 finds the file at `{spec_folder}/issues/<NN>-*.md`, from the number at the tail of the id, and reads its
+status from either a `**Status:**` body line — what the engine writes, because a ticket file is a tracker
+payload and trackers do not read YAML — or `status:` in frontmatter.
 
 The `epics` nesting is **repealed**. A ticket names its `component` directly; an intermediate level that only
 grouped rows bought nothing and cost a lookup.

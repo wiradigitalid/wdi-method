@@ -388,6 +388,31 @@ function splitProductConstitution(file) {
   return { cut, kept, relinked };
 }
 
+// `waves.yaml` holds the PRODUCT's plan, not the package's. When the method retired `wave` for
+// `spec` the registry had to follow, and a rename is the only part of that a tool can safely do:
+// the file MOVES, its content is left exactly as written. Rewriting the rows — `W1` to `SPEC-1`,
+// `epics`/`stories` to `tickets` — is the product's own migration, run by `wdi-build` where a human
+// can see it, because a guess there silently rewrites months of real work.
+//
+// Two refusals matter more than the move. It never writes over an existing `specs.yaml`, and it
+// never deletes a `waves.yaml` whose content has nowhere to go: a half-finished hand migration
+// leaves BOTH files present, and which one is real is not something an installer can know.
+function migrateRegistryNames(target) {
+  const reg = path.join(target, ".control", "registry");
+  const from = path.join(reg, "waves.yaml");
+  const to = path.join(reg, "specs.yaml");
+  if (!fs.existsSync(from)) return false;
+  if (fs.existsSync(to)) {
+    note("BOTH .control/registry/waves.yaml and specs.yaml exist — neither was touched");
+    note("  the plan is in one of them and I cannot tell which. Merge them yourself, then delete waves.yaml");
+    return false;
+  }
+  mv(from, to);
+  note("renamed .control/registry/waves.yaml → specs.yaml (content unchanged)");
+  note("  the rows still say `W<N>` and `epics`/`stories`. Re-cut them through the wdi-build skill");
+  return true;
+}
+
 function migrateToTwoFolders(target) {
   const c = path.join(target, ".constitution");
   if (!fs.existsSync(c)) return false;          // a first install has nothing to migrate
@@ -838,6 +863,7 @@ function apply(target, agents,
   // MUST run before the kit is written: it moves the product's files out of the way of paths the kit
   // is about to occupy. Running it after would leave two copies of most guides.
   const migrated = migrateToTwoFolders(target);
+  migrateRegistryNames(target);
   // The split MUST also be reachable without a migration. 0.5.2 only ran it from inside
   // migrateToTwoFolders, which returns early when the old layout is absent — so a repo that took
   // 0.5.0 or 0.5.1, whose project/constitution.md was moved WHOLE and never split, could never be

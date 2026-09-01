@@ -149,7 +149,7 @@ class Corpus:
     decisions: dict
     risks: dict
     components: dict
-    waves: dict
+    specs: dict
     defects: dict
     index: dict
 
@@ -163,7 +163,7 @@ class Corpus:
             decisions=load_yaml(reg / "decisions.yaml"),
             risks=load_yaml(reg / "risks.yaml"),
             components=load_yaml(reg / "components.yaml"),
-            waves=load_yaml(reg / "waves.yaml"),
+            specs=load_yaml(reg / "specs.yaml"),
             defects=load_yaml(reg / "defects.yaml"),
             index=load_yaml(reg / "index.yaml"),
         )
@@ -209,23 +209,25 @@ class Corpus:
         return rows(self.components, "product_components")
 
     @property
-    def wave_list(self) -> list[dict]:
-        return rows(self.waves, "waves")
+    def spec_list(self) -> list[dict]:
+        return rows(self.specs, "specs")
 
     @property
     def defect_list(self) -> list[dict]:
         return rows(self.defects, "defects")
 
-    def stories(self) -> list[tuple[dict, dict, dict]]:
-        """(wave, epic, story) — sorted by id at each level."""
+    def tickets(self) -> list[tuple[dict, dict]]:
+        """(spec, ticket) — sorted by ticket id.
+
+        FLAT. The `epics` level between a spec and its tickets is repealed: it grouped rows and
+        bought nothing, and every reader here had to walk through it to reach the row it wanted.
+        A ticket names its `component` directly.
+        """
         out = []
-        for wave in self.wave_list:
-            for epic in sorted(wave.get("epics") or [], key=lambda e: str(e.get("id", ""))):
-                if not isinstance(epic, dict):
-                    continue
-                for story in sorted(epic.get("stories") or [], key=lambda s: str(s.get("id", ""))):
-                    if isinstance(story, dict):
-                        out.append((wave, epic, story))
+        for spec in self.spec_list:
+            for ticket in sorted(spec.get("tickets") or [], key=lambda t: str(t.get("id", ""))):
+                if isinstance(ticket, dict):
+                    out.append((spec, ticket))
         return out
 
 
@@ -275,36 +277,36 @@ def v2(c: Corpus, r: Result) -> None:
 
 
 def v3(c: Corpus, r: Result) -> None:
-    """A UC on a component that a wave has ALREADY touched MUST be scheduled to a story.
+    """A UC on a component that a spec has ALREADY touched MUST be scheduled to a ticket.
 
-    The old shape demanded this of EVERY UC, at any time. Before the first wave that meant the
+    The old shape demanded this of EVERY UC, at any time. Before the first spec that meant the
     entire catalogue was reported red — 56 findings out of 62, and those 56 were the correct state,
-    not drift: a story is born in a wave, and there was no wave yet. A validator that drowns six real
-    findings under fifty-six expected ones stops being read, and a validator that is not read
+    not drift: a ticket is born in a spec, and there was no spec yet. A validator that drowns six
+    real findings under fifty-six expected ones stops being read, and a validator that is not read
     guards nothing.
 
-    What is guarded now is the actual omission: a wave touches a component, and a UC of that
-    component is left behind without a story. Full coverage of the whole catalogue is a G5 question,
-    and `wdi-build` owns it — the same way V12 was shifted to wave closing.
+    What is guarded now is the actual omission: a spec touches a component, and a UC of that
+    component is left behind without a ticket. Full coverage of the whole catalogue is a G5
+    question, and `wdi-build` owns it — the same way V12 was shifted to spec closing.
     """
-    scheduled = {uc for _, _, s in c.stories() for uc in listy(s, "satisfies")}
-    touched = {str(s.get("component")) for _, _, s in c.stories() if s.get("component")}
-    if not c.wave_list:
-        r.skip("V3", "no wave yet, so no story yet — every unscheduled UC is the correct "
+    scheduled = {uc for _, t in c.tickets() for uc in listy(t, "satisfies")}
+    touched = {str(t.get("component")) for _, t in c.tickets() if t.get("component")}
+    if not c.spec_list:
+        r.skip("V3", "no spec yet, so no ticket yet — every unscheduled UC is the correct "
                      "state. Full catalogue coverage is checked at G5")
         return
     for uc in c.ucs:
         uid = str(uc.get("id"))
         if uid in scheduled or str(uc.get("component")) not in touched:
             continue
-        r.fail("V3", uid, f"component `{uc.get('component')}` has already been touched by a wave, "
-                          f"but this UC is not scheduled to any story")
+        r.fail("V3", uid, f"component `{uc.get('component')}` has already been touched by a spec, "
+                          f"but this UC is not scheduled to any ticket")
 
 
 def v4(c: Corpus, r: Result) -> None:
-    for _, _, story in c.stories():
-        if not [t for t in listy(story, "tests") if t.strip()]:
-            r.fail("V4", str(story.get("id")), "has not one named test")
+    for _, ticket in c.tickets():
+        if not [t for t in listy(ticket, "tests") if t.strip()]:
+            r.fail("V4", str(ticket.get("id")), "has not one named test")
 
 
 def v5(c: Corpus, r: Result) -> None:
@@ -328,11 +330,10 @@ def v6(c: Corpus, r: Result) -> None:
     for group in (c.goals, c.caps, c.frs, c.nfrs, c.ucs, c.decs, c.lcs, c.pcs,
                   rows(c.requirements, "journeys"), rows(c.risks, "risks"), c.defect_list):
         defined |= {str(row.get("id")) for row in group if row.get("id") is not None}
-    for wave in c.wave_list:
-        defined.add(str(wave.get("id")))
-    for _, epic, story in c.stories():
-        defined.add(str(epic.get("id")))
-        defined.add(str(story.get("id")))
+    for spec in c.spec_list:
+        defined.add(str(spec.get("id")))
+    for _, ticket in c.tickets():
+        defined.add(str(ticket.get("id")))
 
     refs: list[tuple[str, str]] = []
     for cap in c.caps:
@@ -348,9 +349,11 @@ def v6(c: Corpus, r: Result) -> None:
         refs += [(str(dec.get("id")), s) for s in listy(dec, "serves")]
     for defect in c.defect_list:
         refs += [(str(defect.get("id")), v) for v in listy(defect, "violates")]
-    for _, _, story in c.stories():
-        refs += [(str(story.get("id")), u) for u in listy(story, "satisfies")]
-        refs += [(str(story.get("id")), d) for d in listy(story, "depends_on")]
+    for spec in c.spec_list:
+        refs += [(str(spec.get("id")), d) for d in listy(spec, "depends_on")]
+    for _, ticket in c.tickets():
+        refs += [(str(ticket.get("id")), u) for u in listy(ticket, "satisfies")]
+        refs += [(str(ticket.get("id")), b) for b in listy(ticket, "blocked_by")]
 
     for owner, target in sorted(set(refs)):
         if target and target not in defined:
@@ -380,9 +383,16 @@ def v7(c: Corpus, r: Result) -> None:
     caps = {str(x.get("id")): listy(x, "depends_on") for x in c.caps}
     for node in _cycles(caps):
         r.fail("V7", node, "is part of a `depends_on` cycle among CAPs")
-    stories = {str(s.get("id")): listy(s, "depends_on") for _, _, s in c.stories()}
-    for node in _cycles(stories):
-        r.fail("V7", node, "is part of a `depends_on` cycle among stories")
+    # Two graphs, two field names, and the difference is not cosmetic. A spec `depends_on` another
+    # spec — an ordering between units of delivery. A ticket is `blocked_by` other tickets, which is
+    # what the frontier is read from and what the tracker calls the same edge.
+    specs = {str(x.get("id")): listy(x, "depends_on") for x in c.spec_list}
+    for node in _cycles(specs):
+        r.fail("V7", node, "is part of a `depends_on` cycle among specs")
+    tickets = {str(t.get("id")): listy(t, "blocked_by") for _, t in c.tickets()}
+    for node in _cycles(tickets):
+        r.fail("V7", node, "is part of a `blocked_by` cycle among tickets — the frontier is empty "
+                           "and no ticket can ever start")
 
 
 def v8(c: Corpus, r: Result) -> None:
@@ -413,13 +423,13 @@ def v9(c: Corpus, r: Result) -> None:
 
 
 def v11(c: Corpus, r: Result) -> None:
-    per_wave: dict[str, list[dict]] = {}
-    for wave, _, story in c.stories():
-        per_wave.setdefault(str(wave.get("id")), []).append(story)
+    per_spec: dict[str, list[dict]] = {}
+    for spec, ticket in c.tickets():
+        per_spec.setdefault(str(spec.get("id")), []).append(ticket)
 
-    for wid in sorted(per_wave):
-        items = per_wave[wid]
-        edges = {str(s.get("id")): set(listy(s, "depends_on")) for s in items}
+    for wid in sorted(per_spec):
+        items = per_spec[wid]
+        edges = {str(t.get("id")): set(listy(t, "blocked_by")) for t in items}
 
         def reaches(a: str, b: str, seen: set[str] | None = None) -> bool:
             seen = seen or set()
@@ -439,13 +449,14 @@ def v11(c: Corpus, r: Result) -> None:
                 if reaches(lid, rid) or reaches(rid, lid):
                     continue
                 r.fail("V11", f"{lid} + {rid}",
-                       f"share touches {shared} with no depends_on relation — MUST NOT run in parallel")
+                       f"share touches {shared} with no blocking edge between them — MUST NOT run "
+                       f"in parallel")
 
 
 def v12(c: Corpus, r: Result) -> None:
-    """LC registration is checked when a wave CLOSES, not before a story goes `ready-for-dev`.
+    """LC registration is checked when a spec CLOSES, not before a ticket is picked up.
 
-    The old shape demanded the answer when the information was thinnest. At wave closing,
+    The old shape demanded the answer when the information was thinnest. At spec closing,
     every `touches` already has an area and every boundary already has a name.
     """
     areas = {str(lc.get("area")) for lc in c.lcs if lc.get("area")}
@@ -455,22 +466,22 @@ def v12(c: Corpus, r: Result) -> None:
     pc_by_id = {str(x.get("id")): x for x in c.pcs}
 
     seen: set[tuple[str, str]] = set()
-    for wave, _, story in c.stories():
-        if str(wave.get("status")) != "closed":
+    for spec, ticket in c.tickets():
+        if str(spec.get("status")) != "closed":
             continue
-        for area in listy(story, "touches"):
+        for area in listy(ticket, "touches"):
             if area not in areas:
-                r.fail("V12", str(story.get("id")),
-                       f"its wave is already closed, but `{area}` is not registered as an `area` "
+                r.fail("V12", str(ticket.get("id")),
+                       f"its spec is already closed, but `{area}` is not registered as an `area` "
                        f"in components.yaml")
-        pid = str(story.get("component") or "")
+        pid = str(ticket.get("component") or "")
         row = pc_by_id.get(pid)
-        if row is None or (str(wave.get("id")), pid) in seen:
+        if row is None or (str(spec.get("id")), pid) in seen:
             continue
-        seen.add((str(wave.get("id")), pid))
+        seen.add((str(spec.get("id")), pid))
         if c.mode_of(row) in ("guarded", "deep") and not lcs_per_pc.get(pid):
-            r.fail("V12", f"{wave.get('id')} / {pid}",
-                   f"wave closed and component with mode `{c.mode_of(row)}` has not one "
+            r.fail("V12", f"{spec.get('id')} / {pid}",
+                   f"spec closed and component with mode `{c.mode_of(row)}` has not one "
                    f"`LC` registered")
 
 
@@ -552,7 +563,7 @@ def v13(c: Corpus, r: Result) -> None:
     Two narrowings answer the same complaint — that review had become a treadmill:
 
       ABSENCE still fails. A binding artifact with no trace at all has never been reviewed.
-      STALENESS is ADVISORY. A trace has to be fresh at a gate and at wave close, and V13 cannot see
+      STALENESS is ADVISORY. A trace has to be fresh at a gate and at spec close, and V13 cannot see
         a gate; firing on every commit turned every edit into a re-review. G4's fourth star question
         is what holds the gate on a stale review, and it is asked by a human who can see one.
       LENS SET is demanded BEFORE the component's G4 has passed. That is the first review and the
@@ -603,19 +614,22 @@ def v13(c: Corpus, r: Result) -> None:
                 stale_advisory.append(
                     f"{rel} (changed at {stale[:7]}, reviewed at {str(block['sha'])[:7]})")
 
-    for wave in c.wave_list:
-        if not wave.get("epics"):
+    # One trace per SPEC, never one per ticket. Where there is a `SPEC.md` the trace covers it;
+    # at size `S` there is none and the trace covers the ticket set as one artifact. Either way the
+    # unit reviewed is the spec, which is why the trace lives on the spec row.
+    for spec in c.spec_list:
+        if not spec.get("tickets"):
             continue
-        _reviewed_ok(r, f"waves.yaml:{wave.get('id')}", wave.get("spec_reviewed"),
+        _reviewed_ok(r, f"specs.yaml:{spec.get('id')}", spec.get("spec_reviewed"),
                      {"edge-case-hunter"})
 
     if stale_advisory:
-        r.skip("V13", "advisory — trace stale, re-run before the next gate or wave close: "
+        r.skip("V13", "advisory — trace stale, re-run before the next gate or spec close: "
                + ", ".join(sorted(stale_advisory)))
 
 
-def cap_stories(c: Corpus) -> dict[str, list[dict]]:
-    """CAP -> story, traced through CAP -> FR -> UC -> story. No git, no timeline."""
+def cap_tickets(c: Corpus) -> dict[str, list[dict]]:
+    """CAP -> ticket, traced through CAP -> FR -> UC -> ticket. No git, no timeline."""
     frs_of: dict[str, list[str]] = {}
     for fr in c.frs:
         frs_of.setdefault(str(fr.get("capability", "")), []).append(str(fr.get("id")))
@@ -627,14 +641,14 @@ def cap_stories(c: Corpus) -> dict[str, list[dict]]:
     for cap in c.caps:
         cid = str(cap.get("id"))
         wanted = {u for fid in frs_of.get(cid, []) for u in ucs_of.get(fid, [])}
-        out[cid] = [s for _, _, s in c.stories()
-                    if wanted & set(listy(s, "satisfies"))]
+        out[cid] = [t for _, t in c.tickets()
+                    if wanted & set(listy(t, "satisfies"))]
     return out
 
 
 def v14(c: Corpus, r: Result, asof: dt.date) -> None:
     """Overdue-ness is computed from the registry itself — the timeline only reinforces, never gates."""
-    by_cap = cap_stories(c)
+    by_cap = cap_tickets(c)
     timeline = load_yaml(c.root / ".control/generated/timeline.yaml")
     listed = {str(row.get("id")) for row in rows(timeline, "capabilities")
               if str(row.get("state")) == "overdue"} if timeline else None
@@ -653,7 +667,7 @@ def v14(c: Corpus, r: Result, asof: dt.date) -> None:
             r.fail("V14", cid, f"`planned_end` `{end}` is not an ISO date")
             continue
         items = by_cap.get(cid, [])
-        closed = bool(items) and all(_story_status(c, s) == "done" for s in items)
+        closed = bool(items) and all(_ticket_status(c, t) == "done" for t in items)
         if closed or due >= asof:
             continue
         late = (asof - due).days
@@ -689,11 +703,11 @@ def v16(c: Corpus, r: Result) -> None:
 
 
 def v17(c: Corpus, r: Result) -> None:
-    for wave in c.wave_list:
-        wid = str(wave.get("id"))
-        if not str(wave.get("release") or "").strip():
+    for spec in c.spec_list:
+        wid = str(spec.get("id"))
+        if not str(spec.get("release") or "").strip():
             r.fail("V17", wid, "does not name a `release`")
-        slugs = listy(wave, "prd")
+        slugs = listy(spec, "prd")
         if not slugs:
             r.fail("V17", wid, "does not name a `prd`")
         for slug in slugs:
@@ -702,43 +716,33 @@ def v17(c: Corpus, r: Result) -> None:
 
 
 def v18(c: Corpus, r: Result) -> None:
-    for _, _, story in c.stories():
-        sid = str(story.get("id"))
-        folder = str(story.get("spec_folder") or "").strip()
-        if not folder:
-            r.fail("V18", sid, "does not name a `spec_folder`")
-            continue
-        matches = sorted((c.root / folder / "stories").glob(f"{sid}-*.md"))
-        if not matches:
-            r.fail("V18", sid, f"has no story file in {folder}stories/")
-            continue
-        fm = frontmatter(matches[0]) or {}
-        if not str(fm.get("status") or "").strip():
-            r.fail("V18", sid, "story file has no `status` in frontmatter")
+    """A ticket's status has exactly ONE home, and the corpus can point to it.
 
+    That home is the ticket file. `specs.yaml` carries the traceability index — what a ticket
+    satisfies, what blocks it, what it touches, what tests it — and a `status` key copied in beside
+    them is the second home this validator exists to prevent.
 
-def v19(c: Corpus, r: Result) -> None:
-    """The retrospective archive is tied to WAVE SIZE, not to `mode`.
-
-    Mandatory on wave `L`; advisory on `S` and `M`. Document depth and volume of work are two
-    different things, and demanding a retrospective for a three-story wave is ceremony.
+    The file's LOCATION is ours only as far as the root: `{spec_folder}/issues/`. Below that the
+    shape belongs to the engine that writes them — one file per ticket, numbered from `01` in
+    dependency order — and that number is the tail of the ticket id, which is why `SPEC-3-01`
+    finds `issues/01-*.md`.
     """
-    names = [x.name for x in sorted((c.root / ".control/reports").glob("RTR-*"))]
-    advisory: list[str] = []
-    for wave in c.wave_list:
-        if str(wave.get("status")) != "closed":
+    for spec, ticket in c.tickets():
+        sid = str(ticket.get("id"))
+        if str(ticket.get("status") or "").strip():
+            r.fail("V18", sid, "carries a `status` in specs.yaml — status lives in the ticket "
+                               "file, and two homes for one fact is how a registry starts lying")
+        folder = _spec_folder(spec, ticket)
+        if not folder:
+            r.fail("V18", sid, "its spec does not name a `spec_folder`")
             continue
-        wid = str(wave.get("id"))
-        if any(wid in name for name in names):
+        matches = _ticket_files(c, spec, ticket)
+        if not matches:
+            r.fail("V18", sid, f"has no ticket file under {folder}issues/")
             continue
-        if str(wave.get("size")).upper() == "L":
-            r.fail("V19", wid, "wave `L` closed without an `RTR-` in .control/reports/")
-        else:
-            advisory.append(wid)
-    if advisory:
-        r.skip("V19", "advisory — wave S/M closed without an RTR-: " + ", ".join(sorted(advisory)))
-    else:
-        r.skip("V19", "only the RTR- line item is checked mechanically; the rest of the distillation is guarded by wdi-build")
+        if _read_status(matches[0]) == "unknown":
+            r.fail("V18", sid, "ticket file states no status — neither a `**Status:**` line nor "
+                               "`status:` in frontmatter")
 
 
 PLATFORM = "_platform"
@@ -845,18 +849,18 @@ def _platform_documented(c: Corpus, r: Result, entities: list[str]) -> None:
 
 
 def v22(c: Corpus, r: Result) -> None:
-    """A wave MUST NOT touch a component whose G4 has not passed and whose mode is not catalog.
+    """A spec MUST NOT touch a component whose G4 has not passed and whose mode is not catalog.
 
     `catalog` skips G4 on purpose, so it is not an exception — it is part of the rule.
     """
     pc_by_id = {str(x.get("id")): x for x in c.pcs}
     seen: set[tuple[str, str]] = set()
-    for wave, _, story in c.stories():
-        pid = str(story.get("component") or "")
+    for spec, ticket in c.tickets():
+        pid = str(ticket.get("component") or "")
         row = pc_by_id.get(pid)
         if row is None:
             continue
-        key = (str(wave.get("id")), pid)
+        key = (str(spec.get("id")), pid)
         if key in seen:
             continue
         seen.add(key)
@@ -868,8 +872,8 @@ def v22(c: Corpus, r: Result) -> None:
             continue
         passed = row.get("g4_passed")
         if not passed or str(passed).strip().lower() in ("false", "no", "belum"):
-            r.fail("V22", f"{wave.get('id')} / {pid}",
-                   f"wave touches a component with mode `{mode}` whose `g4_passed` has not been set")
+            r.fail("V22", f"{spec.get('id')} / {pid}",
+                   f"spec touches a component with mode `{mode}` whose `g4_passed` has not been set")
 
 
 def v23(c: Corpus, r: Result) -> None:
@@ -1218,7 +1222,7 @@ def v27(c: Corpus, r: Result) -> None:
         README.md               authored in the package, not in the product
         constitution.md         Articles 1, 2, 5 — carries `status:`, and Article 4 governs it
         codebase-*-guide.md     the stack, conventions, and brownfield guides — `status:` plus
-                                `ratified_by:`, and they are filled by a wave's distillation
+                                `ratified_by:`, and they are filled by a spec's distillation
 
     Demanding `scope:` and `purpose:` of those would be demanding a declaration of files whose
     role is already fixed by the layout. What V27 exists to guard is the file somebody ADDS.
@@ -1266,7 +1270,9 @@ def v27(c: Corpus, r: Result) -> None:
 
 def run_checks(c: Corpus, asof: dt.date) -> Result:
     r = Result()
-    for fn in (v1, v2, v3, v4, v5, v6, v7, v8, v9, v11, v12, v13, v15, v16, v17, v18, v19, v20,
+    # V19 is REPEALED. It checked one line item — an `RTR-` file in .control/reports/ — and the
+    # retrospective it archived was the only thing spec size `L` ever decided. Both went together.
+    for fn in (v1, v2, v3, v4, v5, v6, v7, v8, v9, v11, v12, v13, v15, v16, v17, v18, v20,
                v21, v22, v23, v24, v25, v26, v27):
         fn(c, r)
     v14(c, r, asof)
@@ -1276,14 +1282,69 @@ def run_checks(c: Corpus, asof: dt.date) -> Result:
 # ------------------------------------------------------------------ generator
 
 
-def _story_status(c: Corpus, story: dict) -> str:
-    folder = str(story.get("spec_folder") or "").strip()
+def _spec_folder(spec: dict, ticket: dict) -> str:
+    """`spec_folder` belongs to the SPEC — one per spec, not one per spec x component.
+
+    A ticket row is still read as a fallback, because that is where a repo written before the
+    rename put it, and a validator that reports every one of those rows as missing a folder is
+    reporting the migration, not a defect.
+    """
+    return str(spec.get("spec_folder") or ticket.get("spec_folder") or "").strip()
+
+
+def _ticket_files(c: Corpus, spec: dict, ticket: dict) -> list[Path]:
+    """`{spec_folder}/issues/<NN>-<slug>.md`, found by the number at the tail of the ticket id.
+
+    The full id is tried too, so a product that names its files after the whole id is not punished
+    for a convention this method never demanded of it.
+    """
+    folder = _spec_folder(spec, ticket)
     if not folder:
+        return []
+    tid = str(ticket.get("id") or "")
+    issues = c.root / folder / "issues"
+    for stem in (tid.rsplit("-", 1)[-1], tid):
+        if not stem:
+            continue
+        found = sorted(issues.glob(f"{stem}-*.md"))
+        if found:
+            return found
+    return []
+
+
+def status_in(text: str) -> str:
+    """Two spellings, one home.
+
+    The engine writes `**Status:** ready-for-agent` as a body line, because a ticket file is a
+    tracker payload and trackers do not read YAML frontmatter. A product that keeps `status:` in
+    frontmatter instead is not wrong, so both are read. Reading two spellings of one field in one
+    file is not two homes; it is one home written two ways.
+
+    Takes TEXT, not a path, because timeline.py asks the same question of historical revisions
+    pulled out of git, where there is no file to open.
+    """
+    m = FM.match(text)
+    if m:
+        try:
+            fm = yaml.safe_load(m.group(1)) or {}
+        except yaml.YAMLError:
+            fm = {}
+        if isinstance(fm, dict) and str(fm.get("status") or "").strip():
+            return str(fm["status"]).strip()
+    m = re.search(r"^\*\*Status:\*\*\s*(.+?)\s*$", text, re.M)
+    return m.group(1).strip() if m else "unknown"
+
+
+def _read_status(path: Path) -> str:
+    try:
+        return status_in(path.read_text(encoding="utf-8"))
+    except OSError:
         return "unknown"
-    matches = sorted((c.root / folder / "stories").glob(f"{story.get('id')}-*.md"))
-    if not matches:
-        return "unknown"
-    return str((frontmatter(matches[0]) or {}).get("status") or "unknown")
+
+
+def _ticket_status(c: Corpus, spec: dict, ticket: dict) -> str:
+    matches = _ticket_files(c, spec, ticket)
+    return _read_status(matches[0]) if matches else "unknown"
 
 
 def gen_components(c: Corpus) -> dict:
@@ -1314,25 +1375,26 @@ def gen_risks(c: Corpus) -> dict:
 
 
 def gen_dag(c: Corpus) -> dict:
+    """The frontier, spec by spec: each `parallel` group is what can be started at once."""
     out = []
-    per_wave: dict[str, list[dict]] = {}
-    for wave, _, story in c.stories():
-        per_wave.setdefault(str(wave.get("id")), []).append(story)
-    for wid in sorted(per_wave):
-        items = per_wave[wid]
+    per_spec: dict[str, list[dict]] = {}
+    for spec, ticket in c.tickets():
+        per_spec.setdefault(str(spec.get("id")), []).append(ticket)
+    for wid in sorted(per_spec):
+        items = per_spec[wid]
         done: set[str] = set()
-        pending = {str(s.get("id")): set(listy(s, "depends_on")) for s in items}
-        waves_out = []
+        pending = {str(t.get("id")): set(listy(t, "blocked_by")) for t in items}
+        order = []
         while pending:
             ready = sorted(k for k, deps in pending.items() if not (deps - done))
             if not ready:  # cycle — V7 has already reported it
-                waves_out.append({"blocked": sorted(pending)})
+                order.append({"blocked": sorted(pending)})
                 break
-            waves_out.append({"parallel": ready})
+            order.append({"parallel": ready})
             done |= set(ready)
             for k in ready:
                 pending.pop(k)
-        out.append({"wave": wid, "order": waves_out})
+        out.append({"spec": wid, "order": order})
     return {"dag": out}
 
 
@@ -1342,10 +1404,10 @@ def gen_rtm(c: Corpus) -> dict:
     for uc in c.ucs:
         for fr in listy(uc, "satisfies"):
             ucs_for_fr.setdefault(fr, []).append(str(uc.get("id")))
-    stories_for_uc: dict[str, list[tuple[dict, dict]]] = {}
-    for wave, _, story in c.stories():
-        for uc in listy(story, "satisfies"):
-            stories_for_uc.setdefault(uc, []).append((wave, story))
+    tickets_for_uc: dict[str, list[tuple[dict, dict]]] = {}
+    for spec, ticket in c.tickets():
+        for uc in listy(ticket, "satisfies"):
+            tickets_for_uc.setdefault(uc, []).append((spec, ticket))
     decs_for: dict[str, list[str]] = {}
     for dec in c.decs:
         for target in listy(dec, "serves"):
@@ -1360,28 +1422,28 @@ def gen_rtm(c: Corpus) -> dict:
         ucs = sorted(ucs_for_fr.get(fid, []))
         if not ucs:
             exempt = bool(str(fr.get("no_uc") or "").strip())
-            lines.append({**base, "UC": "", "story": "", "wave": "", "release": "",
+            lines.append({**base, "UC": "", "ticket": "", "spec": "", "release": "",
                           "test": [], "status": "", "green": False,
                           "exempt": exempt,
                           "broken_at": "no_uc" if exempt else "UC"})
             continue
         for uid in ucs:
-            pairs = sorted(stories_for_uc.get(uid, []), key=lambda p: str(p[1].get("id")))
+            pairs = sorted(tickets_for_uc.get(uid, []), key=lambda p: str(p[1].get("id")))
             if not pairs:
-                lines.append({**base, "UC": uid, "story": "", "wave": "", "release": "",
+                lines.append({**base, "UC": uid, "ticket": "", "spec": "", "release": "",
                               "test": [], "status": "", "green": False, "exempt": False,
-                              "broken_at": "story"})
+                              "broken_at": "ticket"})
                 continue
-            for wave, story in pairs:
-                status = _story_status(c, story)
-                tests = listy(story, "tests")
+            for spec, ticket in pairs:
+                status = _ticket_status(c, spec, ticket)
+                tests = listy(ticket, "tests")
                 broken = ""
                 if not tests:
                     broken = "test"
                 elif status != "done":
                     broken = "status"
-                lines.append({**base, "UC": uid, "story": str(story.get("id")),
-                              "wave": str(wave.get("id")), "release": str(wave.get("release", "")),
+                lines.append({**base, "UC": uid, "ticket": str(ticket.get("id")),
+                              "spec": str(spec.get("id")), "release": str(spec.get("release", "")),
                               "test": tests, "status": status, "exempt": False,
                               "green": broken == "", "broken_at": broken})
     return {"rtm": lines}
@@ -1392,20 +1454,20 @@ def gen_status(c: Corpus, rtm: dict, result: Result) -> dict:
     counted = [line for line in lines if not line.get("exempt")]
     exempt = len(lines) - len(counted)
     green = sum(1 for line in counted if line.get("green"))
-    per_wave = []
-    for wave in c.wave_list:
-        wid = str(wave.get("id"))
-        items = [s for w, _, s in c.stories() if str(w.get("id")) == wid]
-        done = sum(1 for s in items if _story_status(c, s) == "done")
-        per_wave.append({"wave": wid, "status": wave.get("status"),
-                         "stories_done": done, "stories_total": len(items),
+    per_spec = []
+    for spec in c.spec_list:
+        wid = str(spec.get("id"))
+        items = [t for sp, t in c.tickets() if str(sp.get("id")) == wid]
+        done = sum(1 for t in items if _ticket_status(c, spec, t) == "done")
+        per_spec.append({"spec": wid, "status": spec.get("status"),
+                         "tickets_done": done, "tickets_total": len(items),
                          "work_progress": _pct(done, len(items))})
-    applicable = 26  # V1..V27 minus V10, which was retired
+    applicable = 25  # V1..V27 minus V10 and V19, both repealed
     return {
         "promise_progress": _pct(green, len(counted)),
         "rtm_rows": {"green": green, "counted": len(counted),
                       "excluded_no_uc": exempt},
-        "work_progress": per_wave,
+        "work_progress": per_spec,
         "gate_readiness": _pct(applicable - len(result.red), applicable),
         "validators_red": result.red,
         "validators_skipped": dict(sorted(result.skipped.items())),
@@ -1578,7 +1640,7 @@ def _demote(block: str, by: int = 2) -> str:
 
 
 def page_estimate(c: Corpus) -> str:
-    """Table of CANDIDATE tasks. One row per `FR`, since that is a wave's ideal shape."""
+    """Table of CANDIDATE tasks. One row per `FR`, since that is a spec's ideal shape."""
     mode_of = {str(pc.get("id")): c.mode_of(pc) for pc in c.pcs}
     risk_of = {str(pc.get("id")): (str(pc.get("risk_accepted") or "—"),
                                    str(pc.get("risk_note") or "—")) for pc in c.pcs}
@@ -1591,14 +1653,14 @@ def page_estimate(c: Corpus) -> str:
     have_mandays = any(x.get("estimate_mandays") for x in c.caps)
     parts = ["# estimate\n", PAGE_HEADER,
              "\n**THIS IS AN ESTIMATE, FORWARD-LOOKING.** Every row below is a **candidate** "
-             "task; the wave in `waves.yaml` is the real one. One row MAY become one wave, and three "
+             "task; the spec in `specs.yaml` is the real one. One row MAY become one spec, and three "
              "neighboring rows MAY be merged into one — that merge is a human decision made when the "
-             "wave is opened.\n"]
+             "spec is opened.\n"]
     if not have_mandays:
         parts.append("\n**With no `estimate_mandays` on a single `CAP`**, the Load column is empty and "
                      "this output is only as good as a T-shirt-size estimate. It MUST be reported as such.\n")
 
-    parts.append("\n| Task | FR | Epic | mode | Exposure | Load | Priority | Depends on | Release |")
+    parts.append("\n| Task | FR | Component | mode | Exposure | Load | Priority | Depends on | Release |")
     parts.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for fr in c.frs:
         cap_id = str(fr.get("capability", ""))

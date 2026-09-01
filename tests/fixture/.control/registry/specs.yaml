@@ -1,0 +1,35 @@
+# specs.yaml — rencana kerja.
+#
+# `release` MUST disebut tiap spec. STATUS TIKET MUST NOT DISALIN KE SINI.
+#
+# One spec with two tickets: enough for V3, V4, V7, V11, V12, V17, V18 and V22 to actually FIRE.
+# With `specs: []` every one of them passed over an empty list, which is not the same as passing.
+
+specs:
+  - id: SPEC-1
+    release: v1
+    prd: [checkout-v1]
+    fr: [FR-1, FR-2]
+    size: S
+    status: open
+    spec_folder: _bmad-output/specs/spec-1-checkout/
+    depends_on: []
+    spec_reviewed:
+      date: '2026-01-20'
+      sha: '0000000'
+      by: fixture
+      lenses: [edge-case-hunter]
+    # Flat. No `epics` level, and no `status` on a row — that is the ticket file's, and V18 says so.
+    tickets:
+      - id: SPEC-1-01
+        component: checkout
+        satisfies: [UC-1]
+        blocked_by: []
+        touches: [money]
+        tests: ["an order is written in one transaction"]
+      - id: SPEC-1-02
+        component: checkout
+        satisfies: [UC-2]
+        blocked_by: [SPEC-1-01]
+        touches: [money]
+        tests: ["the order page renders for a valid code"]
