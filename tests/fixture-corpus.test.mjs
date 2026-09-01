@@ -337,3 +337,50 @@ test("a `frozen:` row is not counted as the owner's, even sitting in the same fi
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// V23 is a DISCLOSURE control, not a filing requirement. It exists so an owner cannot accept a risk on
+// a component that touches money or personal data without saying, on the record, that they accepted it.
+// It used to demand that record be a separate `DEC-` file — which made accepting a risk cost a document,
+// and put the fact in a second place when `components.yaml` already has the field for it.
+//
+// What MUST survive the change: `high` on a sensitive component with NOTHING in `risk_accepted_by` is
+// still red. What MUST become legal: a person and a date, written where the risk is set.
+function componentsWith(dir, replacements) {
+  const f = path.join(dir, ".control", "registry", "components.yaml");
+  let text = fs.readFileSync(f, "utf8");
+  for (const [from, to] of replacements) text = text.replace(from, to);
+  fs.writeFileSync(f, text);
+}
+
+test("V23 still fails when a sensitive component accepts high risk and names nobody", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) =>
+    componentsWith(dir, [["risk_accepted: low", "risk_accepted: high"]]));
+  assert.match(out, /V23\s+checkout.*risk_accepted_by/,
+    `an owner accepted a money risk with no record of who accepted it, and nothing said so:\n${out}`);
+});
+
+test("V23 accepts a person and a date — the record does not have to be a DEC- file", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) =>
+    componentsWith(dir, [[
+      "risk_accepted: low",
+      "risk_accepted: high\n    risk_accepted_by: \"Wira, 2026-09-01\"",
+    ]]));
+  assert.doesNotMatch(out, /V23/,
+    `naming a person and a date in components.yaml IS the disclosure. Demanding a separate DEC- file `
+    + `makes accepting a risk cost a document, and puts the fact in a second home:\n${out}`);
+});
+
+test("V23 still resolves a DEC- reference when one is given", (t) => {
+  if (requireUv(t)) return;
+  // The looser rule MUST NOT become "anything non-empty passes". A repo that points at a decision is
+  // making a checkable claim, and a pointer to a decision that does not exist is worse than no pointer.
+  const out = afterMutation((dir) =>
+    componentsWith(dir, [[
+      "risk_accepted: low",
+      "risk_accepted: high\n    risk_accepted_by: DEC-404",
+    ]]));
+  assert.match(out, /V23\s+checkout.*DEC-404/,
+    `a dangling DEC- reference was accepted because it was merely non-empty:\n${out}`);
+});

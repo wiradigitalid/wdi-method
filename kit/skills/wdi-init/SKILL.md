@@ -88,9 +88,10 @@ as its review stays hard; that combination is the one the split exists to make s
 
 Two things are not free:
 
-- **`risk_accepted: high` on a component that touches any of the five** requires a `DEC-` of
-  `type: risk-acceptance`, and `risk_accepted_by:` pointing at it. V23 checks this. On a component that
-  touches none of them, `high` is free.
+- **`risk_accepted: high` on a component that touches any of the five** requires a named acceptance in
+  `risk_accepted_by` — **a person and a date is enough**, written here in `components.yaml` beside the
+  risk itself rather than as a separate file. A `DEC-` id is still accepted and still has to resolve.
+  V23 checks this. On a component that touches none of them, `high` is free.
 - **An outside party who will demand the artifacts as a deliverable** — a regulator, an auditor, a
   client through a contract — puts the touched component at `mode: deep` and `risk_accepted: low`,
   whatever the global setting says. That floor MUST NOT be traded against a preference: the risk there

@@ -34,9 +34,10 @@ promise.
   other skill MAY land these files.
 - Nothing is placed until the run is finalised. Half-placed UX output is worse than unplaced output,
   because it looks distributed.
-- A run MAY finish before there is a `<pc>` to place it into — the slicing is born at the **tail of
-  G2**, and a UX run belongs to G2 itself. The output then waits in `_bmad-output/ux/`, and `wdi-ux` lands it once
-  the component exists. Waiting is the correct state; a home MUST NOT be invented to end it.
+- **A run MUST NOT start before there is a `<pc>` to place it into.** The order is PRD → components →
+  UX, and `wdi-ux` refuses to run without the component list. The older shape let a run finish first and
+  park its output in `_bmad-output/ux/` until a home appeared; that traded a fresh PRD for a half-placed
+  artifact somebody had to return to, and it let the method recommend a step that could not run.
 
 `doc_standards` on `bmad-ux` runs `bmad-review` over both documents **at finalize** — that is, before
 `wdi-ux` lands them. Reviewing afterwards would mean reviewing two files that no longer sit together.

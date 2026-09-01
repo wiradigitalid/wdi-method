@@ -50,12 +50,24 @@ make?** If the honest answer is *"no, but it explains what happened"*, there is 
 MUST NOT be logged as debt, raised as a finding, or backfilled later from memory. Without this
 sentence, "not mandatory" is read as "mandatory but allowed to be late".
 
-One case remains mandatory: a decision that **contradicts or changes an `AD-N`** MUST be recorded
-before the work that depends on it. That is the only one — and it is mandatory because an `AD-N` is what
-the architecture rests on, not because a change is large or arrived late.
+**No case is mandatory any more, and one guard survives all of them.** Three rules used to demand a
+`DEC-` file. Each was protecting something real, and in each the protection was the **stop**, never the
+document:
 
-**Nothing else stops the work.** Where a change contradicts an `FR`, a `UC`, a business rule, or a
-document's wording, the agent states the consequence once and the owner decides. If they proceed, the
+| Was | Is now |
+|---|---|
+| Contradicting an `AD-N` demanded a `DEC-` | It **stops and reaches the owner**. Nobody narrows an invariant silently. The record is the edited `AD-N`, present tense, plus the commit — a `DEC-` only if the reason cannot be read from the spine |
+| `risk_accepted: high` on a sensitive component demanded a risk-acceptance `DEC-` | `risk_accepted_by` names **a person and a date**, in `components.yaml` where the risk is set. V23 checks it, and still resolves a `DEC-` id if one is given |
+| Cancelling >30% of a spec's tickets demanded a `DEC-` | The spec is **re-cut** rather than patched. `specs.yaml` is the record |
+
+What each of those bought was that a human made the call. That is preserved. What each of them also
+cost — a file, written at the moment the work was blocked — is not.
+
+An `AD-N` change stopping is the one that MUST NOT be softened further: it is what stops an architecture
+being narrowed twice by two passes neither of which thought it was doing anything.
+
+**Nothing else stops the work at all.** Where a change contradicts an `FR`, a `UC`, a business rule,
+or a document's wording, the agent states the consequence once and the owner decides. If they proceed the
 documents are edited to match — `delivery-flow-guide.md` § When something settled has to change owns the
 matrix, and the survey behind that warning is spent the moment the owner answers.
 

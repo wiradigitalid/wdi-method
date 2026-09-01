@@ -103,9 +103,9 @@ sit at `mode: catalog` and still be reviewed the hardest.
 
 Two things are not free, and `wdi-init` owns the conversation around both: `risk_accepted: high` on a
 component touching money, personal data, an irreversible action, a contractual promise, or an
-un-rollbackable integration requires a `DEC-` of `type: risk-acceptance` with `risk_accepted_by:` pointing
-at it (V23) — and an outside party who will demand the artifacts as a deliverable puts the touched
-component at `mode: deep` and `risk_accepted: low` whatever the global setting says.
+un-rollbackable integration requires a named acceptance in `risk_accepted_by` — a person and a date,
+written beside the risk (V23) — and an outside party who will demand the artifacts as a deliverable puts
+the touched component at `mode: deep` and `risk_accepted: low` whatever the global setting says.
 
 ## Five gates
 

@@ -877,11 +877,17 @@ def v22(c: Corpus, r: Result) -> None:
 
 
 def v23(c: Corpus, r: Result) -> None:
-    """`risk_accepted: high` on a sensitive component demands a `DEC-` in `risk_accepted_by`.
+    """`risk_accepted: high` on a sensitive component demands a NAMED acceptance in `risk_accepted_by`.
 
     On a component that touches nothing on that list, `high` is FREE. The control is
     disclosure, not veto — the owner may still choose quickly, just not without knowing what
     they are wagering.
+
+    It used to demand that the record be a `DEC-` file, which made accepting a risk cost a document and
+    put the fact in a second home while `components.yaml` already had the field for it. A person and a
+    date, written where the risk is set, IS the disclosure. A `DEC-` id is still accepted and still has
+    to resolve: a repo pointing at a decision is making a checkable claim, and a pointer to a decision
+    that does not exist is worse than no pointer.
     """
     known = {str(x.get("id")) for x in c.decs}
     for pc in c.pcs:
@@ -895,9 +901,9 @@ def v23(c: Corpus, r: Result) -> None:
         ref = str(pc.get("risk_accepted_by") or "").strip()
         if not ref:
             r.fail("V23", pid,
-                   f"`risk_accepted: high` while `risk_note` mentions {hits}, without "
-                   f"`risk_accepted_by` pointing to a risk-acceptance `DEC-`")
-        elif ref not in known:
+                   f"`risk_accepted: high` while `risk_note` mentions {hits}, and "
+                   f"`risk_accepted_by` names nobody — a person and a date is enough")
+        elif ref.startswith("DEC-") and ref not in known:
             r.fail("V23", pid, f"`risk_accepted_by: {ref}` does not exist in decisions.yaml")
 
 

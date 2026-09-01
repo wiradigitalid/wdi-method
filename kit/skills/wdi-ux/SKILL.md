@@ -9,17 +9,18 @@ description: Use when UX is produced or landed — dispatching bmad-ux for a PRD
 came back, and — because `bmad-ux` is **class B** — lands its output into the two layers it splits
 across. No other skill MAY land these files.
 
-Two acts, and a pass MAY do either or both: **run** the UX, and **land** it. They become possible at
-different moments, so **decide which act this pass is doing before anything else:**
+**Precondition: the Product Components exist.** If `components.yaml` has no `product_components`, this
+skill MUST NOT run. Route to `wdi-init` intent `component` and stop — do not run the UX and park the
+output.
 
-| Act | Needs | When |
-|---|---|---|
-| **Run** | a PRD. **Not** components — they do not exist yet and are not required | G2, while the PRD is fresh |
-| **Land** | Product Components and containers registered | tail of G2, after `wdi-init` intent `component` |
+Two acts, and one pass does both: **run** the UX, and **land** it. They used to be separable, and a run
+was allowed before the components existed, with the output waiting in `_bmad-output/ux/` until a home
+appeared. That is repealed. Waiting output is a half-finished thing somebody has to come back to, and
+every screen this produces has to become an `LC` against a component anyway — so a run with no component
+is a run whose result cannot be finished.
 
-**Missing components MUST NOT block a run**, and MUST NOT be reported as a precondition failure. The
-documented order is UX first, components second; a run that waits for them waits for a step that comes
-after it. Run now, land when the list exists — the output says what is waiting, and that is enough.
+The order is: PRD → `wdi-init` intent `component` → **UX**. Nothing MAY recommend UX before the component
+list exists; recommending a step that cannot run is the failure this precondition replaces.
 
 You MUST NOT write or edit `DESIGN.md` or `EXPERIENCE.md` yourself. If a check fails, name what is
 missing and re-dispatch — a hand-patched UX document makes the memlog lie about how it got that way.
@@ -103,8 +104,11 @@ here is **when each one becomes possible**.
 | `DESIGN.md` | `.how/<pc>/01-ux/` | The `<pc>` is registered **and** its container exists |
 | Each screen | an `LC` of type `ui-screen` in `components.yaml` | Same as `DESIGN.md` — an `LC` MUST name its container. Registration is checked at spec close, V12 |
 
-- A half that is not yet landable MUST stay in `_bmad-output/ux/` and be reported as deferred. At G2
-  that is the normal outcome, not a failure: the slicing is born at the tail of G2 and containers at G3.
+- **One deferral survives, and only one.** With the components born before the run, `EXPERIENCE.md` and
+  the tokens land immediately. `DESIGN.md` and its screen `LC` rows still need a **container**, and
+  containers are born at G3 by `wdi-blueprint` intent `platform`. That half MUST stay in
+  `_bmad-output/ux/` and be reported as deferred, naming G3 as what it waits for. This is the last
+  half-placed state in the flow; everything else now lands in the pass that produced it.
 - You MUST NOT create a Product Component or a container to make a landing possible. A PC comes from
   `wdi-init` intent `component` and a container from `wdi-blueprint` intent `platform`.
 - One run MAY land across several Product Components. Split by which `<pc>` the content serves; a

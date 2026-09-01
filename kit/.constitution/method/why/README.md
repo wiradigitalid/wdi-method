@@ -65,8 +65,8 @@ matters is in `rationale.md`; what each value demands is in `../document/deliver
 | 0 | Set up | `wdi-init` intent `setup` — registry scaffolded, global `mode` set, existing documents reported, structure maps derived | — |
 | 1 | Discovery and brief | `wdi-problem` | **G1** |
 | 2 | PRD, one per initiative | `wdi-product` intent `prd` | **G2** |
-| 2b | UX — only when the interface is a large part of the promise | `wdi-ux` | with G2 |
 | 3 | Birth the components, set `mode` and `risk_accepted` | `wdi-init` intent `component` | — (tail of G2) |
+| 3b | UX — only when the interface is a large part of the promise. **After 3**, never before | `wdi-ux` | — (tail of G2) |
 | 4 | Blueprint | `wdi-blueprint` intent `catalog`, then `platform` | **G3** |
 | 5 | One component's depth | `wdi-component` — as deep as its `mode`; **skipped at `catalog`** | **G4** |
 | 6 | Build | `wdi-build` — opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec | **G5** |

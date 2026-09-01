@@ -23,7 +23,7 @@ reviewed the hardest**. `rationale.md` holds why.
 What the table below gives is **consequence**, not recommendation. Two things in it are not free, and both
 are named in the guide, not here: `risk_accepted: high` on a component whose `risk_note` names money,
 personal data, an irreversible action, a contractual promise, or an un-rollbackable integration needs a
-`DEC-` of `type: risk-acceptance` (V23) — and an outside party who will demand the artifacts as a
+named acceptance in `risk_accepted_by` (V23) — and an outside party who will demand the artifacts as a
 deliverable puts the touched component at `mode: deep` **and** `risk_accepted: low`, which is the one cell
 the method assigns rather than offers.
 
@@ -137,4 +137,4 @@ Two more mechanics, neither of which reads `risk_accepted`:
 | Raising or lowering `mode` | nothing. No justification | Lowering **deletes nothing** — a written file stops being required, and that is all |
 | Raising `mode` on a component whose code already runs | the evidence labels in `sdd-guide.md` | What comes out is an **as-built record**, not a design |
 | Lowering `risk_accepted` toward `low` | a review that now has to actually run | A stale trace MUST be re-earned, never re-dated — except for a wording-only change, which `wdi-review` lets you re-stamp |
-| Raising `risk_accepted` to `high` on a sensitive component | a `DEC-` of `type: risk-acceptance` | V23 checks the `DEC-` exists, and it discloses rather than vetoes |
+| Raising `risk_accepted` to `high` on a sensitive component | a person and a date in `risk_accepted_by` | V23 checks somebody is named, and it discloses rather than vetoes |
