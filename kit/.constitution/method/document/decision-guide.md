@@ -22,7 +22,13 @@ MUST NOT be logged as debt, raised as a finding, or backfilled later from memory
 sentence, "not mandatory" is read as "mandatory but allowed to be late".
 
 One case remains mandatory: a decision that **contradicts or changes an `AD-N`** MUST be recorded
-before the work that depends on it. That is the only one.
+before the work that depends on it. That is the only one — and it is mandatory because an `AD-N` is what
+the architecture rests on, not because a change is large or arrived late.
+
+**Nothing else stops the work.** Where a change contradicts an `FR`, a `UC`, a business rule, or a
+document's wording, the agent states the consequence once and the owner decides. If they proceed, the
+documents are edited to match — `delivery-flow-guide.md` § When something settled has to change owns the
+matrix, and the survey behind that warning is spent the moment the owner answers.
 
 ## `AD-N` and `DEC-NNN` are not the same thing
 
@@ -52,6 +58,22 @@ is `low` in `components.yaml`. Everywhere else they are optional, and an empty o
 rather than left as a heading with nothing under it.
 
 **A `DEC-` MUST NOT hold an open question.** Those belong to `.control/questions/`.
+
+**One page, and that is a bound, not a target.** A `DEC-` records **what was chosen and what it cost** —
+not how the answer was reached, not the transcript of the reasoning, not every reading of every clause
+that was weighed on the way. One real decision reached **124 lines** to record that one invariant does not
+reach one artifact; the sentence that mattered was one line and the cost was two.
+
+Three things MUST NOT appear in a `DEC-`, and each of them is the derivation leaking in:
+
+- The search that found the answer — which files were grepped, which clause was read first.
+- A meta-note about the decision itself: whether it should have been a `DEC-` at all, whether some other
+  mechanism was considered and rejected. If that reasoning matters it is the **Why**; usually it does not
+  matter and it is nothing.
+- A correction of an earlier draft of the same decision. Drafts are git's.
+
+`Alternatives` is the one place a rejected option belongs, it is a **line each**, and it is required only
+where the section table above says so.
 
 ## Frontmatter
 

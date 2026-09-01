@@ -217,6 +217,39 @@ A negative claim is the worst case and the easiest to miss, because it looks lik
 recompute (the paragraph above owns that), an `AD-N` citation — the spine's `binds:` is authored, not
 derived — and the *reason* something is the way it is, which no registry holds.
 
+## The corpus is written in the present tense
+
+A design document states **what is true now**. It does not state how it got there, when it was written,
+what it used to say, or what it disagreed with along the way. That is the whole rule, and it applies to
+`.what/<pc>/`, `.how/`, and `.constitution/project/`.
+
+**Banned in those layers:**
+
+| Not written | Why |
+|---|---|
+| A correction block — *"this used to say X"* | git holds it, and a correction goes stale on a slower clock than the thing it corrects |
+| A `## Provenance` note — when the file was filled, and why then | The reader came for the design |
+| The document's own change log | Same |
+| A note recording a conflict that has been **resolved** | The conflict is over. What survives is the answer, written as if it had always been the answer |
+| *"Considered and rejected"* about the method itself | If the reason matters, it is a `DEC-`; usually it does not |
+
+**A mid-flight change lands as if it had been there from the start.** An idea that arrives during G5 is
+written into the documents in the present tense — not appended, not annotated, not marked as late. The
+record that it arrived late is the commit, and the commit is a better record than a paragraph.
+
+**What survives, and MUST NOT be cut by this rule:**
+
+- **The PRD's Revision History.** Its reader is outside the room — a client, a sponsor, an auditor — and
+  a promise that changed silently is a different failure. `prd-guide.md` owns it.
+- **`ratified_by:`** on a room guide. That is not history; it is the evidence the rule is real.
+- **`why/`** and `.control/decisions/`. Those layers exist to hold history. This rule is about the layers
+  that do not.
+- **`superseded`** status pointing at a replacement. A reader following an old id needs the pointer.
+
+Real cost of getting this wrong, from one repo: a codebase conventions guide — the file a developer opens
+to learn how to write code here — spent a quarter of its length explaining when it had been filled, why it
+was not a `DEC-`, and which alternative had been rejected.
+
 ## Two axes inside `.what/`
 
 | | `_prd/<initiative>/` | `<pc>/` |

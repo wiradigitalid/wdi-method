@@ -34,10 +34,9 @@ this skill owns is reading it and refusing to run a lighter set than it names.
 | `medium` | structure · prose · **edge-case-hunter** | structure · prose | — |
 | `high` | structure · prose | structure · prose | — |
 
-**`edge-case-hunter` is bought once, at the moment it pays for itself** — the first review of an artifact,
-and the review that opens a gate. Running it again over a paragraph that changed is what made review feel
-like a tax. A re-review MUST put it back when the delta touches money, personal data, an irreversible
-action, or a third party; there the branch it hunts is the whole point.
+**`edge-case-hunter` is bought once, where it pays** — an artifact's first review, and the review that
+opens a gate. A re-review MUST put it back when the delta touches money, personal data, an irreversible
+action, or a third party.
 
 `SPEC.md` always carries `edge-case-hunter`, first run and re-run alike: it is the contract a builder works
 from, and a branch missed there surfaces as a bug at G5 instead.
@@ -51,29 +50,53 @@ precedent elsewhere in the method; none of them lowers what a review looks for.
   advisory.** V13 reports it and does not fail; what catches a
   gate opening on a stale review is G4's ★ question — *validators green **and** the review leaving no open
   finding* — not a validator firing on every commit.
-- **A wording-only change MUST NOT trigger a re-run.** This is the split `prd-guide.md` already owns:
-  changing an `FR`'s **promise** reopens gates, changing its **wording** costs one Revision History row and
-  nothing else. Re-stamping `date` and `sha` without re-running is allowed **here and nowhere else**, and
-  the Revision History row is what makes it checkable. Anything touching behaviour, a rule, a boundary, a
-  contract, or a use case flow is material, and material changes re-run.
-- **A re-review covers the delta, not the artifact.** Read what changed since the reviewed `sha`, review
-  that and whatever it reaches. Re-reading four hundred lines of SRS to check one changed paragraph is the
-  ceremony this rule exists to stop — and the same principle already governs G3, which reopens over the
-  delta when a new PRD arrives.
+- **A wording-only change MUST NOT trigger a re-run.** The split is `prd-guide.md`'s: an `FR`'s
+  **promise** reopens gates, its **wording** costs one Revision History row. Re-stamping `date` and `sha`
+  without re-running is allowed **here and nowhere else**, and that row is what makes it checkable.
+  Behaviour, a rule, a boundary, a contract, or a use case flow is material, and material changes re-run.
+- **A re-review covers the delta, not the artifact.** Read what changed since the reviewed `sha`, and
+  whatever it reaches. G3 already reopens over the delta when a new PRD arrives; same principle.
 - **One apply, one review.** A `DEC-` or an answered `OQ-` applied across several artifacts is **one**
   review of the delta across all of them, never one review per artifact. The trace lands on each artifact
   touched, naming the same `sha`.
 
+## Stale is not a finding. Load-bearing stale is.
+
+**Triggers are a gate, a spec close, and an explicit ask — nothing else.** You MUST NOT offer a review
+because a document was touched. An offer declined five times teaches the owner to decline the sixth,
+which is the one that mattered.
+
+Three things look like a review and are not: a document the owner has already **decided against** — that
+is an edit, and `delivery-flow-guide.md` owns it; a document **merely behind the code**, which is its
+expected state because the code moves first; and a machine contract, which nobody reads.
+
+**The test — one question, and it decides:**
+
+> Would a reader who believes this sentence make the wrong repair?
+
+| Load-bearing — repair NOW | Not load-bearing — leave it |
+|---|---|
+| A binding guide describing a stack the repo left — `npm` commands that all fail | A count, a date, a section that reads a little old |
+| A guard that greps a language this repo no longer writes | Wording that is merely less good than it could be |
+| A cite that resolves to nothing | A section whose file has moved but whose point still holds |
+| A claim contradicting an `AD-N` or an `applied` `DEC-` | An artifact the next spec will rewrite anyway |
+
+Everything in the right column is corrected **when someone next touches that section**, or it dies with
+the document. It MUST NOT be raised as a finding, MUST NOT open an `OQ-`, and MUST NOT hold a stamp.
+
+**Where substance actually is.** On the evidence of a real pass of twenty-one findings: a document checked
+against **the code**, and against an **`AD-N`** or an `applied` `DEC-`. Those two found the only two that
+changed what was true. Document-versus-document bookkeeping found thirteen and changed nothing. When the
+budget is tight — it always is — spend it on the first two and skip the third.
+
 ## A restated derived fact is one finding, and its remedy is deletion
 
-The cheapest finding class to produce is also the one worth the least: a document disagreeing with a
-registry it could have read. One real pass closed twenty-one findings, and **thirteen** of them were
-that — `mode` restated in prose, a slot list denying files on disk, "no applied `DEC-` binds this
-component", a stale `updated:`, a Gate Checklist counting four use cases where the registry held six, a
-spine carrying three capability lists that disagreed with each other. Two findings in that pass changed
-what was true, and **both came from reading code and an `AD-N`, not from reading prose.**
+The cheapest class to produce is the one worth least: a document disagreeing with a registry it could
+have read. It was **thirteen of the twenty-one** in the pass above — `mode` restated in prose, a slot
+list denying files on disk, "no applied `DEC-` binds this component", a Gate Checklist counting four use
+cases where the registry held six.
 
-So this class MUST be handled as follows, and it is not a judgement call:
+Handled as follows, and it is not a judgement call:
 
 - **One finding, not one per site.** Report the class and list its locations. Thirteen rows for one
   cause spends the budget above on a single problem and buries whatever else the pass found.
@@ -86,14 +109,10 @@ So this class MUST be handled as follows, and it is not a judgement call:
   A derived fact has exactly one home is the list; the templates were cleaned once already, and an
   invitation still standing is a package defect, not a product one.
 
-**Where the substantial findings actually come from**, on the evidence of that pass: a document checked
-against the code, and a document checked against an `AD-N` or an applied `DEC-`. When the budget is
-tight, spend it there.
-
 ## Findings have a budget, and it is not a new one
 
-A review with no upper bound is what produced two hundred findings from one pass and ids reaching `OQ-146`;
-`rationale.md` records it. The budget is the one `wdi-question` already carries, so nothing new is invented:
+A review with no upper bound produced two hundred findings from one pass. The budget is the one
+`wdi-question` already carries, so nothing new is invented:
 
 | Class | Where it goes | Target |
 |---|---|---|
@@ -101,26 +120,19 @@ A review with no upper bound is what produced two hundred findings from one pass
 | Does not hold anything | `.control/questions/assumptions.md`, one line each | **≤15** |
 
 **A review that exceeds both MUST stop and say so.** What it reports is not a finding list but a verdict:
-this artifact needs rewriting, not reviewing. Handing an owner sixty findings is not thoroughness — it is a
-review that failed to reach a conclusion, and the owner pays for it twice.
+this artifact needs rewriting, not reviewing. Sixty findings is not thoroughness — it is a review that
+failed to reach a conclusion, and the owner pays for it twice. You MUST NOT register a finding as
+blocking to be safe.
 
-You MUST NOT register a finding as blocking to be safe. That habit is what produced the flood.
+**V13 stamps only components at `risk_accepted` `low` or `medium`.** At `high` the owner has already
+accepted the risk, and demanding the trace there is bookkeeping with no buyer. The contract keeps its
+trace in the registry rather than in itself: `to-spec` and `to-tickets` overwrite hand edits.
 
-**V13 stamps only components at `risk_accepted` `low` or `medium`.** At `high` the owner has already said
-they accept the risk, and demanding the trace there is bookkeeping with no buyer.
-
-The contract keeps its trace in the registry, not in itself: `to-spec` and `to-tickets` are its sole
-authors and both overwrite hand edits, so a trace written into `SPEC.md` or a ticket file disappears on
-the next run.
-
-**Anything in the corpus MAY be reviewed here, at any time** — a `DEC-`, minutes, an `OQ-`, a guide, a
-brief, a PRD, a `DESIGN.md`. What is restricted is the **stamp**, not the reading: only the four rows
-above have a trace V13 reads, and only they MAY be stamped.
-
-The five artifacts carrying `doc_standards` review themselves at finalize, so a review here is never
-required for them. Asking for one anyway is legitimate — after hand edits, before a gate, when a
-finding is suspected — and it MUST NOT leave a `reviewed:` block behind. A second trace on an
-artifact whose first review is automatic implies that first one was optional.
+**Anything in the corpus MAY be reviewed here when asked** — a `DEC-`, minutes, a guide, a brief, a PRD,
+a `DESIGN.md`. What is restricted is the **stamp**, not the reading: only the four rows above carry a
+trace V13 reads. The five artifacts with `doc_standards` review themselves at finalize; a review here is
+never required for them and MUST NOT leave a `reviewed:` block, because a second trace implies the first
+was optional.
 
 ## Step 1 — Read the lens set off the component
 

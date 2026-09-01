@@ -12,6 +12,15 @@ why it needs a pass that looks for it on purpose.
 This skill is **read-only**. It MUST NOT edit anything. Its output is a report, and every fix it
 recommends is performed by another skill.
 
+**It is not run after every change, and it MUST NOT be offered as one.** Its triggers are a gate, and a
+batch of changes large enough that nobody can hold the delta in their head. Offering it after a two-file
+edit is how a ten-minute change grows a twenty-minute tail — and the offer itself costs the reader
+something, because declining it repeatedly teaches them to decline it always.
+
+**Drift is reported only where it is load-bearing** — where a reader believing the stale sentence would
+make the wrong repair. A document behind the code is in its expected state, not a defect;
+`wdi-review` § Stale is not a finding owns the test, and it applies here unchanged.
+
 ## Step 1 — Scope by gate, then by `mode`
 
 Two filters, and skipping either produces a report that is red where the plan says it should be.
@@ -37,6 +46,12 @@ the plan. The corpus running ahead of the code is likewise normal and deliberate
 
 A narrower scope MAY be asked for — one Product Component, one initiative, one layer. State the scope
 in one line before checking, and say what it excluded.
+
+**A conflict the owner has already decided is not drift.** Where a document disagrees with the code
+because the owner chose the code, the finding is that the **document has not been edited yet** — one
+line, naming the edit — never a re-statement of the conflict and never a question. The decision is not
+reopened here, and `delivery-flow-guide.md` says why: the survey behind that warning was spent when the
+owner answered it.
 
 ## Step 2 — Run the validators first
 

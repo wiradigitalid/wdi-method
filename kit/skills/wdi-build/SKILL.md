@@ -233,6 +233,23 @@ code pass is how a corpus starts agreeing with whatever was built.
 Cap: **2 return trips.** MUST re-run the whole panel after each fix round — a fix introduces defects. On hitting
 the cap MUST escalate and MUST NOT open a PR carrying an unresolved must-fix.
 
+### When the code turns out to be right and the document wrong
+
+This is normal during G5 and it is **not drift**. Building a thing is how you find out what the thing is.
+
+The builder still MUST NOT edit `.what/`, `.how/`, or an `applied` `DEC-` to make its own code fit — that is
+the corpus learning to agree with whatever was built, and it is a different failure. What happens instead:
+
+1. **Say it once.** Name what the code does, which promise it contradicts, and what that costs. One place,
+   one time. An `AD-N` is the one contradiction that **stops** — `decision-guide.md` owns it.
+2. **The owner decides.** If they adopt the code, that survey is spent.
+3. **The owning skill edits**, in the present tense, as if the design had always said this — `wdi-product`
+   for an `FR`, `wdi-component` for behaviour or design, `wdi-blueprint` for a cross-component rule.
+
+What MUST NOT happen after step 2: raising the same conflict again in a later pass, opening an `OQ-` for it,
+dispatching a review over it, or writing anywhere in the corpus that the change arrived late. The commit is
+that record. `corpus-guide.md` § The corpus is written in the present tense is the binding rule.
+
 ### Step 4 — ticket-closing checklist, then push and PR
 
 The checklist is **three items**, and it MUST be answered before the PR opens:

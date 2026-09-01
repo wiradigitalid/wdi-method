@@ -43,9 +43,9 @@ nothing already built on it — then there is nothing to decide and nothing to r
 what was chosen, and it says it more reliably than a line in a list.
 
 This is not a licence to assume quietly. It is the opposite: it protects the list. One real corpus
-carried twenty-five open lines, and **six** of them were this class — the screenshot's long edge, how
-many quality presets, whether one Vault folder at a time is enough. Every one of them had a default
-already running and a one-value reversal. Sitting in the same list as six real decisions, they made a
+carried twenty-five open lines, and **six** of them were this class — a default image dimension, how many
+quality presets to offer, whether one working folder at a time is enough. Every one had a default already
+running and a one-value reversal. Sitting in the same list as six real decisions, they made a
 six-item list look like twenty-five items of homework, and the owner stopped reading it.
 
 **The threshold does NOT apply**, and the line is recorded, when being wrong touches money, personal

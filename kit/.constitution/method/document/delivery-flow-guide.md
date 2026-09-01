@@ -345,6 +345,16 @@ moment it was thinnest.
 One trigger: **an artifact other people agreed to needs to change.** Run this matrix and reopen the gates it
 names.
 
+**Reopening a gate means re-deciding, not re-recording.** The column below names the gate whose *decision*
+the change invalidates — the session runs again because the answer might now be different. Where the chain
+changes but the decision does not, the documents are **edited in place** and no gate opens or closes. There
+is no ceremony to perform, and nothing anywhere records that the change arrived late: the commit does that,
+and it does it better than a paragraph.
+
+**A change that arrives during G5 is written as if it had been there from the start.** Present tense, folded
+in, not appended and not annotated — `corpus-guide.md` § The corpus is written in the present tense owns
+that rule and it is not softened here.
+
 | What changes | MUST be re-reviewed | Gate reopened |
 |---|---|---|
 | Business Goal | The whole chain beneath it | G1 |
@@ -357,6 +367,16 @@ names.
 | Ticket acceptance criteria | That ticket's tests, its RTM row | none — the row going green again is enough |
 
 The promise-versus-wording split is owned by `prd-guide.md` and MUST NOT be re-decided here.
+
+**Once the owner has decided, the survey is spent.** The agent reads the chain — `BG`, `CAP`, `FR`, `UC`,
+the rules, the `AD-N` — and says **once**, in one place, what the change breaks and what it costs. That is
+the warning, and the owner is entitled to it. When they choose anyway, what the survey found becomes
+**edits**: not findings, not `OQ-` rows, not a review, and not a second pass raising the same conflicts in
+different words. Re-arguing a decision the owner already took is the most expensive thing an agent does in
+this method, and it buys nothing that the first warning did not already buy.
+
+The one thing that still stops rather than warns: a change contradicting an `AD-N`. That is an invariant the
+architecture rests on, `decision-guide.md` owns it, and the stop is a `DEC-` — one page, then proceed.
 
 - A ticket already **started** MUST NOT have its contract changed. Stop it, return it to
   `ready-for-agent`, then change it.
