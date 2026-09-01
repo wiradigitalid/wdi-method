@@ -3,7 +3,6 @@ type: srs
 component: '{pc}'
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 satisfies: []            # FR / NFR ids this component carries, from requirements.yaml
 reviewed:                # V13. Filled only after wdi-review has actually run
   date: ''               # '{YYYY-MM-DD}'
@@ -37,7 +36,12 @@ reviewed:                # V13. Filled only after wdi-review has actually run
 ## Decision Summary · [G3]
 
 <!-- <=1 page, business language, no jargon lacking a Glossary entry. What the Product Owner reads.
-     A summary that cannot be read inside the gate's time budget IS the finding. -->
+     A summary that cannot be read inside the gate's time budget IS the finding.
+
+     NO DERIVED FACT. `mode`, `risk_accepted`, which `DEC-` bind this file — "none yet" included —
+     how many UC or FR there are, and which slots exist are all held elsewhere and MUST NOT be
+     stated here. `corpus-guide.md` § A derived fact has exactly one home says where each lives, and
+     that the remedy for one already written is DELETION, not correction. -->
 
 ## Why · [G3]
 
@@ -112,12 +116,21 @@ reviewed:                # V13. Filled only after wdi-review has actually run
 
 <!-- The gate questions as they apply to THIS component, answered yes / no / change. The full list
      lives in delivery-flow-guide.md and MUST NOT be copied here. At mode: catalog only the starred
-     questions are asked. -->
+     questions are asked.
+
+     An answer MUST NOT carry a COUNT of registry rows — "all four use cases are covered" is a claim
+     about usecases.yaml that a fifth UC falsifies without touching this file. Answer the question. -->
 
 ## Design Reference · [G3]
 
-<!-- One line pointing at the paired SDD, plus any AD-N or applied DEC- that binds this component.
-     Nothing else — solution shape MUST NOT appear in this document: no framework, no table, no
+<!-- One line pointing at the paired SDD, plus any AD-N that binds this component — the spine's
+     `binds:` is authored, not derived, so an AD-N citation belongs here.
+
+     APPLIED `DEC-` DO NOT. They are derived from `touches:` and live in .control/generated/decisions.md;
+     point at it. A line saying "no applied DEC- binds this component yet" is the worst version — true
+     the day it is written, silently false forever after, and it looks like diligence.
+
+     Nothing else: solution shape MUST NOT appear in this document — no framework, no table, no
      endpoint, no class, no queue, no file path. -->
 
 ---
@@ -145,9 +158,17 @@ reviewed:                # V13. Filled only after wdi-review has actually run
      05-scenarios/   SCN-<nn>-<slug>.md, long branches hanging off one UC. From mode: deep only
 
      01-requirements/ and supplements/ are REPEALED. The first was permanently empty — FR live in the
-     PRD and this document cites them by id. The second existed for the ANX- concept, which is gone. -->
+     PRD and this document cites them by id. The second existed for the ANX- concept, which is gone.
+
+     THIS SECTION EXPLAINS THE SHAPE, NOT THE CONTENTS. It MUST NOT say which slots exist, which are
+     empty, or which are "not written yet". That is `.control/structure-document.md`, derived from the
+     tree on disk. One real SDD claimed four of its five slots unwritten while one of them held 223
+     lines. -->
 
 ## Open Items
 
-<!-- Anything still unresolved, each pointing at its row in .control/questions/. An assumption left
-     here with no id is the failure wdi-question exists to prevent. -->
+<!-- A POINTER, not a copy. Ids only, and the id is enough: whether an OQ- is still open is held by
+     .control/questions/, so restating its status here creates a second answer on a slower clock.
+
+     An assumption left here with no id is the failure wdi-question exists to prevent. An id listed
+     here that has been answered for weeks is the failure this rule exists to prevent. -->

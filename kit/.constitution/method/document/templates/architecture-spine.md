@@ -8,7 +8,6 @@ paradigm: '{named design pattern, e.g. hexagonal, layered, pipes-and-filters, ac
 scope: '{what this spine governs}'
 status: draft               # draft · final
 created: '{date}'
-updated: '{date}'
 binds: []                   # capability / unit IDs governed (from the driving spec; at epic altitude, also the inherited parent AD ids)
 sources: []
 companions: []

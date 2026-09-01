@@ -4,7 +4,6 @@ scope: global            # global · component — decides the home and the id p
 component: '{pc}'        # omit entirely when scope: global
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 ---
 
 # Business Rules — {the product | Product Component}

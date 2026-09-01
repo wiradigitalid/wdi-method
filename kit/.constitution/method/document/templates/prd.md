@@ -7,7 +7,6 @@
 title: {Initiative Name}
 initiative: {slug}
 created: {YYYY-MM-DD}
-updated: {YYYY-MM-DD}
 ---
 
 # PRD: {Initiative Name}

@@ -3,7 +3,6 @@ type: integration
 component: '{pc}'
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 provider: '{who owns it outside the team}'
 ---
 

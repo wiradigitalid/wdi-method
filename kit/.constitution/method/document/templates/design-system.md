@@ -3,7 +3,6 @@ type: design-system
 scope: _platform
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 ---
 
 # Design System — {product}

@@ -3,7 +3,6 @@ type: ux
 component: '{pc}'
 document: design             # design (.how/<pc>/01-ux/) · experience (.what/<pc>/04-usecases/)
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 ---
 
 # {DESIGN | EXPERIENCE} — {Product Component}

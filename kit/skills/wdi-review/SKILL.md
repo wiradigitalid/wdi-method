@@ -64,6 +64,32 @@ precedent elsewhere in the method; none of them lowers what a review looks for.
   review of the delta across all of them, never one review per artifact. The trace lands on each artifact
   touched, naming the same `sha`.
 
+## A restated derived fact is one finding, and its remedy is deletion
+
+The cheapest finding class to produce is also the one worth the least: a document disagreeing with a
+registry it could have read. One real pass closed twenty-one findings, and **thirteen** of them were
+that — `mode` restated in prose, a slot list denying files on disk, "no applied `DEC-` binds this
+component", a stale `updated:`, a Gate Checklist counting four use cases where the registry held six, a
+spine carrying three capability lists that disagreed with each other. Two findings in that pass changed
+what was true, and **both came from reading code and an `AD-N`, not from reading prose.**
+
+So this class MUST be handled as follows, and it is not a judgement call:
+
+- **One finding, not one per site.** Report the class and list its locations. Thirteen rows for one
+  cause spends the budget above on a single problem and buries whatever else the pass found.
+- **The remedy is DELETION.** You MUST NOT correct the restated value. A corrected copy is a *second*
+  stale fact on a slower clock — one real SRS carried three claims about its own `mode` on one page,
+  one of them a correction block fixing an older value, and none of the three was right.
+- **It is a `structure` finding**, never `edge-case-hunter`. It costs no thinking to find and MUST NOT
+  consume the lens bought for reasoning about behaviour.
+- If the document's **template** invited it, say so and route to the maintainer. `corpus-guide.md` §
+  A derived fact has exactly one home is the list; the templates were cleaned once already, and an
+  invitation still standing is a package defect, not a product one.
+
+**Where the substantial findings actually come from**, on the evidence of that pass: a document checked
+against the code, and a document checked against an `AD-N` or an applied `DEC-`. When the budget is
+tight, spend it there.
+
 ## Findings have a budget, and it is not a new one
 
 A review with no upper bound is what produced two hundred findings from one pass and ids reaching `OQ-146`;

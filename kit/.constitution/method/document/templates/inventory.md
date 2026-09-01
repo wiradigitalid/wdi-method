@@ -4,7 +4,6 @@ kind: db                 # db · api · screen · endpoint — decides the row s
 scope: _platform         # `_platform` for the three product-level inventories; `{pc}` for kind: endpoint
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 derived_from: plan       # plan · code — see the TEMPLATE GUIDE
 verified: ''             # commit SHA the derivation was read at; required when derived_from: code
 ---

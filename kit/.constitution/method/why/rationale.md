@@ -47,7 +47,9 @@ Every decision in this method traces to one of these. Anything that traced to no
 4. **Breadth once, depth per component.** The global portrait is born once and thin; depth is born when its
    component is actually worked on.
 5. **What can be derived is not written by hand.** Inventories, structure maps, the decision index, the
-   global catalogue, ticket status.
+   global catalogue, ticket status. This principle stood here alone for a long time, binding nothing —
+   this file explains and MUST NOT hold a rule — while reviews kept re-finding the same drift. It is now
+   a rule: `../document/corpus-guide.md` § A derived fact has exactly one home.
 6. **Mandatory is a cost and must buy something.** A mandatory rule that prevents no concrete failure is
    repealed, not loosened.
 

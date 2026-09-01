@@ -3,7 +3,6 @@ type: sdd
 component: '{pc}'
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 realizes: []             # UC ids this design realizes, from usecases.yaml
 binds: []                # AD ids from the spine that bind here
 reviewed:                # V13. Filled only after wdi-review has actually run
@@ -38,7 +37,12 @@ reviewed:                # V13. Filled only after wdi-review has actually run
 ## Decision Summary · [outline]
 
 <!-- <=1 page, business language. What this component is built as, and the one or two choices that cost
-     the most to reverse. This is what the Product Owner reads at G4. -->
+     the most to reverse. This is what the Product Owner reads at G4.
+
+     NO DERIVED FACT. `mode`, `risk_accepted`, which `DEC-` bind this file — "none yet" included —
+     how many UC or FR there are, and which slots exist are all held elsewhere and MUST NOT be
+     stated here. `corpus-guide.md` § A derived fact has exactly one home says where each lives, and
+     that the remedy for one already written is DELETION, not correction. -->
 
 ## Structure · [outline]
 
@@ -142,8 +146,13 @@ reviewed:                # V13. Filled only after wdi-review has actually run
                        a third party. Lane order is fixed once for the project in
                        ../../../project/codebase-conventions-guide.md; the No-op lane rule is REPEALED
 
-     supplements/ is REPEALED along with the ANX- concept it existed for. -->
+     supplements/ is REPEALED along with the ANX- concept it existed for.
+
+     THIS SECTION EXPLAINS THE CLASSIFICATION, NOT THE CONTENTS. It MUST NOT say which slots exist,
+     which are empty, or which are "not written yet" — that is `.control/structure-document.md`,
+     derived from the tree on disk. -->
 
 ## Open Items
 
-<!-- Unresolved design questions, each pointing at its row in .control/questions/. -->
+<!-- A POINTER, not a copy: ids only. Whether an OQ- is still open is held by .control/questions/,
+     and restating its status here creates a second answer on a slower clock. -->

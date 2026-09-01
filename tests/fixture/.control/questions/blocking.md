@@ -16,6 +16,6 @@ Failing all three → `assumptions.md`. A question MUST NOT be filed here "to be
 
 ## Open
 
-| id | Question | Blocks | Owner | Before |
-|---|---|---|---|---|
-| — | — | — | — | — |
+| id | Question | Blocks | Whose | Owner | Before |
+|---|---|---|---|---|---|
+| OQ-1 | Does a refund reverse the order row, or write a compensating one? | FR-1 | owner | Wira | G4 |

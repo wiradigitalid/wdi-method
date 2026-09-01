@@ -3,7 +3,6 @@ type: model
 component: '{pc}'
 layer: physical              # conceptual (.what/<pc>/03-domain/) · physical (.how/<pc>/05-model/)
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 ---
 
 # Model — {name}

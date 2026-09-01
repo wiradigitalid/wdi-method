@@ -3,7 +3,6 @@ type: questions
 list: blocking           # blocking · assumptions · external · answered
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 ---
 
 # {Blocking Questions | Assumptions | Waiting on an Outside Party | Answered}
@@ -44,7 +43,13 @@ updated: '{YYYY-MM-DD}'
        2. It changes the wording of an FR's promise.
        3. Answering it wrong forces a rewrite of more than one Product Component.
 
-     Failing all three, the agent takes the answer itself and records it as one line.
+     Failing all three, the agent takes the answer itself — and then THE RECORDING THRESHOLD decides
+     whether it becomes a row at all. Read `Cost if wrong` first: if it is *one setting changes*, *one
+     default changes*, or *a shortcut is added later*, with no rework and nothing built on it, then
+     there is NO ROW. The shipping default is the record, and the code says it more reliably than a
+     line here. wdi-question owns the rule.
+
+     The threshold never applies to the three tests above. Those always win.
 
      A question MUST NOT be filed as blocking "to be safe". That habit is what produced 146 ids. -->
 
@@ -52,13 +57,28 @@ updated: '{YYYY-MM-DD}'
 
 <!-- list: blocking · external -->
 
-| id | Question | Blocks | Owner | Before |
-|---|---|---|---|---|
+| id | Question | Blocks | Whose | Owner | Before |
+|---|---|---|---|---|---|
+
+<!-- external.md drops `Whose`: sitting in that file already says who acts. Its shape is
+     | id | Question | Waiting on | Since | -->
 
 <!-- list: assumptions — keep this shape instead
-| id | Assumption | Cost if wrong | Taken | By |
+| id | Assumption | Cost if wrong | Whose | Taken | By |
 |---|---|---|---|---|---|
 -->
+
+<!-- `Whose` says who acts, and whether anyone may act yet. Three values, and no others:
+
+       owner            a judgement only the owner can make, and it can be made NOW
+       run: <what>      the answer comes from running or measuring something — the AGENT's, not the
+                        owner's. It MUST name what to run; "needs testing" is not a value
+       frozen: DEC-NNN  an applied decision forbids answering it yet, planning included. When that
+                        DEC- lifts or is superseded, the row becomes `owner` with no re-triage
+
+     Without this column the four files still hand the owner one flat pile: in one real corpus, 25 open
+     lines of which only 6 were the owner's and answerable. wdi-question MUST report only `owner` rows
+     to the owner, and the rest as counts. -->
 
 <!-- An empty list is a legitimate state and MUST be written as one, with the date and one line
      saying why. An empty table with no sentence reads as an unfinished file. -->
@@ -73,4 +93,8 @@ updated: '{YYYY-MM-DD}'
      uncertain is what stops the same question being asked again in three months.
 
      An answer amounting to a decision that is expensive to reverse MUST also go to wdi-decision. This
-     list records that an answer arrived; a DEC- records what was chosen and what it cost. -->
+     list records that an answer arrived; a DEC- records what was chosen and what it cost.
+
+     A FOSSIL IS CLOSED, NOT ANSWERED. A row questioning a rule, a layer, or a validator that has since
+     been repealed cannot bite again — it moves here with the repeal as its answer, and it MUST NOT be
+     put to the owner as a decision. Check for these FIRST when a list has grown long; they are free. -->

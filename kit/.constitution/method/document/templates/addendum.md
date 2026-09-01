@@ -4,7 +4,6 @@ parent: '{brief | prd}'  # which document this sits beside
 initiative: '{slug}'     # omit when parent: brief
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 ---
 
 # Addendum — {product brief | PRD: initiative}

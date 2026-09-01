@@ -4,7 +4,6 @@ component: '{pc}'
 lc: LC-{NNN}                 # the gateway this contract belongs to
 direction: exposed           # exposed (we serve it) · consumed (a third party serves it)
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 ---
 
 # Contract — {name}

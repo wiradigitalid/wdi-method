@@ -3,7 +3,6 @@ type: lifecycle
 component: '{pc}'
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-updated: '{YYYY-MM-DD}'
 entities: []             # the domain entities whose lifecycles this file carries
 ---
 

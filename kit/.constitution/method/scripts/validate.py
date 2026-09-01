@@ -1483,13 +1483,38 @@ def _question_budget(c: Corpus) -> dict:
     """
     budget = c.index.get("question_budget") or {}
     out: dict[str, object] = {}
+    # `Whose` splits the open rows by who can act, and whether anyone may act yet. A flat "25 open"
+    # is what made a six-item list read as twenty-five items of homework; the owner's number is the
+    # only one they can do anything about. templates/questions.md owns the vocabulary.
+    whose: dict[str, int] = {"owner": 0, "run": 0, "frozen": 0, "unstated": 0}
     for name in ("blocking", "assumptions", "external", "answered"):
         path = c.root / ".control/questions" / f"{name}.md"
         rows_n = 0
         if path.exists():
-            rows_n = sum(1 for line in path.read_text(encoding="utf-8", errors="replace").splitlines()
-                         if line.startswith("| OQ-"))
+            for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+                if not line.startswith("| OQ-"):
+                    continue
+                rows_n += 1
+                # `answered` is closed; `external` needs no `Whose` — sitting in that file already
+                # says who acts, and it is reported as its own line rather than folded in.
+                if name in ("answered", "external"):
+                    continue
+                cells = [x.strip() for x in line.strip().strip("|").split("|")]
+                key = "unstated"
+                for cell in cells:
+                    low = cell.lower()
+                    if low == "owner":
+                        key = "owner"
+                    elif low.startswith("run:"):
+                        key = "run"
+                    elif low.startswith("frozen:"):
+                        key = "frozen"
+                    else:
+                        continue
+                    break
+                whose[key] += 1
         out[name] = rows_n
+    out["open_by_whose"] = whose
     cap_block = budget.get("blocking_per_component")
     if cap_block and c.pcs:
         allowed = int(cap_block) * len(c.pcs)

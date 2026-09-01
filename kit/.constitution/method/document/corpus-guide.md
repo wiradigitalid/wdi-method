@@ -186,6 +186,37 @@ judgements — so both are declared in that inventory's own frontmatter (`platfo
 survive every re-derivation. Putting either outside the file means the next derivation silently deletes the
 owner's decision.
 
+## A derived fact has exactly one home
+
+`why/rationale.md` has always carried this as principle 5 — *what can be derived is not written by hand.*
+It was never written as a rule anywhere, and that file binds nothing by its own terms. So it bound nothing,
+and only one field was ever actually protected: ticket status, by `V18`.
+
+**A document MUST NOT state a fact that a registry, a generated file, or git already holds.** It cites the
+id and lets the reader follow it. The list is short and it is closed:
+
+| Never stated in prose | Where it lives |
+|---|---|
+| `mode` · `risk_accepted` · `g4_passed` | `components.yaml` |
+| Which `DEC-` bind this document — **including "none yet"** | `.control/generated/decisions.md` |
+| A count of `UC`, `FR`, `CAP`, or containers | the registry that holds them |
+| Which slots or files exist, and which are still empty | `.control/structure-document.md`, derived |
+| Whether an `OQ-` is open or answered | `.control/questions/` |
+| When the document last changed | git |
+
+**The remedy is DELETION, never correction.** This is the part that costs a corpus real time to learn: a
+restated fact that is corrected becomes a *second* stale fact, on a slower clock than the first. One SRS in a
+real repo carried three claims about its own `mode` on one page — the value, a correction block below it
+fixing an older value, and the slot list — and not one of the three was right. Correcting any of them would
+have added a fourth. Deleting all three ends it.
+
+A negative claim is the worst case and the easiest to miss, because it looks like diligence: *"No applied
+`DEC-` binds this component yet"* is true the day it is written and silently false forever after.
+
+**What is NOT a derived fact**, and MUST still be written where it belongs: a judgement the pattern cannot
+recompute (the paragraph above owns that), an `AD-N` citation — the spine's `binds:` is authored, not
+derived — and the *reason* something is the way it is, which no registry holds.
+
 ## Two axes inside `.what/`
 
 | | `_prd/<initiative>/` | `<pc>/` |

@@ -158,6 +158,15 @@ function installedTree() {
   return tmp;
 }
 
+/** Run the GENERATING pass and hand back .control/generated/status.yaml. */
+function statusAfterGenerate(cwd) {
+  try {
+    execFileSync("uv", ["run", path.join(SCRIPTS, "validate.py"), "--root", ".", "--generate"],
+                 { cwd, encoding: "utf8", env: PY_ENV, stdio: ["ignore", "pipe", "pipe"] });
+  } catch { /* findings exit non-zero; the generated files are written either way */ }
+  return fs.readFileSync(path.join(cwd, ".control", "generated", "status.yaml"), "utf8");
+}
+
 function validateIn(cwd) {
   try {
     return execFileSync("uv", ["run", path.join(SCRIPTS, "validate.py"), "--root", "."],
@@ -285,4 +294,46 @@ test("V3 fails when a UC of an already-touched component is scheduled to no tick
   const out = afterMutation((dir) => editSpecs(dir, "        satisfies: [UC-2]", "        satisfies: []"));
   assert.match(out, /V3\s+UC-2.*not scheduled to any ticket/,
     `a promise was left behind by a spec that had already opened its component:\n${out}`);
+});
+
+test("open questions are counted by WHOSE they are, not as one flat number", (t) => {
+  if (requireUv(t)) return;
+  // A flat "25 open" is what made a six-item list read as twenty-five items of homework. The owner
+  // can only act on the `owner` rows; the rest are waiting on a measurement the agent owes, or
+  // frozen by an applied DEC-. The split has to be MECHANICAL — a rule in a skill that nothing
+  // checks is a rule that holds until the first busy session.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-whose-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  try {
+    const status = statusAfterGenerate(tmp);
+    assert.match(status, /open_by_whose:/,
+      `the question count is still flat — the owner cannot tell their two rows from the other three:\n${status}`);
+    // The fixture carries exactly one row of each kind, on purpose. Asserting the numbers rather
+    // than the key means a parser that silently stops recognising `run:` or `frozen:` is caught.
+    for (const [key, n] of [["owner", 2], ["run", 1], ["frozen", 1], ["unstated", 1]]) {
+      assert.match(status, new RegExp(`${key}:\\s*${n}\\b`),
+        `open_by_whose.${key} should be ${n} — the fixture holds exactly that many:\n${status}`);
+    }
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("a `frozen:` row is not counted as the owner's, even sitting in the same file", (t) => {
+  if (requireUv(t)) return;
+  // The failure this guards: a row nobody may answer yet, put in front of the owner as a decision.
+  // One real corpus froze six lines under one applied DEC- and listed all six as open homework.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-frozen-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  const f = path.join(tmp, ".control", "questions", "assumptions.md");
+  fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace("frozen: DEC-001", "owner"));
+  try {
+    const status = statusAfterGenerate(tmp);
+    assert.match(status, /owner:\s*3\b/,
+      `flipping one row to \`owner\` MUST move the count — otherwise \`Whose\` is being ignored:\n${status}`);
+    assert.match(status, /frozen:\s*0\b/,
+      `the frozen count did not drop, so the two classes are not actually separated:\n${status}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
 });
