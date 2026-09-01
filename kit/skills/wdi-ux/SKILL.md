@@ -101,14 +101,16 @@ here is **when each one becomes possible**.
 |---|---|---|
 | Tokens and base components | `.how/_platform/design-system.md` | The run is final — it crosses components by definition |
 | `EXPERIENCE.md` | `.what/<pc>/04-usecases/` | The `<pc>` is registered in `components.yaml` |
-| `DESIGN.md` | `.how/<pc>/01-ux/` | The `<pc>` is registered **and** its container exists |
-| Each screen | an `LC` of type `ui-screen` in `components.yaml` | Same as `DESIGN.md` — an `LC` MUST name its container. Registration is checked at spec close, V12 |
+| `DESIGN.md` | `.how/<pc>/01-ux/` | The `<pc>` is registered. **The path has no container in it, so none is needed** |
+| Each screen | an `LC` of type `ui-screen` in `components.yaml` | The `<pc>` is registered. `container:` is left **empty** and filled at G3 |
 
-- **One deferral survives, and only one.** With the components born before the run, `EXPERIENCE.md` and
-  the tokens land immediately. `DESIGN.md` and its screen `LC` rows still need a **container**, and
-  containers are born at G3 by `wdi-blueprint` intent `platform`. That half MUST stay in
-  `_bmad-output/ux/` and be reported as deferred, naming G3 as what it waits for. This is the last
-  half-placed state in the flow; everything else now lands in the pass that produced it.
+- **Nothing is deferred any more.** A run lands whole, in the pass that produced it. `DESIGN.md`
+  landing was coupled to the container because its screen `LC` rows need one — but the *file's* path,
+  `.how/<pc>/01-ux/`, has no container in it, and the two were never the same requirement.
+- **A screen `LC` is registered now with `container:` empty**, and MUST NOT be given a guessed one. V25
+  is silent on an empty container until the `LC`'s own Product Component lists containers; from that
+  moment it is owed. `wdi-blueprint` intent `platform` fills every one of them in the same act as
+  registering the containers, so the debt closes at G3 without anyone tracking it.
 - You MUST NOT create a Product Component or a container to make a landing possible. A PC comes from
   `wdi-init` intent `component` and a container from `wdi-blueprint` intent `platform`.
 - One run MAY land across several Product Components. Split by which `<pc>` the content serves; a

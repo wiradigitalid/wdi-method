@@ -171,7 +171,12 @@ C4 file and the spine disagree, the spine wins and the disagreement MUST be repo
 places it. **Not one of the three waits for a spec** — `architecture-guide.md` owns that.
 
 **Register the containers** in `containers:` in `components.yaml`, in the same act as landing the L2. It is
-not a follow-up, and it unblocks everyone else: an `LC` MUST name its container.
+not a follow-up.
+
+**And fill every `LC` whose `container:` is empty, in that same act.** Screens registered by `wdi-ux` at
+G2 are born without one on purpose — containers do not exist yet — and this is the moment the answer
+does. V25 starts demanding it as soon as a Product Component lists containers, so filling it here is what
+keeps the board clean without anyone tracking a to-do.
 
 Each container MUST carry `built:` — `true` when we write what is inside it, `false` when we deploy
 someone else's implementation. It decides whether the container gets an L3, an `LC`, and a heading in the

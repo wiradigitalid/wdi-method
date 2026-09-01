@@ -384,3 +384,44 @@ test("V23 still resolves a DEC- reference when one is given", (t) => {
   assert.match(out, /V23\s+checkout.*DEC-404/,
     `a dangling DEC- reference was accepted because it was merely non-empty:\n${out}`);
 });
+
+// An `LC` born before its container exists is the price of running UX at G2, where UX belongs: the
+// screens are known as soon as DESIGN.md is written, and containers are not born until G3.
+//
+// V25 already tolerated an empty `container` — it guards `if ctr and ...` — so the LC could always be
+// registered early. What was missing was the DEADLINE. An empty container with nothing ever demanding
+// it is invisible debt: a screen with no deployable home, and no pass that notices.
+//
+// The deadline is derived rather than scheduled: the moment the LC's own PC has containers, the
+// information exists, so the answer is owed. Silent before G3, automatic after, and no ceremony.
+const LC_NO_CONTAINER = `
+  - id: LC-1
+    type: ui-screen
+    component: checkout
+    area: checkout.ui
+    container: ""
+    owner: wdi-ux
+`;
+
+test("an LC with no container is SILENT while its PC has no containers either", (t) => {
+  if (requireUv(t)) return;
+  // The quiet period is the point. Demanding the answer at G2, when containers do not exist, is the
+  // blocking precondition this replaces — it would make the new rule as expensive as the old one.
+  const out = afterMutation((dir) => {
+    componentsWith(dir, [
+      ["logical_components: []", `logical_components:${LC_NO_CONTAINER}`],
+      ["    containers: [app]", "    containers: []"],
+    ]);
+  });
+  assert.doesNotMatch(out, /V25\s+LC-1/,
+    `an LC was asked for a container before its PC had any — that is the answer at its thinnest:\n${out}`);
+});
+
+test("once its PC has containers, an LC with none is a finding", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) =>
+    componentsWith(dir, [["logical_components: []", `logical_components:${LC_NO_CONTAINER}`]]));
+  assert.match(out, /V25\s+LC-1.*container/,
+    `checkout already lists a container, so LC-1's empty one is answerable and owed. Without this the `
+    + `screen has no deployable home and no pass ever notices:\n${out}`);
+});

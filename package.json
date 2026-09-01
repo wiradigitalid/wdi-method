@@ -1,6 +1,6 @@
 {
   "name": "wdi-method",
-  "version": "0.5.35",
+  "version": "0.5.36",
   "description": "WDI Method — software delivery method that wraps BMad",
   "type": "module",
   "bin": {

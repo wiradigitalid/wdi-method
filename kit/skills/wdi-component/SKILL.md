@@ -67,7 +67,7 @@ None of these are yours to create.
 | Its `mode` is not `catalog` | Stop. G4 is skipped, and the work goes straight to `wdi-build` |
 | G3 has passed | Route to `wdi-blueprint`. Depth written against a moving portrait is rewritten |
 | The spine exists and its `AD-N` are readable | Route to `wdi-blueprint`. You MUST NOT write the spine |
-| For `design`: the container this component runs in is registered | Route to `wdi-blueprint`. An `LC` MUST name its container |
+| For `design`: the container this component runs in is registered | Route to `wdi-blueprint`. G3 has passed by now, so the answer exists — an `LC` written here MUST carry it. Only a screen `LC` born at G2 is allowed an empty one, and G3 fills it |
 
 ## Step 3 — Intent `behaviour`
 

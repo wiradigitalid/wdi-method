@@ -82,6 +82,12 @@ what it touches:
 
 Only after that do you propose `mode` and `risk_accepted`.
 
+**Containers MAY be registered here when they are genuinely already known** — an app, an API, a database
+the product plainly has. Then a screen `LC` gets its container the moment it is born and there is no debt
+at all. They MUST NOT be guessed to achieve that: `wdi-blueprint` intent `platform` owns the real answer
+at G3, and a container invented here is data C4 then has to unpick. Where you are unsure, leave them and
+let G3 fill both the containers and the empty `LC` rows in one act.
+
 Raising or lowering `mode` is **free and needs no justification** — it is a preference, and a preference
 does not have to be defended. Setting `mode: catalog` on a sensitive component requires nothing, as long
 as its review stays hard; that combination is the one the split exists to make sayable.

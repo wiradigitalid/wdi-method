@@ -1111,12 +1111,27 @@ def v25(c: Corpus, r: Result) -> None:
                 r.fail("V25", cid, "`built: true` MUST have a heading in the code map")
 
     # (2) `built: false` MUST NOT be used by an LC, and (3) MUST NOT appear in a PC's `containers:`
+    #
+    # An EMPTY container is legal while the answer does not exist yet. Screens are known as soon as
+    # DESIGN.md is written at G2; containers are born at G3. Blocking the UX landing until then bought
+    # nothing and cost a half-placed artifact somebody had to come back to.
+    #
+    # The deadline is derived, not scheduled: once the LC's own PC lists containers, the information
+    # exists and the answer is owed. Silent before G3, automatic after, and no gate in between.
+    pc_containers = {str(pc.get("id")): listy(pc, "containers") for pc in c.pcs}
     for lc in c.lcs:
         ctr = str(lc.get("container") or "").strip()
-        if ctr and built.get(ctr) is False:
-            r.fail("V25", str(lc.get("id") or "LC-?"), f"names container `{ctr}` which is `built: false`")
-        elif ctr and ctr not in built:
-            r.fail("V25", str(lc.get("id") or "LC-?"), f"names container `{ctr}` which is not registered")
+        lid = str(lc.get("id") or "LC-?")
+        if not ctr:
+            if pc_containers.get(str(lc.get("component") or "")):
+                r.fail("V25", lid,
+                       "has no `container` while its Product Component already lists one — the answer "
+                       "exists now, so a screen with no deployable home is a gap rather than a wait")
+            continue
+        if built.get(ctr) is False:
+            r.fail("V25", lid, f"names container `{ctr}` which is `built: false`")
+        elif ctr not in built:
+            r.fail("V25", lid, f"names container `{ctr}` which is not registered")
 
     # (4) PC x container matrix — this field is its SSOT, and it MUST be complete at G3
     for pc in c.pcs:

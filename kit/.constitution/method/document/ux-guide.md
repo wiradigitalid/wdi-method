@@ -34,10 +34,15 @@ promise.
   other skill MAY land these files.
 - Nothing is placed until the run is finalised. Half-placed UX output is worse than unplaced output,
   because it looks distributed.
-- **A run MUST NOT start before there is a `<pc>` to place it into.** The order is PRD → components →
-  UX, and `wdi-ux` refuses to run without the component list. The older shape let a run finish first and
-  park its output in `_bmad-output/ux/` until a home appeared; that traded a fresh PRD for a half-placed
-  artifact somebody had to return to, and it let the method recommend a step that could not run.
+- **A run MUST NOT start before there is a `<pc>` to place it into**, and once there is one it lands
+  **whole**. The order is PRD → components → UX, all at G2, and `wdi-ux` refuses to run without the
+  component list. Nothing waits in `_bmad-output/ux/` any more: parking half a run until a home appeared
+  left an artifact somebody had to return to, and it let the method recommend a step that could not run.
+- **A container is not required to land UX.** `.how/<pc>/01-ux/` has no container in its path; only a
+  screen's `LC` row needs one, and that row is registered with `container:` empty and filled at G3 by
+  `wdi-blueprint` intent `platform`, in the same act that registers the containers. V25 stays silent on
+  an empty container until the `LC`'s Product Component lists one — the answer is demanded when it
+  exists, not when it is thinnest.
 
 `doc_standards` on `bmad-ux` runs `bmad-review` over both documents **at finalize** — that is, before
 `wdi-ux` lands them. Reviewing afterwards would mean reviewing two files that no longer sit together.
