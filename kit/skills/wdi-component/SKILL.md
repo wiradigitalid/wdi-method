@@ -154,8 +154,10 @@ You MUST NOT open G4 on depth that has not been through it.
 
 ## Rules
 
-- A decision taken while writing MUST go to `wdi-decision`, never into the document as a parenthetical. There
-  is no memlog here to catch it.
+- A decision taken while writing is **written into the document as its own content**, stated as what now
+  holds. Never as a parenthetical aside — there is no memlog here to catch one. It goes to `wdi-decision`
+  only when no design document has a home for it, or it touches an `AD-N`; `decision-guide.md` § A
+  decision's first home owns that split.
 - You MUST NOT write into `.what/_prd/`, `.what/business-rules.md`, `.how/_platform/`, or `.how/<pc>/01-ux/`.
 - You MUST NOT raise `status:`. Status is a stage; the `reviewed:` block is an event.
 - You MUST NOT lower or raise the component's `mode` to fit what you want to write. That is `wdi-init`, and it

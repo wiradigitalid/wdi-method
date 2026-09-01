@@ -330,7 +330,9 @@ turns out to be touched, work MUST stop and become a spec `S`.
 
 Answered as each ticket finishes, before the next is picked up.
 
-1. A decision worth remembering? → `wdi-decision`. A ticket that contradicts an `AD-N` **stops** rather than
+1. Something the next person needs to know? → **into the document that carries it**, and that is almost
+   always where it ends. It reaches `wdi-decision` only when no design document has a home for it —
+   `decision-guide.md` § A decision's first home. A ticket contradicting an `AD-N` **stops** rather than
    closing; that is the one case where recording is mandatory.
 2. A trap for the next agent? → recorded where the next agent will read it.
 3. Test names matching what `specs.yaml` records?
@@ -384,9 +386,14 @@ architecture rests on, `decision-guide.md` owns it, and the stop is a `DEC-` —
 - A change that cancels more than 30% of a spec's tickets MUST go through `wdi-decision`, which wraps
   `bmad-correct-course`, rather than being patched.
 
-**A new PRD arriving after G3 amends the blueprint; it does not repeat it.** The new components are born,
-their rows join the catalogue and the three inventories, and **G3 reopens over the delta only**. The
-45-minute session does not run again for one additional initiative.
+**A reopened gate reopens over the DELTA, always.** Never the whole session, and never the whole
+checklist — only the questions the change actually put back in play. The budgets in the gate table are
+for a gate's **first** run; a reopening costs what the delta costs and usually far less.
+
+This was already true for one case and was never generalised: a new PRD arriving after G3 amends the
+blueprint rather than repeating it — the new components are born, their rows join the catalogue and the
+three inventories, and G3 reopens over the delta only. One feature added during G5 is the same shape. It
+puts its own `FR` and `UC` back in play and nothing else, so it costs a few minutes, not ninety.
 
 ## Roles
 

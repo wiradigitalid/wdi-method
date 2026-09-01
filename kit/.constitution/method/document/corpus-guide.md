@@ -217,6 +217,39 @@ A negative claim is the worst case and the easiest to miss, because it looks lik
 recompute (the paragraph above owns that), an `AD-N` citation — the spine's `binds:` is authored, not
 derived — and the *reason* something is the way it is, which no registry holds.
 
+## A pass writes one artifact
+
+When a skill is writing or updating an artifact, **that artifact is the pass.** Hunting the rest of the
+corpus for things that disagree with it is not part of writing it, and MUST NOT be folded in: it is
+`wdi-reconcile`'s job, it runs at a gate, and `wdi-review` § Stale is not a finding decides what is even
+worth reporting when it does.
+
+Where a contradiction surfaces anyway — and it will, because writing a document is how you notice — there
+are exactly two outcomes:
+
+| The other document is | Do |
+|---|---|
+| **Load-bearing wrong** — a reader would make the wrong repair | Say it in **one line** in the output, naming the file and the edit it needs |
+| Anything else | Nothing. Not a line, not an `OQ-`, not a `DEC-` |
+
+It MUST NOT become an open question, and it MUST NOT become a decision. A contradiction between two
+documents is an **edit** waiting for whoever owns the file — never a thing to be adjudicated.
+
+**This binds hardest at G1 and G2.** A brief is being formed; a PRD is being written. There is barely a
+corpus to be consistent with yet, and a pass that spends its budget looking for one is spending it on
+nothing.
+
+## One decided change is one edit pass
+
+Once the owner has decided, the chain is **applied**, not surveyed. The agent already knows what the
+change reaches — `touches:` names it, the ownership table in this file names who lands each part, and the
+RTM names the rows that move. It edits all of them in **one pass** and reports once.
+
+What MUST NOT happen: checking one document, reporting, waiting, checking the next; re-deriving the same
+relations in a later pass; or asking the owner to confirm the same decision at each file it touches. The
+documents are split for reading, not to be walked one at a time — and walking them is where the time and
+the tokens actually go.
+
 ## The corpus is written in the present tense
 
 A design document states **what is true now**: the latest state of the design, and what still has to be

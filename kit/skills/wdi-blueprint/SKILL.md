@@ -228,7 +228,9 @@ You MUST NOT hand-write anything under `.control/generated/`.
 - You MUST NOT open G3 on a portrait that has not been through it.
 - Every unresolved to-be-confirmed MUST be filed through `wdi-question`, in **one** ranked batch — into
   `assumptions.md` by default, `blocking.md` only through its three tests.
-- A decision surfacing while writing goes to `wdi-decision`, never into the document as a parenthetical.
+- A decision surfacing while writing is **written into the document as its own content** — stated as what
+  now holds, present tense. Never as a parenthetical aside, and never routed to `wdi-decision` merely for
+  being a decision: that is only for one with no home here at all, or one touching an `AD-N`.
 - An `AD-N` that reverses or narrows an earlier one MUST go through `wdi-decision` first. Editing an `AD-N` in
   place is how a reversal happens with nobody deciding it.
 

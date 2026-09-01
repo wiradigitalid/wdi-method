@@ -11,7 +11,28 @@ A `DEC-` records a decision worth remembering. The old name was ADR — *Archite
 architectural?"*. That question throws away the decisions most worth keeping, the ones that sound
 small: *"the filter works like this"*, *"this list is sorted that way"*.
 
-## One test decides whether to record
+## A decision's first home is the document it governs
+
+**Changing a document NEVER requires a `DEC-`.** A `DEC-` is not permission to edit, not a record that
+an edit happened, and not a step between deciding and writing. Where the answer has a home in a design
+document — an `FR` in the PRD, a rule in `business-rules.md`, a boundary in an SDD, a line in the brief —
+**it is written there and nowhere else**, and there is nothing further to do.
+
+A `DEC-` is what you write for a decision with **no such home**. That is the whole of its job, plus the
+one mandatory case below.
+
+| The answer is about | Where it goes |
+|---|---|
+| What the product promises, does, or forbids | The design document that carries it |
+| How this repo builds — a convention, a stack choice | `.constitution/project/`, once code ratifies it |
+| Accepting a risk, cutting a scope, choosing between two paths **that no document holds** | A `DEC-` |
+| Contradicting an `AD-N` | A `DEC-`, mandatory |
+
+This matters most **early**. At G1 a brief is still being formed and at G2 a PRD is still being written;
+almost nothing there is homeless, so almost nothing there is a `DEC-`. Demanding one before the artifact
+it would govern even exists is ceremony at the moment the project can least afford it.
+
+## Then one test decides whether to record it at all
 
 > **If someone asks in three months why it is like this, is the answer readable from the code?**
 

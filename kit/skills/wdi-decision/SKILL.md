@@ -169,6 +169,10 @@ reopen a gate yourself, and you MUST NOT treat a green application as a gate tha
   decisions that disagree is work for intent `open`, not something to resolve by preferring the newer one.
 - If the decision is unapplicable as written — the document it names no longer exists, or the change was already
   made differently — you MUST report that instead of improvising.
+- **Apply the whole chain in one pass.** `touches:` names what the decision reaches and the ownership
+  table names who lands each part. Edit all of them, then report once. Checking one file, reporting,
+  waiting, then checking the next is where the time goes — `corpus-guide.md` § One decided change is one
+  edit pass owns the rule.
 - You MUST NOT apply into a spec that is already closed.
 - `AD-N` is a different thing: a living rule with Binds · Prevents · Rule, edited in place. You MUST NOT convert
   one into the other.

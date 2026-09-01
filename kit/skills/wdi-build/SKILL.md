@@ -254,8 +254,10 @@ that record. `corpus-guide.md` § The corpus is written in the present tense is 
 
 The checklist is **three items**, and it MUST be answered before the PR opens:
 
-1. A decision worth remembering? → `wdi-decision`. A ticket contradicting an `AD-N` **stops** rather than
-   closing.
+1. Something the next person needs to know? → **into the document that carries it**, and that is almost
+   always where it ends. It reaches `wdi-decision` only when no design document has a home for it —
+   `decision-guide.md` § A decision's first home. A ticket contradicting an `AD-N` **stops** rather than
+   closing; that is the one case where recording is mandatory.
 2. A trap for the next agent? → recorded where the next agent will read it.
 3. Test names matching what `specs.yaml` records?
 

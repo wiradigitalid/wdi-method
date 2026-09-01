@@ -9,9 +9,17 @@ description: Use when UX is produced or landed — dispatching bmad-ux for a PRD
 came back, and — because `bmad-ux` is **class B** — lands its output into the two layers it splits
 across. No other skill MAY land these files.
 
-Two acts, and a pass MAY do either or both: **run** the UX, and **land** it. They are separated because
-they become possible at different moments. A run belongs to G2, where the PRD is fresh. Landing needs a
-Product Component to land into, and that list is not born until the tail of G2.
+Two acts, and a pass MAY do either or both: **run** the UX, and **land** it. They become possible at
+different moments, so **decide which act this pass is doing before anything else:**
+
+| Act | Needs | When |
+|---|---|---|
+| **Run** | a PRD. **Not** components — they do not exist yet and are not required | G2, while the PRD is fresh |
+| **Land** | Product Components and containers registered | tail of G2, after `wdi-init` intent `component` |
+
+**Missing components MUST NOT block a run**, and MUST NOT be reported as a precondition failure. The
+documented order is UX first, components second; a run that waits for them waits for a step that comes
+after it. Run now, land when the list exists — the output says what is waiting, and that is enough.
 
 You MUST NOT write or edit `DESIGN.md` or `EXPERIENCE.md` yourself. If a check fails, name what is
 missing and re-dispatch — a hand-patched UX document makes the memlog lie about how it got that way.

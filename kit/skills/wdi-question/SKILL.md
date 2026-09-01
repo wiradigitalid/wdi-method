@@ -34,8 +34,16 @@ recorded at all.
 
 ## The recording threshold — most assumptions MUST NOT be written down
 
-**An assumption whose reversal costs less than the conversation about it MUST NOT be recorded. The
-shipping default IS the record.**
+**Two filters, and a line has to pass both.**
+
+**First: it is about the PRODUCT, not about the corpus.** An open question names something undecided
+about what is being built — a behaviour, a boundary, a promise, a limit. *"Does the SRS contradict the
+SDD"* is not an open question; it is an **edit**, and it goes to whichever skill owns the file. A
+question about which document says what has never once changed what gets built, and it is the single
+easiest way to fill this list with rows nobody can act on.
+
+**Second: an assumption whose reversal costs less than the conversation about it MUST NOT be recorded.
+The shipping default IS the record.**
 
 The test is the `Cost if wrong` column that already exists. If the honest answer is *one setting
 changes* · *one default changes* · *a shortcut is added later* — with no rework, no migration, and
@@ -120,9 +128,14 @@ answer and MUST NOT be put to the owner as a decision. These are free, and a lon
 several — one real corpus was still carrying a question about `V11`'s shape after the layer `V11` runs
 on had been retired.
 
-If the answer amounts to a decision that is expensive to reverse, the closure MUST route to
-`wdi-decision`. This list records that an answer arrived; a `DEC-` records what was chosen and what it
-cost.
+**An answer goes into the document it belongs to, and that is usually the end of it.** An `FR` in the
+PRD, a rule in `business-rules.md`, a line in the brief — written there, closed here, done. The closure
+routes to `wdi-decision` **only** when the answer has no home in any design document, or contradicts an
+`AD-N`. `decision-guide.md` § A decision's first home owns that split, and a `DEC-` is never permission
+to edit a document.
+
+This matters most at G1 and G2, where almost nothing is homeless yet: an answer about a brief belongs in
+the brief.
 
 ## Rules
 
