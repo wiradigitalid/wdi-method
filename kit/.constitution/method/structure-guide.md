@@ -136,8 +136,8 @@ A folder with no key file MUST still appear in the tree. Folders are complete; f
   measured, only felt.
 - A map MUST be refreshed when a base folder is born or removed, when a key file moves or is
   renamed, when a project or container is added, or when a key file's role changes.
-- **Wave close** carries this hook — it left the story-closing checklist along with four other items,
-  because a structural change is visible at the end of a wave and guessed at the end of a story.
+- **Spec close** carries this hook — it left the ticket-closing checklist along with four other items,
+  because a structural change is visible at the end of a spec and guessed at the end of a ticket.
 - A map MUST NOT be edited by hand. `wdi-init` intent `structure` re-derives it from the actual tree;
   a hand edit records what someone remembers, and memory is exactly what the map exists to replace.
 - A map whose **Verified** commit is no longer an ancestor of `HEAD` SHOULD be treated as stale, and

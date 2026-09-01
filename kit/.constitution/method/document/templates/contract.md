@@ -16,7 +16,7 @@ updated: '{YYYY-MM-DD}'
 
      Where a machine-readable spec exists — OpenAPI, protobuf, a schema file — THAT is the source of
      truth and this document MUST point at it rather than restate it. A restated schema drifts from
-     the generated one within a wave. Write here only what the machine spec cannot carry. -->
+     the generated one within a spec. Write here only what the machine contract cannot carry. -->
 
 ## Source of truth
 

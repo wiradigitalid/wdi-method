@@ -24,7 +24,7 @@ persistent_facts = [
 
   "The brief template opens with permission to drop a section that does not fit. That permission MUST NOT apply to the eight mandatory sections: The Problem, Who This Serves, Goals, Success Criteria, Scope In, Scope Out, Constraints, Assumptions — plus Prerequisites. Other template sections MAY be dropped.",
 
-  "Goals MUST be numbered BG-1, BG-2, and so on. They MUST NOT be numbered G1, G2 — G1 through G5 are the names of this method's five gates, and BG is the first link in the BG -> CAP -> FR/NFR -> UC -> Story -> Test traceability chain.",
+  "Goals MUST be numbered BG-1, BG-2, and so on. They MUST NOT be numbered G1, G2 — G1 through G5 are the names of this method's five gates, and BG is the first link in the BG -> CAP -> FR/NFR -> UC -> Ticket -> Test traceability chain.",
 
   "The Who This Serves table MUST carry exactly one row marked primary, and MUST cover every stakeholder including one who never opens the product.",
 

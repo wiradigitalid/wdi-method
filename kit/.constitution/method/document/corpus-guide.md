@@ -28,7 +28,7 @@ be copied into this file.
 
 ## The placement test
 
-One question decides everything: **is this file still correct after its wave has passed?**
+One question decides everything: **is this file still correct after its spec has passed?**
 
 Yes → the corpus. No → `_bmad-output/`.
 
@@ -60,9 +60,8 @@ part of producing it — never a follow-up someone else performs.
 | `DESIGN.md` | `.how/<pc>/01-ux/` | `wdi-ux` |
 | tokens and base components | `.how/_platform/design-system.md` | `wdi-ux` |
 | each screen in `DESIGN.md` | an `LC` of type `ui-screen` in `components.yaml` | `wdi-ux` |
-| `RETROSPECTIVE.md` | `RTR-<wave>.md` in `.control/reports/` | `wdi-build`, at wave close |
-| `test-summary.md` | test names → `waves.yaml` | `wdi-build` |
-| `stack.md` · `conventions.md` · `brownfield.md` | merged into `.constitution/project/codebase-*-guide.md` | `wdi-build`, at wave close |
+| The names of the tests a ticket went green on | the ticket's `tests` in `specs.yaml` | `wdi-build` |
+| What the spec settled about the stack, the conventions, or the brownfield reality | merged into `.constitution/project/codebase-*-guide.md` | `wdi-build`, at spec close |
 | A sprint change proposal | a `DEC-` of `type: course-correction` | `wdi-decision` |
 | The registry rows and skeletons a new PC needs | `components.yaml` · `.what/<pc>/` · `.how/<pc>/` | `wdi-init` intent `component` |
 | `platform_owns` — an entity no component's promise explains | `components.yaml`, plus its description in `cross-cutting.md` | `wdi-blueprint` |
@@ -73,13 +72,13 @@ part of producing it — never a follow-up someone else performs.
 
 - A skill MUST NOT write into a layer it does not own.
 - Registry conversion is part of landing, not a follow-up. A screen that lands in `01-ux/` without its
-  `components.yaml` entry has been half-landed, and V12 catches it **at wave close** — which is the
+  `components.yaml` entry has been half-landed, and V12 catches it **at spec close** — which is the
   right moment to be caught, and a bad moment to be surprised.
 - Content MUST NOT be edited while it is being landed. If it has to change to fit its new home, that is a
   separate act — say so and stop. Splitting one output across the homes its row names is not editing.
 - The C4 set's target files already exist and are **living**. Their owner MUST amend, MUST NOT overwrite; when
   the incoming set contradicts an annotation already there, it MUST stop and report the finding.
-- Nothing MAY be landed into a wave that is already closed. The wave is reopened through `wdi-build`, or the
+- Nothing MAY be landed into a spec that is already closed. The spec is reopened through `wdi-build`, or the
   gap is recorded as an open question.
 - An output with **no row** in this table MUST NOT be given a guessed home. It stays in `_bmad-output/`, and
   `wdi-reconcile` reports it — an output with no home is a gap in the method, and MUST surface as one.
@@ -198,7 +197,7 @@ owner's decision.
 Both are living. What separates them is **promise versus behaviour**, not lifetime. One functional area MAY
 span several components, and one component MAY serve several PRDs, so neither can absorb the other.
 
-**Time is not a folder axis.** Release lives in `CAP.target_release` and in `waves.yaml`.
+**Time is not a folder axis.** Release lives in `CAP.target_release` and in `specs.yaml`.
 
 ## Slot numbering means two different things
 
@@ -229,7 +228,7 @@ cites them. `supplements/` beside either kernel is repealed with the `ANX-` conc
 | `AD-` | An invariant in the architecture spine — a living rule, edited in place |
 | `DEC-` | A decision — an event, frozen when `applied`, only superseded |
 | `LC-` | A Logical Component |
-| `OQ-` `RTR-` | An open question · an archived retrospective |
+| `OQ-` | An open question. `RTR-` was the archived retrospective and is **retired** — a frozen `RTR-` file stays where it is |
 | `BUG-` `HOT-` | A defect · a hotfix |
 | `NT-` | A non-technical fact |
 

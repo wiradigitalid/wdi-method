@@ -6,6 +6,11 @@ status: Reference
 
 **Opened when:** you are about to change a rule and need to know what you would break.
 
+`wave` and `story` appear below wherever this file records **what happened** — a past incident, a repealed
+ceremony, a skill's old name. Those are evidence and MUST NOT be rewritten into `spec` and `ticket`;
+`../method-glossary.md` owns that rule. Where this file states a rule still in force, it uses the current
+terms.
+
 This file **explains**. It does not bind — `../document/*-guide.md` does, and where the two disagree the guide
 wins and the disagreement is a defect to report. **A rule MUST NOT be born here.** If this file notices a
 rule that should exist, it says so as a finding and the rule is written in its guide.
@@ -42,7 +47,7 @@ Every decision in this method traces to one of these. Anything that traced to no
 4. **Breadth once, depth per component.** The global portrait is born once and thin; depth is born when its
    component is actually worked on.
 5. **What can be derived is not written by hand.** Inventories, structure maps, the decision index, the
-   global catalogue, story status.
+   global catalogue, ticket status.
 6. **Mandatory is a cost and must buy something.** A mandatory rule that prevents no concrete failure is
    repealed, not loosened.
 
@@ -74,8 +79,8 @@ client through a contract — will demand the artifacts as a deliverable, the to
 
 ## Why `mode` has no third scope
 
-`mode` cannot be overridden per wave or per `SPEC.md`. A wave MAY cross several components, so a per-wave
-override would give one component two different depths depending on which wave touched it — while the
+`mode` cannot be overridden per spec or per `SPEC.md`. A spec MAY cross several components, so a per-spec
+override would give one component two different depths depending on which spec touched it — while the
 document is one, and living.
 
 > Depth belongs to the component, not to the work.
@@ -190,7 +195,7 @@ Not theory. In the previous run, 41 cross-component business rules from seven pa
 merged and de-duplicated **serially**, because the target file had no key — and that merge was the most
 expensive part of the pass.
 
-Keys that exist: the Product Component, the inventory source, the endpoint number, the story, the wave.
+Keys that exist: the Product Component, the inventory source, the endpoint number, the ticket, the spec.
 Things with no key: the glossary, the cross-component rules, the spine.
 
 ## Why nine ceremonies were repealed

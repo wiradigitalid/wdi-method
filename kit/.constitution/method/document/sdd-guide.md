@@ -81,8 +81,8 @@ NOT be written at all.
 | Behaviour | How the three move together, per use case | `06-flows/` |
 
 From `guarded` up, every Boundary object MUST correspond to an `LC` in `.control/registry/components.yaml`;
-at `deep`, Control objects too. Registration is checked **when the wave closes** — V12 — not before a story
-is `ready-for-dev`.
+at `deep`, Control objects too. Registration is checked **when the spec closes** — V12 — not before a ticket
+is picked up.
 
 Flows **into and out of** each boundary MUST be stated, not just the boundary. A boundary listed without its
 direction of call is a name, not a design.
@@ -204,5 +204,5 @@ Only what this component's `mode` demands, and nothing beyond it:
   `wdi-review` run with the lens set `risk_accepted` names for a gate-opening review — a re-review after
   the gate runs the lighter set, and `wdi-review` owns which.
 
-The spine comes first and `bmad-spec` comes last. An SDD written before the spine will be rewritten; a SPEC
+The spine comes first and the spec's contract comes last. An SDD written before the spine will be rewritten; a SPEC
 written before the SDD has nothing to project.

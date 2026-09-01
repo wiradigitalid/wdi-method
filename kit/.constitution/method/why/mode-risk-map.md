@@ -50,10 +50,13 @@ content, born at G3, which the depth knob does not reach.
 | `medium` | structure · prose · **edge-case-hunter** | — | demanded |
 | `high` | structure · prose | — | not demanded — the risk is already accepted on the record |
 
-`SPEC.md` sits outside that last column entirely, and it is the one artifact this field never reaches:
-it always carries `edge-case-hunter`, and V13 always demands `spec_reviewed` on every wave that carries
-epics — `high` included. SPEC is not a component, so `risk_accepted` has no say over it. It is the
-contract a builder works from, and a branch missed there surfaces as a bug at G5.
+**The contract sits outside that last column entirely**, and it is the one artifact this field never
+reaches: it always carries `edge-case-hunter`, and V13 always demands `spec_reviewed` on every spec that
+carries tickets — `high` included. A spec is not a component, so `risk_accepted` has no say over it. It is
+what a builder works from, and a branch missed there surfaces as a bug at G5.
+
+One trace covers the whole spec, never one per ticket. Where `SPEC.md` exists the trace covers it; at size
+`S` there is none, and the trace covers the **ticket set as one artifact**.
 
 ## The twelve cells
 
@@ -74,10 +77,10 @@ contract a builder works from, and a branch missed there surfaces as a bug at G5
 | `deep` + `medium` | 30' | structure · prose · edge-case-hunter | — | `SRS` · `SDD` after G4 | — |
 | `deep` + `high` | 30' | structure · prose | — | nothing | Depth bought, scrutiny declined. Legal, and worth saying out loud once |
 
-**The trace column is scoped to a component's own documents.** `SPEC.md` is left out of it because it is
-demanded in **every** cell: V13 asks for `spec_reviewed` carrying `edge-case-hunter` on every wave with
-epics, whatever `risk_accepted` says. Reading a `nothing` in that column as *"no trace is demanded
-anywhere in this cell"* is the one misreading it invites, and it is wrong.
+**The trace column is scoped to a component's own documents.** The spec's own trace is left out of it
+because it is demanded in **every** cell: V13 asks for `spec_reviewed` carrying `edge-case-hunter` on every
+spec with tickets, whatever `risk_accepted` says. Reading a `nothing` in that column as *"no trace is
+demanded anywhere in this cell"* is the one misreading it invites, and it is wrong.
 
 ## Before the components exist — G1 and G2
 
@@ -122,7 +125,7 @@ and each row above is just its axis restated.
 
 Two more mechanics, neither of which reads `risk_accepted`:
 
-- **V22** — from `outline` up, a wave MUST NOT touch a component whose `g4_passed` is unset. At `catalog`
+- **V22** — from `outline` up, a spec MUST NOT touch a component whose `g4_passed` is unset. At `catalog`
   the check passes by design, because there is no G4 to pass.
 - **G4's second ★ question** — *"which boundary still has no answer for the other side being slow, absent,
   or lying"* — is asked from `guarded` up. It is the question `guarded` exists to buy.

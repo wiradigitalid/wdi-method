@@ -136,3 +136,50 @@ test("with BOTH files present the migration refuses: specs.yaml is never written
     fs.rmSync(target, { recursive: true, force: true });
   }
 });
+
+// ---------------------------------------------------------------------------------------------
+// The same argument `pruneRetiredSkills` was written for, one folder over.
+//
+// `_bmad/custom/*.toml` are overrides this package ships to shape BMad skills. When the engine
+// layer below G5 changed, five of those engines were retired — and a retired engine's override is
+// worse than no override: it is still installed, still read by BMad, and still describes a world
+// that ended. bmad-retrospective.toml is the clearest case; it instructs an agent to archive an
+// `RTR-` file against a validator, V19, that no longer exists.
+//
+// Update never removed a toml it had stopped shipping, so every repo installed before this keeps
+// all five forever. That is what this covers.
+const RETIRED_TOMLS = [
+  "bmad-spec.toml", "bmad-build.toml", "bmad-build-auto.toml",
+  "bmad-code-review.toml", "bmad-retrospective.toml",
+];
+
+test("update REMOVES an override for a retired engine, and keeps what the product wrote", () => {
+  const pkg = isolatedPackage();
+  const target = tmp("target");
+  const custom = path.join(target, "_bmad", "custom");
+  fs.mkdirSync(custom, { recursive: true });
+  for (const name of RETIRED_TOMLS) {
+    fs.writeFileSync(path.join(custom, name), "# shipped by an older version of this package\n");
+  }
+  // Two files that are NOT ours and MUST survive: a product's own override, and the `.user.toml`
+  // half of the pair, which is the product's side of every override by convention.
+  fs.writeFileSync(path.join(custom, "bmad-build.user.toml"), "# the product's own half\n");
+  fs.writeFileSync(path.join(custom, "bmad-something-we-never-shipped.toml"), "# not ours\n");
+  try {
+    const out = update(pkg, target);
+    for (const name of RETIRED_TOMLS) {
+      assert.ok(!fs.existsSync(path.join(custom, name)),
+        `${name} overrides an engine this method retired, and update left it installed`);
+    }
+    assert.ok(fs.existsSync(path.join(custom, "bmad-build.user.toml")),
+      "a .user.toml is the PRODUCT's half of an override and is never the installer's to delete");
+    assert.ok(fs.existsSync(path.join(custom, "bmad-something-we-never-shipped.toml")),
+      "update deleted a toml this package never shipped — _bmad/custom/ is not our namespace, "
+      + "so removal MUST be by an explicit retired list, never by 'not in the kit'");
+    assert.match(out, /retired override/,
+      "files were deleted from someone else's repo in silence");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});

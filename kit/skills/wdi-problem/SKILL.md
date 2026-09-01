@@ -27,7 +27,7 @@ hand-patched brief makes the memlog lie about how it got that way.
 
 - If `brief.md` exists, the intent is **update** or **validate**, never **create**. A second create would
   overwrite the singleton.
-- If a wave is open and the ask is a scope change rather than a problem change, this is the wrong skill.
+- If a spec is open and the ask is a scope change rather than a problem change, this is the wrong skill.
   Route to `wdi-decision`, which wraps `bmad-correct-course`.
 - If the ask is about one initiative rather than the product, route to `wdi-product`.
 

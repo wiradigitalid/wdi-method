@@ -47,16 +47,16 @@ it prints before reading anything else:
 | `rtm/status not yet generated` (exit 3) | Stop. The tables cannot be built, so there is nothing honest to report |
 | `git did not respond` (exit 3) | Stop. Every actual date comes from git; without it there is no time dimension |
 | `the registry has uncommitted changes` | Say so in the report header. The numbers describe a working tree, not `main` |
-| `story with no git history` | Name those stories. They count toward promise progress but cannot appear under Proven |
+| `tickets with no git history` | Name those tickets. They count toward promise progress but cannot appear under Proven |
 | `n findings` | Report the count and, if any are red, say which gate they block |
 
 A report built on stale tables is worse than no report: it looks authoritative and is not.
 
 ## Step 2 — Read the derived time dimension
 
-You MUST NOT derive dates yourself. `timeline.py` reads each story file's history and takes the first commit whose
-frontmatter status left `draft` as the start, and the commit where it became `done` as the end. `FR` spans its
-stories; `CAP` spans its `FR`, and closes only when every story under it is closed.
+You MUST NOT derive dates yourself. `timeline.py` reads each ticket file's history and takes the first commit whose
+status left the not-started set as the start, and the commit where it became `done` as the end. `FR` spans its
+tickets; `CAP` spans its `FR`, and closes only when every ticket under it is closed.
 
 None of this is written back into any registry. A stored copy would be a second home for one fact, and the stored
 copy is the one that goes wrong.
@@ -98,11 +98,11 @@ overwrite one (exit 4) rather than trusting anyone to remember.
 | Measure | Formula | Answers |
 |---|---|---|
 | **Progres janji** | green RTM rows ÷ total RTM rows | How much is **proven** |
-| Progres kerja | stories `done` ÷ stories in wave | How much was worked on |
+| Progres kerja | tickets `done` ÷ tickets in spec | How much was worked on |
 | Kesiapan gate | green validators ÷ applicable validators | Whether the next gate can open |
 
 You MUST present **progres janji** first and label it as the one that counts. Progres kerja MUST NOT lead a
-client-facing report: a story can be `done` while its RTM row is still red because the test has no name or the `UC`
+client-facing report: a ticket can be `done` while its RTM row is still red because the test has no name or the `UC`
 does not exist — and that gap is exactly what the client is entitled to know.
 
 ---
@@ -121,9 +121,9 @@ one thing this intent can get badly wrong.
 |---|---|---|
 | **G1** — the brief | T-shirt size · rough capability count · the first risk list | very rough |
 | **+ G2** — the PRD | **The candidate task list = the `FR` list** · `estimate_mandays` per `CAP` · `must/should/could/wont` · order from `depends_on` between `CAP` | rough |
-| **+ tail of G2** — components born | Tasks grouped per component = per Epic · **`mode` per component, so document load is counted too** · `risk_accepted` marks exposure | medium |
+| **+ tail of G2** — components born | Tasks grouped per Product Component · **`mode` per component, so document load is counted too** · `risk_accepted` marks exposure | medium |
 | **+ G3** — the blueprint | Table, endpoint, and screen counts → real implementation load, not load guessed from an `FR` count | good |
-| **+ G4** — component depth | Stories and test names → measured load | best |
+| **+ G4** — component depth | Tickets and test names → measured load | best |
 
 ## Step 2 — Inputs
 
@@ -136,13 +136,13 @@ absent, say so — an estimate with no mandays input is a T-shirt size, and it M
 ## Step 3 — The output: one task table
 
 Written to `.control/generated/estimate.md` by `validate.py --generate`. **Default one row per `FR`**, because that
-is the ideal shape of a wave and because an `FR` has had a proof of done since birth.
+is the ideal shape of a spec and because an `FR` has had a proof of done since birth.
 
 | Column | Content |
 |---|---|
 | Task | The title, from the `FR` |
 | `FR` | Its id |
-| Epic | The Product Component |
+| Component | The Product Component |
 | `mode` | That component's depth — this is what makes document load visible |
 | Exposure | `risk_accepted` + `risk_note` |
 | Effort | Mandays, derived from the parent `CAP`'s `estimate_mandays`, divided among its `FR` |
@@ -152,11 +152,11 @@ is the ideal shape of a wave and because an `FR` has had a proof of done since b
 
 ## Step 4 — Say what it is, and what it is not
 
-> A row in the estimate table is a **candidate** task. A wave in `waves.yaml` is a **real** one. The first missing
+> A row in the estimate table is a **candidate** task. A spec in `specs.yaml` is a **real** one. The first missing
 > is normal; the second is not.
 
-The table is planning, not commitment. One row MAY become one wave, and three neighbouring rows MAY be merged into
-one. **That merge is a human decision made when the wave opens**, and this intent MUST NOT pretend to already know
+The table is planning, not commitment. One row MAY become one spec, and three neighbouring rows MAY be merged into
+one. **That merge is a human decision made when the spec opens**, and this intent MUST NOT pretend to already know
 the answer.
 
 - Every output MUST carry the word estimate, visibly, at the top.
@@ -168,11 +168,12 @@ the answer.
 
 # Intent `dispatch`
 
-Reads `.control/generated/estimate.md` and `waves.yaml`. **It recomputes nothing.**
+Reads `.control/generated/estimate.md` and `specs.yaml`. **It recomputes nothing.**
 
-It emits rows in a form that can be pasted into an outside tracker: Epic (the Product Component), Task (the wave, or
-the candidate row where no wave exists yet), Sub-task (the story, where one exists), labels for `FR` and `CAP`, and
-Fix Version from the release.
+It emits rows in a form that can be pasted into an outside tracker: a **parent issue** for the spec — or the
+candidate row where no spec exists yet — an **issue** per ticket where tickets exist, with its blocking edges,
+labels for `FR` and `CAP`, and Fix Version from the release. A ticket is an issue and not a sub-task, because a
+sub-task cannot carry the blocking relation the frontier is read from; `delivery-flow-guide.md` owns that mapping.
 
 - Output goes **to the screen**. This intent MUST NOT write a file, and MUST NOT write to the tracker — entering it
   is a human act.
@@ -185,7 +186,7 @@ Fix Version from the release.
 ## Rules
 
 - You MUST NOT invent progress. When a table is missing or stale, name it and stop.
-- You MUST NOT report `progress` in stories. The planning layer speaks in `CAP`, `FR`, and defects; stories are the
+- You MUST NOT report `progress` in tickets. The planning layer speaks in `CAP`, `FR`, and defects; tickets are the
   execution layer and are born too late to plan against.
 - You MUST NOT hand-write anything under `generated/`. There is no exception.
 - You MUST NOT re-run `--publish` to "fix" a report. The refusal is the rule working.

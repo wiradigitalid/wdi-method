@@ -109,7 +109,7 @@ while an artifact was written, and a source when writing a `DEC-`, never an inde
 | An open question was answered | `wdi-question` closes it; the answer becomes a `DEC-` when it binds |
 | `wdi-systematic-debugging` found a root cause in the design | A `DEC-`. It MUST NOT be absorbed as a code patch |
 | A planning assumption turned out to be void | `wdi-decision`, which wraps `bmad-correct-course`. The result is a `DEC-` of `type: course-correction` |
-| A story contradicts an `AD-N` | The story stops. This is the one mandatory case |
+| A ticket contradicts an `AD-N` | The ticket stops. This is the one mandatory case |
 | `wdi-reconcile` found two documents disagreeing with no clear winner | That is a decision, not drift |
 
 Minutes MUST NOT be treated as a decision record. They say what was discussed; a `DEC-` says what was

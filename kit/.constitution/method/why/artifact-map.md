@@ -97,7 +97,7 @@ Repealed: `_platform/architecture/` (one file does not earn a folder) and `<pc>/
 | `.control/registry/components.yaml` → `containers` | The containers from C4 L2 | every mode |
 | `.control/registry/components.yaml` → `platform_owns` | Entities no Product Component's promise explains. `_platform` is not a component and has no `mode` | every mode |
 | `.control/registry/components.yaml` → `logical_components` | `LC` | boundary from `guarded`; boundary + control at `deep` |
-| `.control/registry/decisions.yaml` · `waves.yaml` · `defects.yaml` · `risks.yaml` · `index.yaml` | Decisions · work · defects · risks · the global `mode` and gate map | every mode |
+| `.control/registry/decisions.yaml` · `specs.yaml` · `defects.yaml` · `risks.yaml` · `index.yaml` | Decisions · work · defects · risks · the global `mode` and gate map | every mode |
 | `.control/generated/blueprint.md` | **The one-page roll-up reviewed at G3** | every mode |
 | `.control/generated/decisions.md` | The flat index of every `DEC-` | every mode |
 | `.control/generated/estimate.md` | The candidate task table | every mode |
@@ -116,7 +116,7 @@ someone else performs. `../document/corpus-guide.md` holds the binding version o
 | `wdi-blueprint` | `.what/<pc>/` § Actor Register + § UC Catalogue + `03-domain/domain-model.md` · `.what/business-rules.md` · `.control/product-glossary.md` · all of `.how/_platform/` except `design-system.md` |
 | `wdi-component` | `.what/<pc>/` slots `02`–`05` · `.how/<pc>/` except `01-ux/` |
 | `wdi-ux` | `EXPERIENCE.md` · `.how/<pc>/01-ux/` · `.how/_platform/design-system.md` |
-| `wdi-build` | `waves.yaml` · `_bmad-output/specs/` · `src/` · `web/` · `.control/reports/RTR-<wave>.md` |
+| `wdi-build` | `specs.yaml` · `_bmad-output/specs/` · `src/` · `web/` |
 | `wdi-decision` | `.control/decisions/` · `decisions.yaml`, and at apply time whatever `touches` names — through each file's owner |
 | `wdi-question` | `.control/questions/` |
 | `wdi-log` | `.control/meetings/` · `.control/project-non-technical-log.md` |
@@ -129,14 +129,15 @@ also change things — otherwise there is nothing left to check with.
 
 ## How the units of work line up
 
-`FR` is a **promise** and permanent; a wave is a **unit of work** and temporary; `SPEC.md` is the machine
-contract for one wave; a story is one piece one builder takes to a green PR.
+`FR` is a **promise** and permanent; a spec is a **unit of work** and temporary; `SPEC.md` is the machine
+contract for one spec — written from size `M` up, and at `S` the tickets are the contract; a ticket is one
+vertical slice one builder takes to a green PR.
 
-One wave = one `SPEC` = one tracker Task, and Epic = Product Component, Sub-task = story. **`FR` is not a
-Task** — it travels as a label, because one `FR` can be delivered by stories in two waves and one story can
-satisfy part of two `FR`.
+One spec = one parent issue, and a ticket is an **issue**, not a sub-task, because its blocking edges are
+what make the frontier visible in the tracker's own UI. **`FR` is not an issue** — it travels as a label,
+because one `FR` can be delivered by tickets in two specs and one ticket can satisfy part of two `FR`.
 
-The binding version of all of this, including why a wave MAY cross components and what has to be true
+The binding version of all of this, including why a spec MAY cross components and what has to be true
 first, is in `../document/delivery-flow-guide.md`. It is not restated here.
 
 ## What needs no template, and why
@@ -148,8 +149,8 @@ Stated so the next completeness audit does not report it again:
 | `.control/generated/*` | Script output. Its shape is code, not a template |
 | `.control/reports/<period>.md` | Rendered by `timeline.py` |
 | `.control/project-non-technical-log.md` | States its own entry shape in its own header, and there is exactly one such file |
-| `SPEC.md` · story files | They belong to `bmad-spec`. WDI does not write their shape, and MUST NOT |
+| `SPEC.md` · ticket files | Their shape belongs to `to-spec` and `to-tickets`. WDI owns where they land, not how they read |
 | Registry `*.yaml` | Their shape is the comment block at the head of each file, plus the validator |
 
-Everything else in this map has a template in `../document/templates/` — 27 of them, and every row above is
+Everything else in this map has a template in `../document/templates/` — 26 of them, and every row above is
 covered by one.

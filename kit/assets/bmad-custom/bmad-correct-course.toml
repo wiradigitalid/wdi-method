@@ -9,7 +9,7 @@
 #
 # The main danger is not the path but this skill's habit of editing directly: its default is
 # "direct updates to epics, stories, or PRD sections". In this repo that MUST NOT happen —
-# document changes go through wdi-decision intent `apply`, and wave content through wdi-build.
+# document changes go through wdi-decision intent `apply`, and spec content through wdi-build.
 # That is why the prohibition is installed as a persistent fact, held from activation, rather than
 # as end-of-run polish.
 
@@ -18,11 +18,11 @@
 persistent_facts = [
   "file:{project-root}/.constitution/method/document/delivery-flow-guide.md",
   "file:{project-root}/.constitution/method/document/corpus-guide.md",
-  "This skill MUST NOT write or edit anything in {project-root}/.what/ or {project-root}/.how/. Its output is a proposal; document changes are made by wdi-decision intent `apply` once the `DEC-` is accepted, and wave content by wdi-build.",
-  "epics.md and sprint-status.yaml are NOT used in this repo — we run the stories route. Neither MUST be read as a source, and neither MUST be created.",
-  "The impact scan MUST cover .what/_prd/, .what/<pc>/, .how/_platform/, .how/<pc>/, SPEC.md, .control/registry/waves.yaml, and the story files. .what/<pc>/ is unknown to this skill entirely, and without this it goes stale silently.",
+  "This skill MUST NOT write or edit anything in {project-root}/.what/ or {project-root}/.how/. Its output is a proposal; document changes are made by wdi-decision intent `apply` once the `DEC-` is accepted, and spec content by wdi-build.",
+  "epics.md and sprint-status.yaml are NOT used in this repo, and neither is the stories route they belong to. Neither MUST be read as a source, and neither MUST be created.",
+  "The impact scan MUST cover .what/_prd/, .what/<pc>/, .how/_platform/, .how/<pc>/, SPEC.md, .control/registry/specs.yaml, and the ticket files. .what/<pc>/ is unknown to this skill entirely, and without this it goes stale silently.",
   "Every plan change that is expensive to reverse MUST become a `DEC-` through wdi-decision, not a paragraph inside the proposal. A course correction is itself one `DEC-` of type course-correction.",
-  "A correction that voids more than 30% of a wave's stories MUST NOT be handled as a patch. Say so, and let the wave be re-cut through wdi-build.",
+  "A correction that voids more than 30% of a spec's tickets MUST NOT be handled as a patch. Say so, and let the spec be re-cut through wdi-build.",
 ]
 
 on_complete = "Hand the landing to wdi-decision: the whole proposal becomes one `DEC-` of type course-correction, and its run folder MUST NOT be deleted. MUST NOT land itself, MUST NOT edit .what/ or .how/."

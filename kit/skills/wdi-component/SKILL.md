@@ -112,7 +112,7 @@ Write in this order, stopping at whatever the `mode` does not reach:
    a reason where one does not apply. The data model carries a dictionary beside its diagram.
 
 From `guarded` up, every Boundary object MUST become an `LC` in `components.yaml`; at `deep`, Control objects
-too. Registration is checked **when the wave closes** — V12 — not before a story is `ready-for-dev`. You MUST
+too. Registration is checked **when the spec closes** — V12 — not before a ticket is picked up. You MUST
 NOT register a `container`, and you MUST NOT register `ui-screen` or `ui-composite`.
 
 ## Step 5 — Evidence, and the as-built case
@@ -160,7 +160,7 @@ You MUST NOT open G4 on depth that has not been through it.
 - You MUST NOT raise `status:`. Status is a stage; the `reviewed:` block is an event.
 - You MUST NOT lower or raise the component's `mode` to fit what you want to write. That is `wdi-init`, and it
   is the owner's call.
-- `bmad-spec` runs **after** this, never before, and it MUST NOT introduce anything these documents do not say.
+- The spec's contract is cut **after** this, never before, and it MUST NOT introduce anything these documents do not say.
 - Memlog: `.control/memlog/<pc>.md`, through `memlog.py --path`. `--workspace` MUST NOT be used.
 - Questions arrive as **one** ranked batch at the gate, not as they surface.
 

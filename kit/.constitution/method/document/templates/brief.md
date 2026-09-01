@@ -37,7 +37,7 @@ A flexible starting structure for the executive product brief. Adapt aggressivel
 
 ## Goals
 
-[What the product is trying to achieve, one line each. Number them `BG-1`, `BG-2`, … — `BG` is the first link of the traceability chain `BG → CAP → FR/NFR → UC → DEC → Story → Test`, so these IDs are cited downstream and MUST stay stable once written.]
+[What the product is trying to achieve, one line each. Number them `BG-1`, `BG-2`, … — `BG` is the first link of the traceability chain `BG → CAP → FR/NFR → UC → DEC → Ticket → Test`, so these IDs are cited downstream and MUST stay stable once written.]
 
 - **BG-1** — core value: [the goal that justifies the product existing at all]
 - **BG-2**: [...]

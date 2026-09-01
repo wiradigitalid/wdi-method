@@ -87,7 +87,7 @@ there is only Product Component.
 | `DEC-` | A decision |
 | `LC-` | A Logical Component |
 | `OQ-` | An open question |
-| `RTR-` | An archived retrospective, in `.control/reports/` |
+| `RTR-` | **Retired.** It was an archived retrospective in `.control/reports/`; the retrospective step and `V19` went together. A frozen `RTR-` file stays where it is |
 | `CAP-` | A capability — the planning unit |
 | `NT-` | A non-technical fact |
 | `BUG-` · `HOT-` | A defect · a hotfix |

@@ -74,7 +74,7 @@ Then dispatch `bmad-correct-course`. Do not restate the rules to it — they arr
 `_bmad/custom/bmad-correct-course.toml`, including the ban on direct edits. Name the corpus files in scope
 explicitly; it globs its own defaults, which this project does not use.
 
-**Its impact analysis is incomplete by construction** — it knows a PRD, epics, and stories, and it cannot see
+**Its impact analysis is incomplete by construction** — it knows a PRD and BMad's own planning shapes, and it cannot see
 `.what/<pc>/`, `.how/`, `.control/`, or `.constitution/`. Every one of these MUST be checked here:
 
 | Layer | What to look for |
@@ -83,18 +83,18 @@ explicitly; it globs its own defaults, which this project does not use.
 | `.what/<pc>/` | Use cases realising those `FR`, business rules, state lifecycles that lose a state |
 | `.how/_platform/` | An `AD-N` the correction breaks, a container the C4 set no longer describes, an inventory row with nothing behind it |
 | `.how/<pc>/` | Contracts, flows, and Failure Behaviour written against the old promise |
-| `SPEC.md` | What the wave projected — a SPEC MUST NOT be edited to match; it is re-derived |
-| `waves.yaml` | The wave's size, and whether the correction changes it |
-| Story files | Which stories are `in-progress`, and which are not yet started |
+| the contract | What the spec projected — it MUST NOT be edited to match; it is re-cut |
+| `specs.yaml` | The spec's size, and whether the correction changes it |
+| Ticket files | Which tickets are in progress, and which have not been picked up |
 
 The result is a `DEC-` of **`type: course-correction`**. The `SCP-` code is retired — a course correction is a
 decision, and no second code names the same thing.
 
-A correction cancelling more than **30%** of a wave's stories MUST NOT be handled as a patch. Say so, and let
-the wave be re-cut through `wdi-build`.
+A correction cancelling more than **30%** of a spec's tickets MUST NOT be handled as a patch. Say so, and let
+the spec be re-cut through `wdi-build`.
 
-A story already `in-progress` MUST NOT have its contract changed. Report it; stopping it and returning it to
-`ready-for-dev` is the coordinator's act.
+A ticket already in progress MUST NOT have what it asks for changed underneath it. Report it; stopping it and
+returning it to `ready-for-agent` is the coordinator's act.
 
 ## Intent `accept`
 
@@ -127,7 +127,7 @@ list assembled while editing is a list that grows to fit what was already done.
 | `.how/<pc>/` minus `01-ux/` | `wdi-component` intent `design` |
 | `EXPERIENCE.md` · `.how/<pc>/01-ux/` · `design-system.md` | `wdi-ux` |
 | `components.yaml` — a PC born or changed · `mode` · `risk_accepted` · the two structure maps | `wdi-init`, by intent |
-| `waves.yaml`, or anything inside an open wave | `wdi-build` |
+| `specs.yaml`, or anything inside an open spec | `wdi-build` |
 | `.control/questions/` | `wdi-question` |
 | `.control/project-non-technical-log.md` · `.control/meetings/` | `wdi-log` |
 
@@ -169,7 +169,7 @@ reopen a gate yourself, and you MUST NOT treat a green application as a gate tha
   decisions that disagree is work for intent `open`, not something to resolve by preferring the newer one.
 - If the decision is unapplicable as written — the document it names no longer exists, or the change was already
   made differently — you MUST report that instead of improvising.
-- You MUST NOT apply into a wave that is already closed.
+- You MUST NOT apply into a spec that is already closed.
 - `AD-N` is a different thing: a living rule with Binds · Prevents · Rule, edited in place. You MUST NOT convert
   one into the other.
 - A decision that emerged from a failed third fix attempt MUST say so in Why. That is the signal

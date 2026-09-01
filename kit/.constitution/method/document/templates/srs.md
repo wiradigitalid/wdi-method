@@ -18,7 +18,7 @@ reviewed:                # V13. Filled only after wdi-review has actually run
      left in English per the controlled vocabulary. -->
 
 <!-- NOT a one-shot document. Despite the IEEE name, this SRS is LIVING: one per Product Component,
-     amended every wave, never signed off and frozen. -->
+     amended every spec, never signed off and frozen. -->
 
 <!-- TWO SKILLS WRITE IT, AT TWO GATES, and every section below says which:
        [G3]  wdi-blueprint intent `catalog`. Exists at EVERY mode, including catalog

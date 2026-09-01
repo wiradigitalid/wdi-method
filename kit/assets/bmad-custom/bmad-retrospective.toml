@@ -1,9 +1,0 @@
-# Runs in stories mode: reads SPEC.md + stories.yaml + stories/<id>-*.md, not
-# sprint-status.yaml. Its output is RETROSPECTIVE.md inside the spec folder — which is ephemeral.
-
-[workflow]
-
-persistent_facts = [
-  "This repo runs in stories mode. RETROSPECTIVE.md MUST be archived as RTR-<wave> in .control/reports/ by wdi-build before the wave closes. It is REQUIRED on a wave `L` and advisory on `S` and `M` — V19 is tied to wave size, not to `mode`, and skipping it MUST be stated rather than left silent.",
-  "Every row of the distillation table in .constitution/method/document/bmad-guide.md MUST be complete before a wave is declared closed.",
-]

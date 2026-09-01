@@ -92,7 +92,7 @@ carried by:
 | Field | Answers |
 |---|---|
 | `CAP.target_release` | Which release this capability is planned for. **The only place a promise's release is written** |
-| `waves.yaml` `release` | Which release a wave of work belongs to — the execution side |
+| `specs.yaml` `release` | Which release a spec of work belongs to — the execution side |
 
 An `FR` MUST NOT carry a release of its own. It inherits one from its `CAP`, the same way it reaches
 its `BG`: each child names only its parent. A capability whose requirements genuinely land in
@@ -103,7 +103,7 @@ Naming a release in prose as context MAY happen; the registry is what binds.
 ## Numbering
 
 `BG-N`, `CAP-N`, `FR-N`, `NFR-N`, and `UJ-N` MUST be allocated from `.control/registry/requirements.yaml`
-and MUST NOT restart at 1. The chain runs `BG → CAP → FR/NFR → UC → DEC → Story → Test`, and each
+and MUST NOT restart at 1. The chain runs `BG → CAP → FR/NFR → UC → DEC → Ticket → Test`, and each
 child names only its parent:
 
 - Each feature in §4 MUST declare its `CAP-N` and the `BG-N` it serves.
@@ -116,12 +116,12 @@ V15 checks both links. An FR with no capability is a promise nobody asked for.
 ## Proof of done — one, in business language
 
 Every `FR` MUST carry **exactly one** proof of done: a sentence a Product Owner can check without opening
-the code. It is what lets one `FR` become one testable unit of work, and it is why a wave is ideally one
+the code. It is what lets one `FR` become one testable unit of work, and it is why a spec is ideally one
 `FR`.
 
 **The double proof of done is repealed.** Requiring a business sentence *and* a technical restatement
 naming status codes, limits, and payloads meant writing the same acceptance twice, in two vocabularies that
-then drifted. The technical form is represented by the **test name** recorded in `waves.yaml`, where it is
+then drifted. The technical form is represented by the **test name** recorded in `specs.yaml`, where it is
 checked mechanically (V4) instead of read.
 
 A technical detail that genuinely has to be written down belongs in `addendum.md` or in the SDD, not in a

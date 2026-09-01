@@ -47,7 +47,7 @@ Placement is not finished when the files have moved.
 
 - **Every screen in `DESIGN.md` MUST be registered as an `LC` of type `ui-screen`** in
   `.control/registry/components.yaml`, with its `container`. A screen that exists in the design and not
-  in the registry is a change nothing will trace, and V12 catches it **at wave close**.
+  in the registry is a change nothing will trace, and V12 catches it **at spec close**.
 - A composite that is reused across screens is an `LC` of type `ui-composite`, not a screen.
 - Tokens and base components — colour, type scale, spacing, buttons, inputs — MUST go to
   `.how/_platform/design-system.md`, not into any one component's `01-ux/`. They cross Product

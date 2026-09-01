@@ -2,7 +2,7 @@
 type: oq
 id: OQ-{n}
 component: '{pc}'            # or `_platform`
-blocks: []                   # gate, FR, UC, or story ids — empty means it blocks nothing
+blocks: []                   # gate, FR, UC, or ticket ids — empty means it blocks nothing
 owner: '{who can answer}'
 by_when: '{gate or date}'
 status: open                 # open · answered

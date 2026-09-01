@@ -19,7 +19,7 @@ reviewed:                # V13. Filled only after wdi-review has actually run
 
 <!-- NOT an HLD, and NOT a one-shot LLD. What the system consists of belongs to C4 L1-L2; architecture
      constraints belong to ARCHITECTURE-SPINE.md; deployment topology belongs to the devops repository.
-     This document is LIVING: one per Product Component, amended every wave. -->
+     This document is LIVING: one per Product Component, amended every spec. -->
 
 <!-- EVERY SECTION MARKS THE MINIMUM `mode` THAT DEMANDS IT. Below that minimum it MUST NOT be written
      to fill a slot; above it, it is required. Read the component's mode from its row in
@@ -46,7 +46,7 @@ reviewed:                # V13. Filled only after wdi-review has actually run
      rule, not decoration.
 
      Every LC named here MUST be registered in .control/registry/components.yaml, and the registration
-     is checked WHEN THE WAVE CLOSES — V12 — not before a story is ready-for-dev. The old timing
+     is checked WHEN THE SPEC CLOSES — V12 — not before a ticket is picked up. The old timing
      demanded the answer at the moment the information was thinnest. -->
 
 | LC | type | Responsibility |

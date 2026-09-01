@@ -15,7 +15,7 @@ of where things are, a reader that can see this product's code.
 | `component` | Propose the slicing from the brief plus every PRD · birth what is accepted: registry row plus `SRS`/`SDD` skeletons · propose `mode`, `risk_accepted`, `risk_note`, `owns` | **G2 passed** | each time a component is born |
 | `mode` | Change `mode` — global in `index.yaml`, or one component in `components.yaml`. Guided | — | any time |
 | `risk` | Set or review one component's `risk_accepted`, with disclosure of what it touches | the component exists | any time, usually before G4 |
-| `structure` | Re-derive `.control/structure-codebase.md` and `structure-document.md` from the tree on disk | — | when folders change, and at wave close |
+| `structure` | Re-derive `.control/structure-codebase.md` and `structure-document.md` from the tree on disk | — | when folders change, and at spec close |
 | `readers` | Write `.constitution/project/inventory-readers.py` for **this** repo's stack, then prove it by running the engine | code exists | once, and again when the code's shape moves |
 
 ## Two boundaries

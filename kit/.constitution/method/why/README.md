@@ -34,7 +34,7 @@ A gate is named for **what is decided there**, never for the work before it.
 | **G2 Product** | What is built, and how it feels to use | once per PRD | 45' |
 | **G3 Blueprint** | The whole portrait: which use cases, their entities, tables, endpoints, screens, and the invariants binding them | once per **product** | 45' |
 | **G4 Component** | How one Product Component is built, and what the choice costs | once per **component** | 20–30' |
-| **G5 Release** | Whether it is done and proven | once per wave | 10' |
+| **G5 Release** | Whether it is done and proven | once per spec | 10' |
 
 **Only G4 can disappear.** At `mode: catalog` its session does not happen at all; the other four always run,
 and what each decides never changes. What `mode` does shorten everywhere is the **checklist**: at `catalog`
@@ -69,12 +69,12 @@ matters is in `rationale.md`; what each value demands is in `../document/deliver
 | 3 | Birth the components, set `mode` and `risk_accepted` | `wdi-init` intent `component` | — (tail of G2) |
 | 4 | Blueprint | `wdi-blueprint` intent `catalog`, then `platform` | **G3** |
 | 5 | One component's depth | `wdi-component` — as deep as its `mode`; **skipped at `catalog`** | **G4** |
-| 6 | Build | `wdi-build` — opens the wave, runs `bmad-spec`, ships each story, closes the wave | **G5** |
+| 6 | Build | `wdi-build` — opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec | **G5** |
 
 After step 6 the next component enters at **step 5**, not at the beginning. Steps 0–4 happen once in the
 life of the product.
 
-`SPEC.md` and story files are **not read by humans**. The human review surface stops at the PRD, `.what/`,
+`SPEC.md` and ticket files are **not read by humans**. The human review surface stops at the PRD, `.what/`,
 and `.how/`.
 
 ## The run, every time after
@@ -85,7 +85,7 @@ and `.how/`.
 | That component is at `mode: catalog` | straight to `wdi-build`. G4 is skipped |
 | A promise changes where a PRD already exists | `wdi-product` intent `update` — never a second PRD for the same area |
 | A new initiative with a different reader | `wdi-product` intent `prd` → `wdi-init` intent `component` if it births components |
-| A small fix touching no `FR`, `UC`, `AD-N`, or domain model | Fast Path: `bmad-build` directly. It **stops and becomes a wave `S`** the moment an `FR` is touched |
+| A small fix touching no `FR`, `UC`, `AD-N`, or domain model | Fast Path: the owner runs `/implement` directly, with no wrapper. It **stops and becomes a spec `S`** the moment an `FR` is touched |
 | A bug, a failing test, unexpected behaviour | `wdi-systematic-debugging`, **before** any fix is proposed |
 | A planning assumption turned out void | `wdi-decision` — it wraps `bmad-correct-course`, proposes, and changes nothing itself |
 | An estimate or a task list is needed | `wdi-report` intent `estimate` |
@@ -105,7 +105,7 @@ Named for the **gate they serve**, so *"which skill do I run"* is answered by *"
 | `wdi-init` intent `component` | tail of G2, and whenever a new PRD births a component |
 | `wdi-blueprint` | G3 |
 | `wdi-component` | G4 |
-| `wdi-build` | G5, one wave per run |
+| `wdi-build` | G5, one spec per run |
 
 **Anytime** — run the moment the trigger appears, without waiting for a gate:
 
@@ -133,9 +133,9 @@ Named for the **gate they serve**, so *"which skill do I run"* is answered by *"
 | **UC catalogue · actors · entities · business rules** | **nothing in BMad** | `wdi-blueprint` writes it itself |
 | **SRS and all of `.what/<pc>/`** | **nothing in BMad** | `wdi-component` writes it itself |
 | **SDD and all of `.how/<pc>/`** | **nothing in BMad** | `wdi-component` writes it itself |
-| `SPEC.md` + stories | `bmad-spec` | `wdi-build` |
-| Code | `bmad-build` · `bmad-build-auto` | `wdi-build` |
-| Retrospective | `bmad-retrospective` | `wdi-build` |
+| `SPEC.md` + tickets | `to-spec` · `to-tickets` — **not BMad's**, and the owner runs them | `wdi-build` |
+| Code | `implement`, with `tdd` inside it — same | `wdi-build` |
+| Code review | `code-review` — same | `wdi-build` |
 | Document review | `bmad-review` | `wdi-review` |
 | Course correction | `bmad-correct-course` | `wdi-decision` |
 
@@ -156,7 +156,7 @@ itself.
 | Scratch that empties when the task closes | `.work/` |
 | The application | `src/` · `web/` |
 
-The test that settles anything ambiguous: **is this file still correct after its wave has passed?** Yes →
+The test that settles anything ambiguous: **is this file still correct after its spec has passed?** Yes →
 the corpus. No → `_bmad-output/`. In doubt, `../document/corpus-guide.md`.
 
 ## Model choice

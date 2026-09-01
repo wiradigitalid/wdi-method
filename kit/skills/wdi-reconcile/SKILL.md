@@ -6,7 +6,7 @@ description: Use before a gate, or after a batch of changes, to find drift betwe
 # WDI Reconcile
 
 Documents drift apart quietly. An SRS gets amended while its SDD does not; a `DEC-` is accepted and never
-applied; a story ships behaviour the use case never described. None of this shows up as an error, which is
+applied; a ticket ships behaviour the use case never described. None of this shows up as an error, which is
 why it needs a pass that looks for it on purpose.
 
 This skill is **read-only**. It MUST NOT edit anything. Its output is a report, and every fix it
@@ -25,7 +25,7 @@ Establish which gate the work stands at — `wdi-help` answers that — and chec
 | G2 | + every `_prd/<initiative>/`, UX output wherever it currently sits, `product_components` with `mode` and `risk_accepted` |
 | G3 | + every `.what/<pc>/` § UC Catalogue and § Actor Register, `domain-model.md`, `business-rules.md`, the spine, the C4 set, `containers`, the three inventories |
 | G4 | + whatever each component's `mode` demands in `.what/<pc>/` and `.how/<pc>/` |
-| G5 | + `SPEC.md`, `waves.yaml`, story files, tests, `defects.yaml`, RTM rows |
+| G5 | + the contract, `specs.yaml`, ticket files, tests, `defects.yaml`, RTM rows |
 
 **By `mode`.** An artifact a component's `mode` does not demand MUST NOT be reported as missing. A
 component at `catalog` has an SDD skeleton and no depth, and that is a **finished** state — G4 is skipped
@@ -54,7 +54,7 @@ missing or stale, say so and name `validate.py --generate` rather than working a
 | Top-down | Does every `applied` `DEC-` actually appear in the files its `touches` names? |
 | Bottom-up | Does anything in `.how/<pc>/` describe behaviour that `.what/<pc>/` never promised? |
 | Decisions | Is there an `accepted` `DEC-` that was never applied, or an `applied` one with an empty `touches`? The second is V8; the first no validator can see |
-| Chain | `BG → CAP → FR/NFR → UC → story → test` — where does it break? |
+| Chain | `BG → CAP → FR/NFR → UC → ticket → test` — where does it break? |
 | Depth | Does any document carry more than its component's `mode` demands? Over-writing is drift too, and it is the direction nobody looks for |
 | Vocabulary | Does any document use a domain noun that `.control/product-glossary.md` does not define, or a synonym for one it does? Detect against the rule in `wdi-blueprint`; MUST NOT keep a second rule here |
 | Registry | Does `components.yaml` still describe what the corpus contains — a `<pc>` folder with no entry, an `LC` with no prose in the slot its `type` names, a container in the C4 set but not in `containers`, `owns:` claiming an entity another component also claims |
@@ -98,7 +98,7 @@ anything at all.
 It checks whether **citations still resolve**. It does **not** check whether the code implements the
 corpus, and you MUST NOT widen it into that.
 
-A general corpus-versus-code comparison would be red through the middle of every wave, and a check
+A general corpus-versus-code comparison would be red through the middle of every spec, and a check
 that is always red is a check people learn to skip. What is already covered elsewhere MUST NOT be
 re-reported here:
 
@@ -106,7 +106,7 @@ re-reported here:
 |---|---|
 | A red RTM row | Promised, not built yet |
 | V2 · V3 | Documented, never scheduled |
-| V4 | A story closed with no named test |
+| V4 | A ticket closed with no named test |
 | `inventory.py` | The plan and the code disagreeing about a table, endpoint, or screen |
 
 That leaves exactly one gap, and it is the one this check fills: **a descriptive claim about code

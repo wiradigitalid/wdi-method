@@ -18,10 +18,10 @@ about BMad itself.
 
 | Source | What it answers |
 |---|---|
-| `.control/generated/status` | Which wave is open, which stories sit at which status, which validators are red |
+| `.control/generated/status` | Which spec is open, how many of its tickets are done, which validators are red |
 | `.control/registry/index.yaml` | The global `mode`, and the gate map |
 | `.control/registry/components.yaml` | Per-component `mode`, `risk_accepted`, and `g4_passed` |
-| `.control/registry/waves.yaml` | Wave → release, size, `depends_on` |
+| `.control/registry/specs.yaml` | Spec → release, size, `depends_on`, and its ticket index |
 | `.constitution/method/document/delivery-flow-guide.md` | The five gates and their checklists |
 | `.constitution/method/why/README.md` | The whole shape, when the caller has never seen the method |
 
@@ -60,8 +60,8 @@ mis-route in this flow, because every other gate is the same for every component
 | The blueprint is complete and G3 has not been held | The gate. Read `.control/generated/blueprint.md`, not seven files |
 | G3 passed, a component at `outline`/`guarded`/`deep` has no depth | `wdi-component` |
 | G3 passed, the component is at `mode: catalog` | `wdi-build` — G4 is skipped by design |
-| Depth done and G4 passed for every component the work touches | `wdi-build` — it opens the wave, runs `bmad-spec`, ships each story, closes the wave |
-| A small fix touching no `FR`, `UC`, `AD-N`, or domain model | Fast Path: `bmad-build` directly. It stops and becomes a wave `S` the moment an `FR` is touched |
+| Depth done and G4 passed for every component the work touches | `wdi-build` — it opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec |
+| A small fix touching no `FR`, `UC`, `AD-N`, or domain model | Fast Path: the owner runs `/implement` directly. It stops and becomes a spec `S` the moment an `FR` is touched |
 | A planning assumption turned out void | `wdi-decision` intent `open` — it proposes, and changes nothing |
 | An accepted `DEC-` has not reached its documents | `wdi-decision` intent `apply` |
 | A bug, a failing test, unexpected behaviour | `wdi-systematic-debugging`, before any fix is proposed |
@@ -92,7 +92,7 @@ it claims, or when one of its eight required sections is missing outright.
 - When the caller has never seen this method, point at `.constitution/method/why/README.md` rather than
   paraphrasing it here.
 
-## When there is no wave open
+## When there is no spec open
 
 Say so plainly, then route by the table above. An artifact a later gate produces MUST NOT be reported as
 missing — that is not a gap, it is the plan.

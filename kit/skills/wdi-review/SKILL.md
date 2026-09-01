@@ -13,7 +13,7 @@ artifact but of the component's `risk_accepted`, and defaulting to structure + p
 one lens that matters for behaviour; and `bmad-review` is class D — it writes nothing, so nothing proves
 it ran.
 
-You MUST NOT use this for code or diffs. That is `bmad-code-review` and the Review Panel.
+You MUST NOT use this for code or diffs. That is `code-review`, dispatched by `wdi-build` as Step 3 of its pipeline.
 
 ## What it covers
 
@@ -22,7 +22,7 @@ You MUST NOT use this for code or diffs. That is `bmad-code-review` and the Revi
 | `.how/_platform/ARCHITECTURE-SPINE.md` | `reviewed:` in its frontmatter |
 | `SRS-<pc>.md` + slots `02`–`05` | `reviewed:` in the SRS frontmatter |
 | `SDD-<pc>.md` + slots `01`–`06` | `reviewed:` in the SDD frontmatter |
-| `SPEC.md` | `spec_reviewed:` on the wave in `waves.yaml` |
+| the contract — `SPEC.md`, or the ticket set as one artifact at size `S` | `spec_reviewed:` on the spec in `specs.yaml` |
 
 **The lens set comes from the component's `risk_accepted`, never from `mode` and never from the artifact
 type.** `delivery-flow-guide.md` owns the mapping and it MUST NOT be restated as a second copy here; what
@@ -47,8 +47,8 @@ from, and a branch missed there surfaces as a bug at G5 instead.
 Four rules, and together they are what keeps this skill from becoming a treadmill. Every one of them has a
 precedent elsewhere in the method; none of them lowers what a review looks for.
 
-- **The trace has to be fresh at a gate and at wave close. Between those points a stale trace is
-  advisory.** V13 reports it and does not fail, the same way V19 is advisory on wave `S`/`M`. What catches a
+- **The trace has to be fresh at a gate and at spec close. Between those points a stale trace is
+  advisory.** V13 reports it and does not fail; what catches a
   gate opening on a stale review is G4's ★ question — *validators green **and** the review leaving no open
   finding* — not a validator firing on every commit.
 - **A wording-only change MUST NOT trigger a re-run.** This is the split `prd-guide.md` already owns:
@@ -83,8 +83,9 @@ You MUST NOT register a finding as blocking to be safe. That habit is what produ
 **V13 stamps only components at `risk_accepted` `low` or `medium`.** At `high` the owner has already said
 they accept the risk, and demanding the trace there is bookkeeping with no buyer.
 
-SPEC keeps its trace in the registry because `bmad-spec` is its sole author and overwrites hand
-edits. A trace written into `SPEC.md` disappears on the next run.
+The contract keeps its trace in the registry, not in itself: `to-spec` and `to-tickets` are its sole
+authors and both overwrite hand edits, so a trace written into `SPEC.md` or a ticket file disappears on
+the next run.
 
 **Anything in the corpus MAY be reviewed here, at any time** — a `DEC-`, minutes, an `OQ-`, a guide, a
 brief, a PRD, a `DESIGN.md`. What is restricted is the **stamp**, not the reading: only the four rows

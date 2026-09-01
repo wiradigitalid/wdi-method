@@ -626,6 +626,34 @@ function syncTomls(target) {
   return { files: n, slugsKept };
 }
 
+// The same argument pruneRetiredSkills makes, one folder over — with one difference that changes
+// the rule. `wdi-` is this method's namespace, so "a wdi-* folder not in WDI_SKILLS" is safely ours.
+// `_bmad/custom/` is NOT: a product may put its own override there, and `.user.toml` is the
+// product's half of every override by convention. So removal here is by an EXPLICIT list of files
+// this package once shipped and has now withdrawn — never by "absent from the kit".
+//
+// Why remove them at all: an override for a retired engine is worse than no override. It is still
+// installed and still read, and bmad-retrospective.toml instructs an agent to archive an `RTR-`
+// against a validator, V19, that no longer exists.
+const RETIRED_TOMLS = [
+  "bmad-spec.toml", "bmad-build.toml", "bmad-build-auto.toml",
+  "bmad-code-review.toml", "bmad-retrospective.toml",
+];
+
+function pruneRetiredTomls(target) {
+  const dir = path.join(target, "_bmad", "custom");
+  if (!fs.existsSync(dir)) return 0;
+  let removed = 0;
+  for (const name of RETIRED_TOMLS) {
+    const file = path.join(dir, name);
+    if (!fs.existsSync(file)) continue;
+    fs.rmSync(file);
+    note(`removed retired override ${name}`);
+    removed += 1;
+  }
+  return removed;
+}
+
 function seedControlIfMissing(target) {
   const control = path.join(target, ".control");
   if (fs.existsSync(control)) {
@@ -810,9 +838,10 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
   summaryLine("written", `${written} constitution · ${skills.files} skill files · ${tomls.files} bmad overrides`
     + (opencodeCmds?.written ? ` · ${opencodeCmds.written} opencode commands` : ""));
   if (kept.length) summaryLine("kept", kept.join(" · "));
-  if (skills.removed) {
-    summaryLine("removed", `${skills.removed} retired wrapper${skills.removed === 1 ? "" : "s"}`);
-  }
+  const gone = [];
+  if (skills.removed) gone.push(`${skills.removed} retired wrapper${skills.removed === 1 ? "" : "s"}`);
+  if (tomls.removed) gone.push(`${tomls.removed} retired override${tomls.removed === 1 ? "" : "s"}`);
+  if (gone.length) summaryLine("removed", gone.join(" · "));
   if (first && policy.docLanguage) {
     summaryLine("language", `${policy.docLanguage} · filenames ${policy.docFilenameLanguage}`);
   }
@@ -899,6 +928,7 @@ function apply(target, agents,
     }
   }
   const tomls = syncTomls(target);
+  tomls.removed = pruneRetiredTomls(target);
   note(`bmad custom ${tomls.files} toml → _bmad/custom/`);
   if (first) seedControlIfMissing(target);
   seedEmptyLayers(target, { first });

@@ -27,7 +27,7 @@ Depth is **read from `mode`**, never computed. Review lenses are **read from `ri
 
 ## No BMad skill writes this
 
-`bmad-prd` writes the PRD, `bmad-architecture` writes the spine, `bmad-spec` writes SPEC. Nothing in BMad
+`bmad-prd` writes the PRD, `bmad-architecture` writes the spine, `to-spec` writes the contract. Nothing in BMad
 writes an SRS. Three consequences follow, and each MUST be handled deliberately:
 
 | Consequence | What follows |

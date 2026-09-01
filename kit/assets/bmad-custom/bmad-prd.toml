@@ -36,7 +36,7 @@ persistent_facts = [
 
   "Every intent Update run MUST add exactly one row to the PRD's Revision History table: the date, what changed in language an outside reader understands, and why. That table is for the reader; the memlog is for the audit. Neither MUST substitute for the other.",
 
-  "A release MUST NOT be stated through the PRD's folder name or its title. It is carried by the target_release field in requirements.yaml and waves.yaml. Naming a release number inside the PRD's prose MAY be done as context, but the registry remains what binds.",
+  "A release MUST NOT be stated through the PRD's folder name or its title. It is carried by the target_release field in requirements.yaml and specs.yaml. Naming a release number inside the PRD's prose MAY be done as context, but the registry remains what binds.",
 
   "Every memlog.py call — init, append, set, and the read on resume or intent Update — MUST use --path {project-root}/.control/memlog/prd-FILL-initiative-slug.md. The slug MUST match run_folder_pattern above, and both lines MUST change together when the initiative changes. --workspace MUST NOT be used.",
 ]

@@ -93,7 +93,7 @@ here is **when each one becomes possible**.
 | Tokens and base components | `.how/_platform/design-system.md` | The run is final — it crosses components by definition |
 | `EXPERIENCE.md` | `.what/<pc>/04-usecases/` | The `<pc>` is registered in `components.yaml` |
 | `DESIGN.md` | `.how/<pc>/01-ux/` | The `<pc>` is registered **and** its container exists |
-| Each screen | an `LC` of type `ui-screen` in `components.yaml` | Same as `DESIGN.md` — an `LC` MUST name its container. Registration is checked at wave close, V12 |
+| Each screen | an `LC` of type `ui-screen` in `components.yaml` | Same as `DESIGN.md` — an `LC` MUST name its container. Registration is checked at spec close, V12 |
 
 - A half that is not yet landable MUST stay in `_bmad-output/ux/` and be reported as deferred. At G2
   that is the normal outcome, not a failure: the slicing is born at the tail of G2 and containers at G3.
@@ -133,7 +133,7 @@ Everything in a UX pass — the run and the landing — logs to `.control/memlog
 - You MUST NOT open G2 on UX that has not been through check 9. Gate time is for deciding.
 - You MUST NOT raise `status:` as part of landing. Status is a stage; the `reviewed:` block is an
   event, and `wdi-review` writes it.
-- You MUST NOT land anything into a wave that is already closed. The wave is reopened through
+- You MUST NOT land anything into a spec that is already closed. The spec is reopened through
   `wdi-build`, or the gap is filed through `wdi-question`.
 - When the UX concludes the PRD promised something that cannot be made usable, say so and stop. Route
   to `wdi-product`; do not quietly narrow the promise in `EXPERIENCE.md`.

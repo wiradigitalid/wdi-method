@@ -277,7 +277,6 @@ be moved onto them. The human review surface stops at the PRD, `.what/`, and `.h
 
 | Tracker | WDI | Lifetime |
 |---|---|---|
-| Epic | Product Component | permanent — an Epic never closes |
 | **Parent issue** | **spec** | one spec |
 | **Issue, carrying native blocking edges** | **ticket** | one spec |
 | Fix Version | release | one release |

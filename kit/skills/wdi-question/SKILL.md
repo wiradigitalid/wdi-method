@@ -51,7 +51,7 @@ When N agents ran in parallel, their questions arrive as **one** ranked batch, n
 | Field | Rule |
 |---|---|
 | Question | One sentence, answerable. "How should referrals work?" is a topic, not a question |
-| Blocks | What cannot proceed — a gate, an `FR`, a story, or nothing |
+| Blocks | What cannot proceed — a gate, an `FR`, a ticket, or nothing |
 | Owner | Who can answer. A question with no owner is a wish |
 | By when | The moment it must be answered, usually a gate |
 

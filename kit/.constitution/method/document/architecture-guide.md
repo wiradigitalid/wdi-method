@@ -48,14 +48,14 @@ read in the places where it is right.
 An `AD-N` with no **Prevents** is a preference. Preferences belong in
 `.constitution/project/codebase-conventions-guide.md`, where nothing has to justify itself.
 
-## The spine stops being touched every story
+## The spine stops being touched every ticket
 
 This is the change that ends the tax that was being paid before the information existed.
 
 - **The spine holds invariants and nothing else.** It changes only when an `AD-N` is born or reversed, and
   both are decision events. For a mid-sized product: once at the start, around 6–10 `AD-N`, then almost
   never.
-- **A story MUST NOT touch the spine.** A story that contradicts an `AD-N` **stops** and opens a `DEC-` —
+- **A ticket MUST NOT touch the spine.** A ticket that contradicts an `AD-N` **stops** and opens a `DEC-` —
   the one case where recording a decision is still mandatory.
 - **Editing an `AD-N` MUST NOT quietly reverse it.** A reversal is a decision, and it goes through
   `wdi-decision` first.
@@ -90,7 +90,7 @@ the C4 set describes and the spine forbids. A C4 file MUST NOT be used to justif
 belongs in an `AD-N`.
 
 The C4 set is **living**. It is amended when a container is added or changed — it MUST NOT be regenerated from
-scratch, which would drop the annotations three waves of amendment put there.
+scratch, which would drop the annotations three specs of amendment put there.
 
 ## What counts as a container, and what does not
 
@@ -152,8 +152,8 @@ first: *which container does this promise live in, and is it more than one?*
 **L2 MUST be complete** — every container, plus the matrix. **L3 exists once per `built: true` container
 holding more than one PC**; a one-PC container needs none because the matrix already places it.
 
-**Not one of the three waits for a wave.** Which container a PC lives in cannot be discovered by a wave,
-because a wave picks its stories from that answer — a wave forced to invent it answers a G3 question with
+**Not one of the three waits for a spec.** Which container a PC lives in cannot be discovered by a spec,
+because a spec picks its tickets from that answer — a spec forced to invent it answers a G3 question with
 a fraction of G3's information.
 
 ## Cross-cutting
@@ -181,9 +181,9 @@ at every mode.
 
 ## Binding order
 
-Spine first, then the SDD, then `bmad-spec`. An `SDD-<pc>.md` written before the spine will be rewritten,
+Spine first, then the SDD, then the spec's contract. An `SDD-<pc>.md` written before the spine will be rewritten,
 because the constraints it was supposed to inherit did not exist yet. A `SPEC.md` written before the SDD has
-nothing to project. `bmad-spec` MUST keep `AD` ids stable so downstream artifacts can cite them.
+nothing to project. `AD` ids MUST stay stable so downstream artifacts can cite them.
 
 ## Inheritance downward
 

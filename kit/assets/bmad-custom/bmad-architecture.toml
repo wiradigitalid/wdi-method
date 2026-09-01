@@ -2,7 +2,7 @@
 # The spine holds the invariants that keep separately built units from diverging.
 # Structure (stack, tree, data shapes) is treated as a seed, not a contract.
 #
-# Order binds: the spine comes first, and bmad-spec reads it as a companion — never the other
+# Order binds: the spine comes first, and the spec's contract reads it as a companion — never the other
 # way round.
 
 [workflow]

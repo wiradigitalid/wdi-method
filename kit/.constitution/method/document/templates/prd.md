@@ -103,7 +103,7 @@ changed for the reader. Neither replaces the other.]
 ...
 
 ## 5. Non-Goals (Explicit)
-[Bulleted. What this product is *not* and what it will *not* do in v1. Does outsized work for downstream readers and workflows — prevents the "let me also add this nearby thing" failure mode at every level (epic, ticket, code). Inline `[NON-GOAL for MVP]` callouts within §4 Features cover deferred items within features; this section captures the broader "we are not building X / we are not becoming Y" statements.]
+[Bulleted. What this product is *not* and what it will *not* do in v1. Does outsized work for downstream readers and workflows — prevents the "let me also add this nearby thing" failure mode at every level (spec, ticket, code). Inline `[NON-GOAL for MVP]` callouts within §4 Features cover deferred items within features; this section captures the broader "we are not building X / we are not becoming Y" statements.]
 
 ## 6. MVP Scope
 
@@ -176,8 +176,8 @@ changed for the reader. Neither replaces the other.]
 - **Deployment and Update Mechanism** — OTA, manual, image-based.
 - **Environmental and Reliability Requirements**.
 
-### Small-scope all-inclusive *(use when scope is 1-2 stories' worth and the user wants a single captured artifact — chosen during the Right-skill check in Discovery)*
-- **Stories** — story-level specs listed inline at the end of the doc. Each story: *"As a [persona], I can [action] [under conditions]. Acceptance: [testable criteria]."* Numbered Story-1, Story-2, ... for reference. Pair with very lean §1 Vision, §2 Target User (often just JTBD + one UJ), §3 Glossary (handful of terms), §4 Features (often a single feature), §6 MVP Scope (in/out very tight). The whole doc fits on a page or two and captures intent + implementable stories in one place. If the user doesn't want the captured artifact at all, `bmad-build` is the better path — this cluster is only for "I want a doc *and* the stories."
+### Small-scope all-inclusive *(use when scope is 1-2 tickets' worth and the user wants a single captured artifact — chosen during the Right-skill check in Discovery)*
+- **Tickets** — ticket-level detail listed inline at the end of the doc. Each ticket: *"As a [persona], I can [action] [under conditions]. Acceptance: [testable criteria]."* Numbered Ticket-1, Ticket-2, ... for reference. Pair with very lean §1 Vision, §2 Target User (often just JTBD + one UJ), §3 Glossary (handful of terms), §4 Features (often a single feature), §6 MVP Scope (in/out very tight). The whole doc fits on a page or two and captures intent + implementable tickets in one place. If the user doesn't want the captured artifact at all, running `/to-tickets` straight from the conversation is the better path — this cluster is only for "I want a doc *and* the tickets."
 
 
 ---
@@ -196,7 +196,7 @@ shape above; nothing in the shape is removed.
 - **Revision History.** Every Update run MUST add exactly one row, written for an outside reader.
   It is what preserves "what did we promise back then" now that the document is not frozen.
 - **Release.** Carried by `CAP.target_release` in `.control/registry/requirements.yaml` — the only
-  place a promise's release is written — and by `release` in `waves.yaml` for the execution side. It
+  place a promise's release is written — and by `release` in `specs.yaml` for the execution side. It
   MUST NOT be expressed through this document's folder name or title, and an `FR` MUST NOT carry a
   release of its own; it inherits one from its capability. Naming a release in prose as context MAY
   happen; the registry is what binds.

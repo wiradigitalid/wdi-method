@@ -40,7 +40,7 @@ of that is `wdi-component` at G4. You MUST NOT write a promise; when the bluepri
   intent `component` — the slicing is born at the tail of G2, from the brief plus every PRD.
 - `catalog` runs before `platform`. The spine is written against a portrait that exists.
 - If the spine and C4 set already exist, `platform` is an **amendment**, never a create. A second create
-  overwrites what three waves of annotation put there.
+  overwrites what three specs of annotation put there.
 - If the ask is one component's mechanism or its full flows, route to `wdi-component`.
 - If the ask is what the product promises, route to `wdi-product` — an invariant is not a promise.
 
@@ -168,7 +168,7 @@ already there, you MUST stop and report it, and MUST NOT resolve it by preferrin
 C4 file and the spine disagree, the spine wins and the disagreement MUST be reported. One
 `c4-l3-<container>.md` per `built: true` container **holding more than one Product Component**. A
 `built: false` container gets no L3 at all, and a one-PC container needs none because the L2 matrix already
-places it. **Not one of the three waits for a wave** — `architecture-guide.md` owns that.
+places it. **Not one of the three waits for a spec** — `architecture-guide.md` owns that.
 
 **Register the containers** in `containers:` in `components.yaml`, in the same act as landing the L2. It is
 not a follow-up, and it unblocks everyone else: an `LC` MUST name its container.

@@ -24,7 +24,7 @@ created: '{YYYY-MM-DD}'
        service · job            → .how/<pc>/04-components/
        store                    → .how/<pc>/05-model/
 
-     An LC MUST be registered by the time its wave CLOSES — V12 checks that
+     An LC MUST be registered by the time its spec CLOSES — V12 checks that
      every `touches` entry resolves. -->
 
 ## Responsibility

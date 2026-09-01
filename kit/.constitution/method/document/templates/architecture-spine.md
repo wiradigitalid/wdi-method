@@ -3,6 +3,7 @@ name: '{name}'
 type: architecture-spine
 purpose: build-substrate    # build-substrate (default) · discussion · report · deck
 altitude: feature           # initiative (keeps features) · feature (keeps epics) · epic (keeps stories)
+                            # bmad-architecture's OWN vocabulary — not this method's `spec`/`ticket`, and not ours to rename
 paradigm: '{named design pattern, e.g. hexagonal, layered, pipes-and-filters, actor}'
 scope: '{what this spine governs}'
 status: draft               # draft · final
@@ -97,6 +98,6 @@ reviewed:                # V13. Filled only after wdi-review has actually run
 - **`AD-N` versus `DEC-NNN`.** An `AD-N` here is a living rule, edited in place. A `DEC-NNN` in
   `.control/decisions/` is one decision event, never edited and replaced by a `superseded` pointer.
   The two MUST NOT be interchanged.
-- **Ordering.** The spine is authored before `bmad-spec` runs, and `bmad-spec` adopts it as a
+- **Ordering.** The spine is authored before the contract is cut, and the contract adopts it as a
   companion — never the reverse.
 - **Memlog.** Written to `.control/memlog/spine.md` via `--path`.
