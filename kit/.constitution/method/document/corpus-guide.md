@@ -219,36 +219,50 @@ derived — and the *reason* something is the way it is, which no registry holds
 
 ## The corpus is written in the present tense
 
-A design document states **what is true now**. It does not state how it got there, when it was written,
-what it used to say, or what it disagreed with along the way. That is the whole rule, and it applies to
-`.what/<pc>/`, `.how/`, and `.constitution/project/`.
+A design document states **what is true now**: the latest state of the design, and what still has to be
+reached. It does not state how it got there. This governs `.what/<pc>/`, `.how/`, and
+`.constitution/project/`.
 
-**Banned in those layers:**
+### Two kinds of history, and only one is worth writing
 
-| Not written | Why |
-|---|---|
-| A correction block — *"this used to say X"* | git holds it, and a correction goes stale on a slower clock than the thing it corrects |
-| A `## Provenance` note — when the file was filled, and why then | The reader came for the design |
-| The document's own change log | Same |
-| A note recording a conflict that has been **resolved** | The conflict is over. What survives is the answer, written as if it had always been the answer |
-| *"Considered and rejected"* about the method itself | If the reason matters, it is a `DEC-`; usually it does not |
+Most history is not useful. What is useful is the current state — and the rare piece of history that
+**stops the same mistake happening twice**. One question separates them:
 
-**A mid-flight change lands as if it had been there from the start.** An idea that arrives during G5 is
-written into the documents in the present tense — not appended, not annotated, not marked as late. The
-record that it arrived late is the commit, and the commit is a better record than a paragraph.
+> **Would someone about to make a change be saved by this line?**
 
-**What survives, and MUST NOT be cut by this rule:**
+| Kind | Example | Where it goes |
+|---|---|---|
+| **Business or technical** — the mistake could recur | *"Files are removed before the record, and that left a document pointing at a deleted image"* | A `DEC-`, `why/`, or `answered.md`. Rarely, and only when it earns it |
+| **Document history** — a document said something else last week | *"This section was rewritten"* · *"withdrawn because a later pass found it wrong"* · *"this used to read X"* | **Nowhere.** git holds it, and git holds it better |
 
-- **The PRD's Revision History.** Its reader is outside the room — a client, a sponsor, an auditor — and
-  a promise that changed silently is a different failure. `prd-guide.md` owns it.
-- **`ratified_by:`** on a room guide. That is not history; it is the evidence the rule is real.
-- **`why/`** and `.control/decisions/`. Those layers exist to hold history. This rule is about the layers
-  that do not.
-- **`superseded`** status pointing at a replacement. A reader following an old id needs the pointer.
+The second kind is what fills a corpus and buys nothing. It arrives as a correction block, a
+`## Provenance` note, a document's own change log, a note about a conflict that has already been
+**resolved**, or a *"considered and rejected"* aside about the method itself. All of it MUST NOT be
+written in the three layers above.
+
+**And no step demands the first kind either.** History is never a checklist item, never a gate condition,
+and never a blocking finding. It is written when someone judges it worth writing, and skipping it is
+**not** a gap — nothing in this method MAY report a missing history line as a defect. That is the whole
+difference between a record and a ritual.
+
+**A mid-flight change lands as if it had been there from the start.** An idea arriving during G5 is
+written in the present tense — not appended, not annotated, not marked as late. The commit is that
+record, and it is a better one than a paragraph.
+
+**What this rule does NOT cut:**
+
+- **The PRD's Revision History.** Its reader is outside the room, and `prd-guide.md` already demands the
+  business form of it: *state what the promise now is, not which section was edited.*
+- **`.control/questions/answered.md`.** This is the clearest case of history that pays: it is what stops
+  the same question being asked again in three months.
+- **`ratified_by:`** on a room guide — evidence the rule is real, not a record that it changed.
+- **`why/`** and `.control/decisions/`, whose job is exactly the first kind.
+- **`superseded`** pointing at its replacement. A reader following an old id needs the pointer.
 
 Real cost of getting this wrong, from one repo: a codebase conventions guide — the file a developer opens
 to learn how to write code here — spent a quarter of its length explaining when it had been filled, why it
-was not a `DEC-`, and which alternative had been rejected.
+was not a `DEC-`, and which alternative had been rejected. Not one line of that would save the next reader
+from anything.
 
 ## Two axes inside `.what/`
 

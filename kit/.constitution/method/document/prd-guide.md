@@ -30,7 +30,7 @@ This is the decision the guide exists for, and the default is **Update**.
 | Situation | What to do |
 |---|---|
 | Behaviour of an existing promise changes | Update |
-| A promise turns out to be wrong and must be withdrawn | Update — and the withdrawal MUST be visible in Revision History, not silently deleted |
+| A promise turns out to be wrong and must be withdrawn | Update — and the withdrawal MUST be visible in Revision History, not silently deleted. This is the one mandated history line in the method, and it survives because it is **business** history read by someone outside the room, not a record that a document changed |
 | A new feature that a reader would expect to find in this PRD | Update |
 | The next release extends what this PRD already promises | Update. A release is never a reason on its own |
 | A functional area a reader would not think to look for here | New PRD |

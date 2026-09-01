@@ -17,6 +17,14 @@ small: *"the filter works like this"*, *"this list is sorted that way"*.
 
 Yes → it MUST NOT be recorded. No → it is recorded.
 
+**A `DEC-` records a state, never an event.** It answers *why is it like this* for someone about to
+change it — forward-looking, present tense. It is not a record that something changed, not a record that
+a document used to say otherwise, and not a record that a review found a conflict. Those are document
+history, and `corpus-guide.md` § The corpus is written in the present tense says they go nowhere.
+
+The practical form of the test: **would this file save the next person from a mistake they were about to
+make?** If the honest answer is *"no, but it explains what happened"*, there is no file.
+
 **Recording is not mandatory, and a decision nobody recorded is normal rather than negligence.** It
 MUST NOT be logged as debt, raised as a finding, or backfilled later from memory. Without this
 sentence, "not mandatory" is read as "mandatory but allowed to be late".
@@ -110,7 +118,9 @@ be touched — not the Decision, not the Cost, not a typo in the Why. Documents 
 destroys the only evidence of what they were changed to match.
 
 Before that, an `accepted` `DEC-` MAY be corrected in place. Nothing has been built on it, so there is
-no divergent record to preserve. The correction MUST be recorded in the memlog.
+no divergent record to preserve, and **the correction is not recorded anywhere** — the file now reads
+correctly and git holds the change. Logging it would be a second home for a fact git already has, and a
+piece of document history that would save nobody.
 
 An agent MUST NOT accept its own `DEC-`. When work is blocked waiting on one, the block is reported,
 never resolved by self-approval.

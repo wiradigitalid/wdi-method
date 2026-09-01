@@ -25,21 +25,16 @@ You MUST NOT use this for code or diffs. That is `code-review`, dispatched by `w
 | the contract — `SPEC.md`, or the ticket set as one artifact at size `S` | `spec_reviewed:` on the spec in `specs.yaml` |
 
 **The lens set comes from the component's `risk_accepted`, never from `mode` and never from the artifact
-type.** `delivery-flow-guide.md` owns the mapping and it MUST NOT be restated as a second copy here; what
-this skill owns is reading it and refusing to run a lighter set than it names.
+type.** The mapping lives in `delivery-flow-guide.md` § Two fields, and it is **read from there, not copied
+here** — this file carried a second copy of that table until it was noticed that the sentence forbidding
+the copy sat directly above it.
 
-| `risk_accepted` | First review, and the review before a gate | Every re-review after that | On the code |
-|---|---|---|---|
-| `low` | structure · prose · **edge-case-hunter** | structure · prose | a two-reviewer panel is required |
-| `medium` | structure · prose · **edge-case-hunter** | structure · prose | — |
-| `high` | structure · prose | structure · prose | — |
+What this skill owns is three things the mapping does not say:
 
-**`edge-case-hunter` is bought once, where it pays** — an artifact's first review, and the review that
-opens a gate. A re-review MUST put it back when the delta touches money, personal data, an irreversible
-action, or a third party.
-
-`SPEC.md` always carries `edge-case-hunter`, first run and re-run alike: it is the contract a builder works
-from, and a branch missed there surfaces as a bug at G5 instead.
+- **Refusing a lighter set than it names.** The lens set is not negotiable down, whatever the artifact.
+- **The contract is the exception:** it always carries `edge-case-hunter`, first run and re-run alike. It
+  is what a builder works from, and a branch missed there surfaces as a bug at G5 instead.
+- **Reading `risk_accepted` off the component, not off the artifact** — Step 1 below.
 
 ## When a review has to run again — and when it does not
 
@@ -66,9 +61,9 @@ precedent elsewhere in the method; none of them lowers what a review looks for.
 because a document was touched. An offer declined five times teaches the owner to decline the sixth,
 which is the one that mattered.
 
-Three things look like a review and are not: a document the owner has already **decided against** — that
-is an edit, and `delivery-flow-guide.md` owns it; a document **merely behind the code**, which is its
-expected state because the code moves first; and a machine contract, which nobody reads.
+Three things look like a review and are not: a document the owner has already **decided against** — an
+edit, `delivery-flow-guide.md` owns it; a document **merely behind the code**, its expected state; and a
+machine contract, which nobody reads.
 
 **The test — one question, and it decides:**
 
@@ -83,6 +78,11 @@ expected state because the code moves first; and a machine contract, which nobod
 
 Everything in the right column is corrected **when someone next touches that section**, or it dies with
 the document. It MUST NOT be raised as a finding, MUST NOT open an `OQ-`, and MUST NOT hold a stamp.
+
+**A missing history line is never a finding.** Not a rationale, not a note saying why something changed,
+not an account of a conflict already resolved. `corpus-guide.md` § The corpus is written in the present
+tense says history is written when someone judges it worth writing, and that skipping it is not a gap —
+a review that reports it as one turns a record into a ritual.
 
 **Where substance actually is.** On the evidence of a real pass of twenty-one findings: a document checked
 against **the code**, and against an **`AD-N`** or an `applied` `DEC-`. Those two found the only two that
