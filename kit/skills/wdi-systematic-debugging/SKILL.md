@@ -109,7 +109,7 @@ defect; refusing to work until the paperwork is right is how the file becomes a 
 | Field | Where it comes from |
 |---|---|
 | `root_cause` | Your Phase 1–3 conclusion, in the four categories of the table above |
-| `violates` | The `FR-` or `UC-` the defect breaks. MUST be filled for `requirement` and `architecture`: a defect that violates something without naming what cannot be traced back to the corpus, and V20 fails it |
+| `violates` | The `FR-` or `UC-` the defect breaks. MUST be filled for `requirement` and `architecture`: a defect that violates something without naming what cannot be traced back to the corpus, and `defect-root-cause` fails it |
 | `fix` | `fastpath` for a pure code defect, the spec id otherwise. The table above already decides this — `requirement` and `architecture` MUST NOT be `fastpath` |
 
 You MUST NOT write a closure date. It is derived from the history of `defects.yaml` itself by
@@ -128,7 +128,7 @@ own `root_cause`:
 |---|---|
 | `code` | The failing test from Phase 4 passes and the fix is merged |
 | `requirement` | The `FR-` or `UC-` in `violates` has actually changed — the code alone MUST NOT close it |
-| `architecture` | The `DEC-` is `accepted` and named on the row. V20 fails a `fixed` row without one |
+| `architecture` | The `DEC-` is `accepted` and named on the row. `defect-root-cause` fails a `fixed` row without one |
 | `environment` | The handling is in place and the monitoring exists |
 
 Setting `fixed` before its row's condition is met is the failure this whole registry exists to

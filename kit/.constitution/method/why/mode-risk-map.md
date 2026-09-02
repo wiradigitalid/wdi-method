@@ -23,7 +23,7 @@ reviewed the hardest**. `rationale.md` holds why.
 What the table below gives is **consequence**, not recommendation. Two things in it are not free, and both
 are named in the guide, not here: `risk_accepted: high` on a component whose `risk_note` names money,
 personal data, an irreversible action, a contractual promise, or an un-rollbackable integration needs a
-named acceptance in `risk_accepted_by` (V23) — and an outside party who will demand the artifacts as a
+named acceptance in `risk_accepted_by` (`high-risk-named`) — and an outside party who will demand the artifacts as a
 deliverable puts the touched component at `mode: deep` **and** `risk_accepted: low`, which is the one cell
 the method assigns rather than offers.
 
@@ -44,14 +44,14 @@ content, born at G3, which the depth knob does not reach.
 
 ## Axis 2 — what moves when only `risk_accepted` moves
 
-| `risk_accepted` | Lenses on the documents | On the code | V13 trace on the component's docs |
+| `risk_accepted` | Lenses on the documents | On the code | `review-trace` trace on the component's docs |
 |---|---|---|---|
 | `low` | structure · prose · **edge-case-hunter** | a **two-reviewer panel is required** | demanded |
 | `medium` | structure · prose · **edge-case-hunter** | — | demanded |
 | `high` | structure · prose | — | not demanded — the risk is already accepted on the record |
 
 **The contract sits outside that last column entirely**, and it is the one artifact this field never
-reaches: it always carries `edge-case-hunter`, and V13 always demands `spec_reviewed` on every spec that
+reaches: it always carries `edge-case-hunter`, and `review-trace` always demands `spec_reviewed` on every spec that
 carries tickets — `high` included. A spec is not a component, so `risk_accepted` has no say over it. It is
 what a builder works from, and a branch missed there surfaces as a bug at G5.
 
@@ -60,13 +60,13 @@ One trace covers the whole spec, never one per ticket. Where `SPEC.md` exists th
 
 ## The twelve cells
 
-`g4` = the G4 session · `panel` = the two-reviewer code panel · V13 targets assume the file is born.
+`g4` = the G4 session · `panel` = the two-reviewer code panel · `review-trace` targets assume the file is born.
 
 | `mode` + `risk_accepted` | Owner time at G4 | Document review | Code | Component trace on | Also |
 |---|---|---|---|---|---|
 | `catalog` + `low` | none — skipped | structure · prose · edge-case-hunter | **panel** | `SRS` only | The cell the split exists for: thin on purpose, reviewed hardest |
 | `catalog` + `medium` | none — skipped | structure · prose · edge-case-hunter | — | `SRS` only | The cheapest cell that still hunts edge cases |
-| `catalog` + `high` | none — skipped | structure · prose | — | nothing | Nothing in the flow asks what is being staked — only `wdi-init`'s disclosure and V23 do |
+| `catalog` + `high` | none — skipped | structure · prose | — | nothing | Nothing in the flow asks what is being staked — only `wdi-init`'s disclosure and `high-risk-named` do |
 | `outline` + `low` | 20' | structure · prose · edge-case-hunter | **panel** | `SRS` · `SDD` after G4 | Flows for 3 use cases, checked hard |
 | `outline` + `medium` | 20' | structure · prose · edge-case-hunter | — | `SRS` · `SDD` after G4 | — |
 | `outline` + `high` | 20' | structure · prose | — | nothing | Flows exist; no lens looks for the branch they miss |
@@ -78,7 +78,7 @@ One trace covers the whole spec, never one per ticket. Where `SPEC.md` exists th
 | `deep` + `high` | 30' | structure · prose | — | nothing | Depth bought, scrutiny declined. Legal, and worth saying out loud once |
 
 **The trace column is scoped to a component's own documents.** The spec's own trace is left out of it
-because it is demanded in **every** cell: V13 asks for `spec_reviewed` carrying `edge-case-hunter` on every
+because it is demanded in **every** cell: `review-trace` asks for `spec_reviewed` carrying `edge-case-hunter` on every
 spec with tickets, whatever `risk_accepted` says. Reading a `nothing` in that column as *"no trace is
 demanded anywhere in this cell"* is the one misreading it invites, and it is wrong.
 
@@ -109,14 +109,14 @@ the component and name what is touched before proposing any value. The disclosur
 Four points, and they are the whole reason this file exists. Everywhere else the fields are independent
 and each row above is just its axis restated.
 
-1. **The `SDD` review trace is the one demand that reads both fields.** V13 demands it only when
+1. **The `SDD` review trace is the one demand that reads both fields.** `review-trace` demands it only when
    `risk_accepted` is `low` or `medium` **and** `mode` is above `catalog` **and** `g4_passed` is set. At
    `catalog` the SDD skeleton is its **finished** form, and a trace on thirteen lines of template comments
    is theater.
 2. **The `SRS` trace reads only risk.** It is demanded at every `mode`, `catalog` included, because the
    SRS carries the Actor Register and the UC Catalogue — G3 content, born whatever the depth.
 3. **The spine's trace is product-wide.** One component at `low` or `medium` anywhere puts
-   `ARCHITECTURE-SPINE.md` under V13, however the other components are set.
+   `ARCHITECTURE-SPINE.md` under `review-trace`, however the other components are set.
 4. **`catalog` removes the gate where risk is spoken about.** G4's first ★ question is *"what is being
    staked in this component — and does `risk_accepted` say so out loud?"* At `catalog` that session does
    not happen, so the disclosure at `wdi-init` intent `risk` and the `risk_note` it writes are the only
@@ -125,7 +125,7 @@ and each row above is just its axis restated.
 
 Two more mechanics, neither of which reads `risk_accepted`:
 
-- **V22** — from `outline` up, a spec MUST NOT touch a component whose `g4_passed` is unset. At `catalog`
+- **`spec-after-g4`** — from `outline` up, a spec MUST NOT touch a component whose `g4_passed` is unset. At `catalog`
   the check passes by design, because there is no G4 to pass.
 - **G4's second ★ question** — *"which boundary still has no answer for the other side being slow, absent,
   or lying"* — is asked from `guarded` up. It is the question `guarded` exists to buy.
@@ -137,4 +137,4 @@ Two more mechanics, neither of which reads `risk_accepted`:
 | Raising or lowering `mode` | nothing. No justification | Lowering **deletes nothing** — a written file stops being required, and that is all |
 | Raising `mode` on a component whose code already runs | the evidence labels in `sdd-guide.md` | What comes out is an **as-built record**, not a design |
 | Lowering `risk_accepted` toward `low` | a review that now has to actually run | A stale trace MUST be re-earned, never re-dated — except for a wording-only change, which `wdi-review` lets you re-stamp |
-| Raising `risk_accepted` to `high` on a sensitive component | a person and a date in `risk_accepted_by` | V23 checks somebody is named, and it discloses rather than vetoes |
+| Raising `risk_accepted` to `high` on a sensitive component | a person and a date in `risk_accepted_by` | `high-risk-named` checks somebody is named, and it discloses rather than vetoes |

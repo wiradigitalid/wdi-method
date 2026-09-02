@@ -28,7 +28,7 @@ them only an *example* does — not a rule.
 | `templates/design-system.md` | The pointer to wherever this project keeps its tokens | Re-point at that project's token file |
 | `templates/oq.md` | One example of a bad question title | Cosmetic |
 
-Everything else — the five gates, the two fields, the fifteen skills, the templates, `validate.py`,
+Everything else — the five gates, the two fields, the sixteen skills, the templates, `validate.py`,
 `inventory.py`, `../method-glossary.md`, and the three files beside this one — carries without edit.
 
 One half-exception, and it is by design: `inventory.py` is the generic engine and carries whole, but

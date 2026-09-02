@@ -29,7 +29,7 @@ reverse holds too. The test: would this term still apply on a different product?
 | **Product Component** (PC) | A domain slice — the box at C4 L3. Lives in `.what/<pc>/` and `.how/<pc>/`, and its `containers:` says where it runs |
 | **Logical Component** (LC) | One addressable unit of build. Registered in `components.yaml` with `type` · `container` · `owner` · `area` |
 | **Container** | Something that **runs its own code or stores its own data** and can be replaced without rebuilding another one. The C4 L2 term, and the value of an LC's `container` field. Two questions decide it and both MUST be yes — `architecture-guide.md` owns the test. Shipping two containers in one release does **not** merge them |
-| **`built`** | A container's one boolean. `true` when we write what is inside it, `false` when we deploy someone else's implementation. It decides whether the container gets an L3, an `LC`, and a heading in the codebase map — V25 checks all three |
+| **`built`** | A container's one boolean. `true` when we write what is inside it, `false` when we deploy someone else's implementation. It decides whether the container gets an L3, an `LC`, and a heading in the codebase map — `container-built` checks all three |
 | **External system** | Something the product talks to whose **runtime we do not deploy**. It belongs at C4 L1, and MUST NOT be a container, an `LC`'s `container`, or a heading in the codebase map. What we lean on it for lives in `cross-cutting.md` or an integration contract |
 | **`_platform`** | **Not a component.** The home for what belongs to no Product Component: the spine, the C4 set, `cross-cutting.md`, the three inventories, and whatever it **owns**. A legitimate value in every position that asks which component owns something — `platform_owns`, an inventory row, an `LC`. Four kinds today: data · endpoint · job · screen. It carries no `mode`, no `risk_accepted`, and no G4 |
 | **Library** | An includable artifact — compiled into or imported by something else, never run on its own. Not a container |
@@ -91,7 +91,7 @@ there is only Product Component.
 | `CAP-` | A capability — the planning unit |
 | `NT-` | A non-technical fact |
 | `BUG-` · `HOT-` | A defect · a hotfix |
-| `V1`–`V25` | Validators. `V10` fell and its number is not reused |
+| `goal-has-fr`–`container-built` | Validators. `V10` fell and its number is not reused |
 
 IDs are allocated **globally** and never restart per document, per component, or per release. The chain
 that must hold end to end: `BG → FR → UC → ticket → test`.
@@ -149,7 +149,7 @@ A synonym for a term that already has an entry is drift, and `wdi-reconcile` hun
 | application · app · service, for a deployable | **container** | The term is already defined at C4 L2 and carried by every LC |
 | infrastructure · third-party · dependency, for something inside the boundary | **container** with `built: false` | Calling it something else is how a container ends up with no row, no owner, and no NFR |
 | container, for something whose runtime we do not deploy | **external system** | It has no `built`, no L3, and no heading. Registering it as a container promises a section of the codebase map that will never exist |
-| module · package, for a unit of build | **Logical Component** | `components.yaml` names it, and V12 resolves against that name |
+| module · package, for a unit of build | **Logical Component** | `components.yaml` names it, and `lc-registered` resolves against that name |
 | epic · sprint, for a batch of work | **spec** | Both belong to the sprint route this method dropped |
 | **wave**, for a unit of delivered work | **spec** | Retired when the engine layer below G5 changed. See the retired-alias rule below |
 | **story**, for a unit of build | **ticket** | Same retirement. A ticket is a vertical slice that blocks and is blocked; a story was a row in a file BMad owned |

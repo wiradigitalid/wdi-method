@@ -317,7 +317,7 @@ def gen_report(c: Corpus, timeline: dict, asof: dt.date) -> dict:
         by_cause.setdefault(row["root_cause"] or "?", []).append(row["id"])
 
     # An empty `root_cause` is a valid state — the row was opened by someone who has not yet
-    # diagnosed it, and V20 does skip it. What MUST NOT happen is it aging unseen, so it is
+    # diagnosed it, and `defect-root-cause` does skip it. What MUST NOT happen is it aging unseen, so it is
     # surfaced in the report instead of being held by a validator. The whole period, not just this one.
     undiagnosed = sorted(
         ({"id": str(d.get("id")), "title": str(d.get("title") or ""),

@@ -5,7 +5,7 @@ status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
 realizes: []             # UC ids this design realizes, from usecases.yaml
 binds: []                # AD ids from the spine that bind here
-reviewed:                # V13. Filled only after wdi-review has actually run
+reviewed:                # `review-trace`. Filled only after wdi-review has actually run
   date: ''               # '{YYYY-MM-DD}'
   sha: ''                # commit it was reviewed at; without the SHA, staleness cannot be measured
   lenses: []             # the set risk_accepted names — NOT a fixed list
@@ -50,7 +50,7 @@ reviewed:                # V13. Filled only after wdi-review has actually run
      rule, not decoration.
 
      Every LC named here MUST be registered in .control/registry/components.yaml, and the registration
-     is checked WHEN THE SPEC CLOSES — V12 — not before a ticket is picked up. The old timing
+     is checked WHEN THE SPEC CLOSES — `lc-registered` — not before a ticket is picked up. The old timing
      demanded the answer at the moment the information was thinnest. -->
 
 | LC | type | Responsibility |
@@ -58,15 +58,18 @@ reviewed:                # V13. Filled only after wdi-review has actually run
 
 ## Inherited Constraints · [guarded]
 
-<!-- Every AD-N from ARCHITECTURE-SPINE.md that reaches this component, QUOTED VERBATIM under its
-     ORIGINAL id. A paraphrase drifts, and the drift is invisible because both texts read reasonably.
+<!-- The AD-N ids from ARCHITECTURE-SPINE.md that reach this component, and how each lands HERE.
+     IDS ONLY — never the rule's text. `AD-` is a living rule edited in place, so a copy of its text
+     goes stale the moment the spine changes and nothing sees it. The rendered SDD
+     (`.how-rendered/<pc>/SDD-<pc>.md`) shows every invariant with its current text, pulled from the
+     spine, and marks which ones bind this component.
 
      A local choice contradicting one is a conflict to surface through wdi-decision, never an override
      made here. Below `guarded` this section is absent and the AD-N still binds — an invariant does not
      stop holding because a document is thin. -->
 
-| AD | Quoted rule | How it lands here |
-| --- | --- | --- |
+| AD | How it lands here |
+| --- | --- |
 
 ## Failure Behaviour · [guarded]
 

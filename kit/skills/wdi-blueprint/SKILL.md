@@ -160,7 +160,7 @@ Then verify and land:
 | 6 | Nothing but invariants | A statement affecting one component only — that is its SDD |
 | 7 | Memlog at `.control/memlog/spine.md` | A `.memlog.md` appeared inside `.how/` — `--workspace` was used |
 
-Check 7 MUST be fixed immediately. V16 rejects a memlog inside the corpus.
+Check 7 MUST be fixed immediately. `memlog-home` rejects a memlog inside the corpus.
 
 **Land the C4 set by amending, never overwriting.** The files are living and already carry annotations,
 including a pre-method provenance note that MUST survive. When the incoming set contradicts an annotation
@@ -175,12 +175,12 @@ not a follow-up.
 
 **And fill every `LC` whose `container:` is empty, in that same act.** Screens registered by `wdi-ux` at
 G2 are born without one on purpose — containers do not exist yet — and this is the moment the answer
-does. V25 starts demanding it as soon as a Product Component lists containers, so filling it here is what
+does. `container-built` starts demanding it as soon as a Product Component lists containers, so filling it here is what
 keeps the board clean without anyone tracking a to-do.
 
 Each container MUST carry `built:` — `true` when we write what is inside it, `false` when we deploy
 someone else's implementation. It decides whether the container gets an L3, an `LC`, and a heading in the
-codebase map (V25). Something whose **runtime we do not deploy** is an external system: it belongs at L1,
+codebase map (`container-built`). Something whose **runtime we do not deploy** is an external system: it belongs at L1,
 and registering it here promises a codebase-map section that will never exist.
 
 **Fill each PC's `containers:` in the same act, and land the matrix at L2** — the registry is the SSOT and
@@ -193,7 +193,7 @@ You MUST NOT register a
 **Register what `_platform` owns** in the same pass — a domain entity through `platform_owns`, an inventory
 row through that inventory's `platform_rows:`, an `LC` through its `component:`. The test is in
 `corpus-guide.md` and both halves MUST hold. Each one MUST then be described under `## Platform-owned` in
-`cross-cutting.md`, in the same act: V21 checks that second half, because owning something without
+`cross-cutting.md`, in the same act: `entity-one-writer` checks that second half, because owning something without
 documenting it is taking ownership without taking responsibility.
 
 A judgement the pattern cannot derive MUST live in the artifact it governs, not in a script and not in a
@@ -218,13 +218,13 @@ a new row takes the next number, never a renumber.
 
 ## Step 6 — The roll-up, and what the owner actually reads
 
-Regenerate `.control/generated/blueprint.md` with `validate.py --generate`. It assembles the UC catalogue, the
+Regenerate `.how-rendered/blueprint.md` with `validate.py --generate`. It assembles the UC catalogue, the
 actor lists, the domain model, and the three inventories into **one page**.
 
 **That page is what G3 reviews** — not seven files. The catalogue and actors stay in their component kernels as
 their permanent home; the roll-up is a view. One fact, one home, one view.
 
-You MUST NOT hand-write anything under `.control/generated/`.
+You MUST NOT hand-write anything under `.control/generated/`, `.what-rendered/`, or `.how-rendered/`.
 
 ## Step 7 — Review and questions
 

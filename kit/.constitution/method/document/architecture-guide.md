@@ -118,7 +118,7 @@ A container is inside the boundary whether or not we wrote it. `built:` records 
 | A heading in `structure-codebase.md` | **Required** | **Never** — no code of ours lives there |
 | Listed in a PC's `containers:` | Yes | **Never** — see the matrix below |
 
-V25 checks all four. This is what makes the class settled rather than re-argued: a database and a web
+`container-built` checks all four. This is what makes the class settled rather than re-argued: a database and a web
 server are containers, they carry NFRs, and they still produce no design artifact of ours.
 
 **What IS ours about a `built: false` container MUST have a home outside the C4 set** — its configuration
@@ -139,7 +139,7 @@ depends on it for lives in `cross-cutting.md` or an integration contract.
 A PC and a container cross, so neither list implies the other — and the crossing is what a builder needs
 first: *which container does this promise live in, and is it more than one?*
 
-- The **SSOT is each PC's `containers:`** in `components.yaml`; C4 L2 renders it, and V25 fails when the
+- The **SSOT is each PC's `containers:`** in `components.yaml`; C4 L2 renders it, and `container-built` fails when the
   two disagree.
 - Complete at **G3** for every PC. It is blueprint content, so `mode` does not touch it.
 - A PC MUST list every `built: true` container it lives in. Listing only the main one is the error the
@@ -167,7 +167,7 @@ another. One fact, one home.
 **The platform MAY own things, and owning one costs a row here.** `_platform` is a legitimate owner in every
 position that asks which component owns something — a domain entity through `platform_owns`, an inventory row,
 an `LC`. Whatever it owns MUST be described under `## Platform-owned` in this file: what it is, its kind, why
-no component's promise explains it, who touches it, and the shape every toucher obeys. V21 checks that second
+no component's promise explains it, who touches it, and the shape every toucher obeys. `entity-one-writer` checks that second
 half, because a platform that owns something without documenting it has taken ownership without taking
 responsibility.
 

@@ -18,7 +18,7 @@ shape with `mode`, and the only one that runs more than once for a reason other 
 This table said `outline` → `behaviour` only until 2026-08-18. It contradicted **Step 4 of this same
 skill**, which starts `Decision Summary` and `Structure` "from `outline`", and it contradicted
 `delivery-flow-guide.md`, which owns the mapping and lists both for `outline`. Read literally, it would
-have left every `outline` component with an SDD that is a template skeleton forever — and V13 would have
+have left every `outline` component with an SDD that is a template skeleton forever — and `review-trace` would have
 been right to keep flagging it.
 
 Read the component's `mode` from its row in `components.yaml`, falling back to `mode:` in `index.yaml`. Read
@@ -112,7 +112,7 @@ Write in this order, stopping at whatever the `mode` does not reach:
    a reason where one does not apply. The data model carries a dictionary beside its diagram.
 
 From `guarded` up, every Boundary object MUST become an `LC` in `components.yaml`; at `deep`, Control objects
-too. Registration is checked **when the spec closes** — V12 — not before a ticket is picked up. You MUST
+too. Registration is checked **when the spec closes** — `lc-registered` — not before a ticket is picked up. You MUST
 NOT register a `container`, and you MUST NOT register `ui-screen` or `ui-composite`.
 
 ## Step 5 — Evidence, and the as-built case

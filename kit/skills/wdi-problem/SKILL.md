@@ -50,7 +50,23 @@ create a second copy that drifts.
 Name the raw-material files explicitly in the handoff. The skill globs its own output locations, and this
 project redirects them.
 
-## Step 4 — Verify
+## Step 4 — Land the Goals
+
+The template's `Goals` section is a pointer: `Goals — see goals.yaml → goals:`. The engine drafts
+`BG-N` statements in conversation, but nothing in `bmad-product-brief` writes them anywhere durable —
+the returned `brief.md` has no place left to hold them.
+
+Write each goal discussed as a row in `.control/registry/goals.yaml` → `goals:`, with the next
+`id` in sequence and its `statement`. Add a `why:` field only when the goal's justification is not
+already carried by `The Problem` or `Why` — most goals need no `why:` at all. This step is what
+finishes the brief; a pointer to an empty list is not a finished G1 artifact, and you MUST NOT report
+it as one.
+
+This is landing, not editing `brief.md` — the rule in the header is about the prose document, not the
+registry. Registry conversion is part of producing the artifact, the same way it is for a screen
+becoming an `LC` row.
+
+## Step 5 — Verify
 
 Check the returned brief against the guide. Report every failure; fix none of them by hand.
 
@@ -59,14 +75,16 @@ Check the returned brief against the guide. Report every failure; fix none of th
 | 1 | Home | Anything landed outside `.what/_product-brief/` |
 | 2 | Eight required sections present | The template's "drop what does not earn its place" was applied to one of them |
 | 3 | Exactly one `primary` in Who This Serves | Zero, or more than one |
-| 4 | Goals numbered `BG-N` | Numbered `G1`–`G4`, which collides with the gates |
-| 5 | Scope Out written as items | Left implicit |
-| 6 | Memlog at `.control/memlog/brief.md` | A `.memlog.md` appeared inside `.what/` — `--workspace` was used |
-| 7 | No raw material folded in | Research or brainstorming prose copied into the brief instead of cited |
-| 8 | No Product Component list | A slicing was written at G1; it belongs to `wdi-init` intent `component`, after G2 |
-| 9 | `bmad-review` structure + prose ran | `doc_standards` did not fire |
+| 4 | Goals numbered `BG-N`, landed in the registry, and the brief's own section stays a pointer | A goal's statement was written into the brief instead of, or as well as, the registry row from Step 4 |
+| 5 | Success Criteria names exactly one measurable figure, with a timeframe | A mission statement, a mix of signals, or a claim nobody could check without opening the code |
+| 6 | Scope Out written as items | Left implicit |
+| 7 | No Assumptions or Prerequisites section | Either appeared in the brief instead of being routed through `wdi-question` |
+| 8 | Memlog at `.control/memlog/brief.md` | A `.memlog.md` appeared inside `.what/` — `--workspace` was used |
+| 9 | No raw material folded in | Research or brainstorming prose copied into the brief instead of cited |
+| 10 | No Product Component list | A slicing was written at G1; it belongs to `wdi-init` intent `component`, after G2 |
+| 11 | `bmad-review` structure + prose ran | `doc_standards` did not fire |
 
-Check 6 MUST be fixed immediately rather than reported. A `.memlog.md` inside `.what/` is corpus pollution,
+Check 8 MUST be fixed immediately rather than reported. A `.memlog.md` inside `.what/` is corpus pollution,
 and every later run compounds it.
 
 ## Rules
@@ -76,7 +94,7 @@ and every later run compounds it.
   stays put.
 - You MUST NOT delete an exploration run folder after feeding it in. The `update` intents re-read the
   original inputs.
-- You MUST NOT open G1 on a brief that has not been through check 9. Gate time is for deciding.
+- You MUST NOT open G1 on a brief that has not been through check 11. Gate time is for deciding.
 - A brief concluding the idea is not worth building is a **pass**. You MUST report it as one rather than
   offering to rework it.
 - Every unresolved `[ASSUMPTION]` MUST be filed through `wdi-question` before the gate opens — into
@@ -86,5 +104,5 @@ and every later run compounds it.
 
 ## Output
 
-A short report: intent dispatched, what the brief now claims in one line, and the result of all nine checks
-— naming the failures, not summarising them away.
+A short report: intent dispatched, what the brief now claims in one line, the goal rows landed in Step 4,
+and the result of all eleven checks — naming the failures, not summarising them away.

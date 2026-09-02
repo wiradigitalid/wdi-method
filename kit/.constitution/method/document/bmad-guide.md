@@ -19,7 +19,7 @@ neither.** The engine layer below G5 is `to-spec`, `to-tickets`, `implement`, `t
 `wdi-build` owns the transition and states which BMad engines are retired.
 
 What survived the change is the **reason** the sprint route was dropped, because it is the same reason
-V18 still exists. That route keeps status in one hand-edited file: two builders running in parallel
+`ticket-status-one-home` still exists. That route keeps status in one hand-edited file: two builders running in parallel
 contend for it, and status becomes something a builder declares about itself. Status is read from the
 ticket instead, and it MUST NOT be copied into `specs.yaml`.
 
@@ -121,7 +121,7 @@ BMad skills call `--workspace` by default; the class-A home is reached by instal
 instruction as a `persistent_fact`.
 
 - A class-A or class-B skill MUST use `--path`. `--workspace` MUST NOT be used — it would leave a
-  `.memlog.md` inside `.what/` or `.how/`, which V16 rejects.
+  `.memlog.md` inside `.what/` or `.how/`, which `memlog-home` rejects.
 - Class-C memlogs stay beside their output in `_bmad-output/`.
 - Every memlog MUST carry `artifact:` in its frontmatter, pointing at a file that exists.
 

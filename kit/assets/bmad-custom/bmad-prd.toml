@@ -27,16 +27,22 @@ doc_standards = ["file:{project-root}/.constitution/method/document/prd-guide.md
 # activation. prd-guide.md remains authoritative; where the two disagree, the guide wins and the
 # line here MUST be fixed.
 persistent_facts = [
-  "file:{project-root}/.control/registry/requirements.yaml",
+  "file:{project-root}/.control/registry/goals.yaml",
   "file:{project-root}/.constitution/method/document/prd-guide.md",
 
-  "FR-N, NFR-N, UJ-N, and CAP-N MUST be allocated from requirements.yaml and MUST NOT restart from 1. The next initiative's PRD continues the previous PRD's sequence — the sequence is global, one product, one sequence.",
+  "BG-N is allocated from goals.yaml, which this PRD only READS. CAP-N, FR-N, NFR-N, and UJ-N are all allocated from this initiative's own requirements-<slug>.yaml, where <slug> is this PRD's folder name under .what/_prd/ — one file, one writer. None of them MUST restart from 1. The next initiative's PRD continues the previous PRD's sequence — the sequence is global, one product, one sequence.",
+
+  "Every FR's statement and proof of done, and every NFR's statement and enforced_by, are written directly into requirements-<slug>.yaml on the id's own row — as part of finishing this PRD, not a later step. The PRD's own §3 Features section cites the id under a Realizes: line and MUST NOT also carry the full statement or proof of done in prose. A promise written in both places is the same fact with two homes.",
 
   "This PRD is a living document. A behaviour change, a closely related feature addition, or a promise correction MUST go through intent Update on the same PRD. A new PRD MUST NOT be created just because the release changed; it is created only when the functional area is genuinely different and reads badly if merged.",
 
+  "§1 Why This Initiative states a DELTA against the product brief's own Why section — what this initiative changes, adds, or unlocks beyond it. It MUST NOT restate the product's vision from scratch; on a single-initiative product, one sentence pointing back to the brief is enough.",
+
+  "This template carries no Document Purpose section, no Glossary section, no Non-Goals section, no Open Questions section, and no Assumptions Index section — all five were removed. A domain noun MUST already exist in .control/product-glossary.md, used verbatim; a new one is raised through wdi-question in the same pass, never defined in this document. An open question or an unresolved [ASSUMPTION] tag is filed through wdi-question into .control/questions/ the moment it is found, never batched into a section.",
+
   "Every intent Update run MUST add exactly one row to the PRD's Revision History table: the date, what changed in language an outside reader understands, and why. That table is for the reader; the memlog is for the audit. Neither MUST substitute for the other.",
 
-  "A release MUST NOT be stated through the PRD's folder name or its title. It is carried by the target_release field in requirements.yaml and specs.yaml. Naming a release number inside the PRD's prose MAY be done as context, but the registry remains what binds.",
+  "A release MUST NOT be stated through the PRD's folder name or its title. It is carried by the target_release field on the CAP row in requirements-<slug>.yaml, and by specs.yaml. Naming a release number inside the PRD's prose MAY be done as context, but the registry remains what binds.",
 
   "Every memlog.py call — init, append, set, and the read on resume or intent Update — MUST use --path {project-root}/.control/memlog/prd-FILL-initiative-slug.md. The slug MUST match run_folder_pattern above, and both lines MUST change together when the initiative changes. --workspace MUST NOT be used.",
 ]

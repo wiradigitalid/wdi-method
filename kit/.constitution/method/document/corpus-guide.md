@@ -23,8 +23,33 @@ be copied into this file.
 | `.what/` | What is promised | Living, amended | BMad class A + us |
 | `.how/` | How it is built | Living, amended | BMad class A + us |
 | `_bmad-output/` | Work in progress | Ends when the work does | BMad class B and C |
+| `.what-rendered/` · `.how-rendered/` | The same promise and shape, **assembled for a human to read** | Regenerated on every `render`; never edited | `validate.py --generate`, and nobody else |
 
 `.control/` is the value of `{project_knowledge}` in BMad's configuration. There is no `docs/`.
+
+### Two audiences, two trees
+
+`.what/` and `.how/` are the **working** trees: prose that cannot be a row, pointers to the registry for
+everything that can. They are what an agent reads and what a skill writes. They are deliberately thin
+for a human — `Goals` is one line, an `FR` is an id — because completeness is not their job.
+
+`.what-rendered/` and `.how-rendered/` are the **reader's** trees. Every file in them sits at the mirror
+path of the working document it projects — `.what-rendered/<pc>/SRS-<pc>.md` is
+`.what/<pc>/SRS-<pc>.md` with every pointer opened: the goal statements, the UC rows, the
+`AD-N` text, the open questions, all pulled in from their own homes. That is what a gate reads, and
+what a client receives.
+
+Three rules keep the two trees honest:
+
+- **A skill MUST NOT read a `-rendered` file as input.** It is output. The working document and the
+  registry are the source, and a skill that read the projection would be reading its own echo — a
+  `kit-integrity` test fails when any `SKILL.md` lists one in its `Inputs`.
+- **Nobody edits a `-rendered` file.** A defect seen there is a defect in the working document or the
+  registry, and that is where it is fixed. The next `render` overwrites the page.
+- **Every gate reads one rendered page, and that page MUST answer the gate's seven questions.** G1
+  reads `.what-rendered/_product-brief/brief.md`; G2 `.what-rendered/_prd/<slug>/prd.md`; G3
+  `.how-rendered/blueprint.md`; G4 `.how-rendered/<pc>/SDD-<pc>.md`. A question that cannot be
+  answered from the page is a gap in the page, not a reason to open a working file.
 
 ## The placement test
 
@@ -72,7 +97,7 @@ part of producing it — never a follow-up someone else performs.
 
 - A skill MUST NOT write into a layer it does not own.
 - Registry conversion is part of landing, not a follow-up. A screen that lands in `01-ux/` without its
-  `components.yaml` entry has been half-landed, and V12 catches it **at spec close** — which is the
+  `components.yaml` entry has been half-landed, and `lc-registered` catches it **at spec close** — which is the
   right moment to be caught, and a bad moment to be surprised.
 - Content MUST NOT be edited while it is being landed. If it has to change to fit its new home, that is a
   separate act — say so and stop. Splitting one output across the homes its row names is not editing.
@@ -167,7 +192,7 @@ would have to be withdrawn for the entity to stop being needed. Two examples of 
 
 **One guard, and it is what stops this becoming a drawer:** everything `_platform` owns — in any position —
 MUST be described under `## Platform-owned` in `cross-cutting.md`, with its kind and the shape every toucher
-obeys. A platform that owns something documents it. V21 checks it, and skips only while that section has not
+obeys. A platform that owns something documents it. `entity-one-writer` checks it, and skips only while that section has not
 been born at G3.
 
 That guard is the whole reason `_platform` can be a general answer rather than an escape hatch: reaching for
@@ -190,7 +215,7 @@ owner's decision.
 
 `why/rationale.md` has always carried this as principle 5 — *what can be derived is not written by hand.*
 It was never written as a rule anywhere, and that file binds nothing by its own terms. So it bound nothing,
-and only one field was ever actually protected: ticket status, by `V18`.
+and only one field was ever actually protected: ticket status, by `ticket-status-one-home`.
 
 **A document MUST NOT state a fact that a registry, a generated file, or git already holds.** It cites the
 id and lets the reader follow it. The list is short and it is closed:
@@ -335,7 +360,7 @@ cites them. `supplements/` beside either kernel is repealed with the `ANX-` conc
 
 | Code | Is |
 |---|---|
-| `BG-` `CAP-` `FR-` `NFR-` `UJ-` `UC-` | The traceability chain, allocated from `requirements.yaml` and `usecases.yaml` |
+| `BG-` `CAP-` `FR-` `NFR-` `UJ-` `UC-` | The traceability chain. `BG` from `goals.yaml`; `CAP`/`FR`/`NFR`/`UJ` from that initiative's `requirements-<slug>.yaml`; `UC` from `usecases.yaml` |
 | `AD-` | An invariant in the architecture spine — a living rule, edited in place |
 | `DEC-` | A decision — an event, frozen when `applied`, only superseded |
 | `LC-` | A Logical Component |
@@ -388,7 +413,7 @@ it there, then `promote`. Using this room to bypass the package is how a method 
 with nobody deciding it, and **an empty room is a valid state**: filling it so that it gets used is the
 very failure this rule prevents.
 
-Frontmatter is required and **V27** checks it: `scope: project` · a one-line `purpose:`. A file MAY
+Frontmatter is required and **`custom-room-declared`** checks it: `scope: project` · a one-line `purpose:`. A file MAY
 narrow or add with nothing further; to **contradict** a generic rule it MUST name that rule in
 `overrides:` and carry `decision:` naming the `DEC-` that decided it. A method that can be contradicted
 without a decision stops being trustworthy in the next repo.

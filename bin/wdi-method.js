@@ -51,6 +51,7 @@ const WDI_SKILLS = [
   "wdi-review",
   "wdi-report",
   "wdi-systematic-debugging",
+  "wdi-upgrade",
 ];
 
 const PRD_SLUG_PLACEHOLDER = "FILL-initiative-slug";
@@ -413,6 +414,36 @@ function migrateRegistryNames(target) {
   return true;
 }
 
+// The requirement registry split into `goals.yaml` (the product's `BG`, written by `wdi-problem` at
+// G1) plus one `requirements-<slug>.yaml` per PRD (`CAP`, `FR`, `NFR`, `UJ`, written by
+// `wdi-product` at G2). One file, one writer, one gate. What a tool can do here is SEED `goals.yaml`;
+// what it MUST NOT do is move the rows.
+//
+// Splitting the rows needs one fact the registry has never recorded: which PRD an `FR` belongs to.
+// Before the split nothing wrote it down, and deriving it — FR → UC → ticket → spec → `prd:` — only
+// works for FRs that already have tickets. A guess would file a promise under the wrong initiative,
+// which is worse than leaving it where it is. So `requirements.yaml` is left ALONE and still read:
+// `validate.py` unions every requirement file it finds, so a half-split corpus stays green while its
+// owner cuts the rows through the skill that owns each one.
+function seedRequirementSplit(target) {
+  const reg = path.join(target, ".control", "registry");
+  if (!fs.existsSync(reg)) return false;
+  const product = path.join(reg, "goals.yaml");
+  if (fs.existsSync(product)) return false;
+  const seed = path.join(SCAFFOLD, "registry", "goals.yaml");
+  if (!fs.existsSync(seed)) return false;
+  copyFile(seed, product);
+  note("seeded .control/registry/goals.yaml");
+  if (fs.existsSync(path.join(reg, "requirements.yaml"))) {
+    note("  requirements.yaml was left exactly as it is, and is still read — nothing broke");
+    note("  move `goals:` into goals.yaml through wdi-problem");
+    note("  cut `capabilities:`, `functional:`, `nonfunctional:`, and `journeys:` into");
+    note("  requirements-<slug>.yaml per PRD through wdi-product. <slug> is the PRD's folder");
+    note("  name under .what/_prd/");
+  }
+  return true;
+}
+
 function migrateToTwoFolders(target) {
   const c = path.join(target, ".constitution");
   if (!fs.existsSync(c)) return false;          // a first install has nothing to migrate
@@ -741,6 +772,58 @@ function setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen })
        `doc_filename_language = ${after.docFilenameLanguage}`);
 }
 
+// After `update`, some of the corpus can still be in the OLD shape — content the installer MUST NOT
+// move, because moving it takes a decision about meaning: which PRD an `FR` belongs to, whether a
+// sentence was an assumption or a constraint. The `wdi-upgrade` skill does that half. This only
+// DETECTS it, cheaply, so the summary can say how much is waiting and where.
+function pendingUpgrades(target) {
+  const has = (...p) => fs.existsSync(path.join(target, ...p));
+  const read = (...p) => (has(...p) ? fs.readFileSync(path.join(target, ...p), "utf8") : "");
+  const anyIn = (dir, glob, re) => {
+    const d = path.join(target, dir);
+    if (!fs.existsSync(d)) return false;
+    return fs.readdirSync(d).some((n) => {
+      const f = path.join(d, n, glob);
+      return fs.existsSync(f) && re.test(fs.readFileSync(f, "utf8"));
+    });
+  };
+  const items = [];
+  if (has(".control", "registry", "requirements.yaml")) items.push("requirements.yaml → goals.yaml + requirements-<slug>.yaml");
+  if (/^\s*-\s*id:\s*W\d+|^\s*(epics|stories):/m.test(read(".control", "registry", "specs.yaml"))) items.push("specs.yaml rows still W<n>/epics/stories (wdi-build re-cuts)");
+  if (/^## (Executive Summary|Vision|Assumptions|Prerequisites)\s*$/m.test(read(".what", "_product-brief", "brief.md"))) items.push("brief.md in the 14-section shape");
+  if (anyIn(".what/_prd", "prd.md", /^## (0\. Document Purpose|3\. Glossary|5\. Non-Goals|8\. Open Questions|9\. Assumptions Index)|\*\*Proof of done:\*\*/m)) items.push("a prd.md in the 12-section shape, or with FR blocks");
+  const whatDir = path.join(target, ".what");
+  if (fs.existsSync(whatDir)) {
+    for (const pc of fs.readdirSync(whatDir)) {
+      if (pc.startsWith("_")) continue;
+      const srs = read(".what", pc, `SRS-${pc}.md`);
+      if (/^\|\s*UC-\d+\s*\|/m.test(srs)) { items.push("an SRS with a UC Catalogue table (now a pointer)"); break; }
+    }
+  }
+  const howDir = path.join(target, ".how");
+  if (fs.existsSync(howDir)) {
+    for (const pc of fs.readdirSync(howDir)) {
+      if (pc.startsWith("_")) continue;
+      if (/\|\s*Quoted rule\s*\||Quoted verbatim from/.test(read(".how", pc, `SDD-${pc}.md`))) { items.push("an SDD quoting AD-N text (now ids only)"); break; }
+    }
+  }
+  if (/\|\s*Container\s*\|\s*Product Components living in it\s*\|/.test(read(".how", "_platform", "c4-l2-containers.md"))) items.push("c4-l2 with a PC x container table (now a pointer)");
+  if (has(".control", "generated", "brief.md") || has(".control", "generated", "blueprint.md")) items.push("human pages still in .control/generated/ (render clears them)");
+  if (has(".what", "_product-brief", "brief.md") && !has(".what-rendered")) items.push("no .what-rendered/ yet (render creates it)");
+  const SKIP = new Set([".git", "node_modules", "target", ".constitution", ".claude", ".agents", ".agent", ".what-rendered", ".how-rendered", "dist", "build"]);
+  const OLD_PAGE = /\.control\/generated\/(brief|blueprint|prd-[a-z0-9-]+)\.md/;
+  const citesOldPage = (dir, depth) => {
+    if (depth > 8) return false;
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) { if (!SKIP.has(e.name) && citesOldPage(path.join(dir, e.name), depth + 1)) return true; continue; }
+      if (e.name.endsWith(".md") && OLD_PAGE.test(fs.readFileSync(path.join(dir, e.name), "utf8"))) return true;
+    }
+    return false;
+  };
+  if (citesOldPage(target, 0)) items.push("a document cites .control/generated/brief|blueprint|prd-*.md (pages moved to the rendered trees)");
+  return items;
+}
+
 // Read BEFORE writeStamp overwrites it. Without this there is no version transition to print, and
 // an "updated" with no from-to tells the reader nothing they can use.
 function readStampVersion(target) {
@@ -855,7 +938,15 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
                         `run the ${INIT_SKILL} skill, intent ${DIM}readers${RESET}, ` +
                         `to write it for this repo's stack`);
   }
-  summaryLine("next", `invoke the ${HELP_SKILL} skill and ask what to do`);
+  const pending = first ? [] : pendingUpgrades(target);
+  if (pending.length) {
+    summaryLine("upgrade", `${pending.length} item${pending.length === 1 ? "" : "s"} still in the OLD shape — ` +
+                           `run the ${DIM}wdi-upgrade${RESET} skill; it moves content, never invents it`);
+    for (const item of pending) summaryLine("", `${DIM}·${RESET} ${item}`);
+  }
+  summaryLine("next", pending.length
+    ? `run the ${DIM}wdi-upgrade${RESET} skill first, then ${HELP_SKILL}`
+    : `invoke the ${HELP_SKILL} skill and ask what to do`);
   summaryLine("", REPO_URL);
   console.log(`${DIM}${"─".repeat(62)}${RESET}`);
 }
@@ -893,6 +984,7 @@ function apply(target, agents,
   // is about to occupy. Running it after would leave two copies of most guides.
   const migrated = migrateToTwoFolders(target);
   migrateRegistryNames(target);
+  seedRequirementSplit(target);
   // The split MUST also be reachable without a migration. 0.5.2 only ran it from inside
   // migrateToTwoFolders, which returns early when the old layout is absent — so a repo that took
   // 0.5.0 or 0.5.1, whose project/constitution.md was moved WHOLE and never split, could never be

@@ -1,0 +1,28 @@
+# Initiative `checkout-v1` — the slug matches .what/_prd/checkout-v1/.
+# One file, one writer: this is wdi-product's, written at G2.
+
+capabilities:
+  - id: CAP-1
+    goal: BG-1
+    title: "Checkout without an account"
+    priority: must
+    estimate_mandays: 5
+    target_release: v1
+
+functional:
+  - id: FR-1
+    capability: CAP-1
+    title: "A visitor can place an order without creating an account"
+    proof: "An order exists and the visitor can reopen it"
+  - id: FR-2
+    capability: CAP-1
+    title: "A visitor can read their order back after placing it"
+    proof: "The order page renders for the code given at checkout"
+
+nonfunctional:
+  - id: NFR-1
+    capability: CAP-1
+    title: "An order write MUST be atomic"
+    enforced_by: ["checkout.orders"]
+
+journeys: []

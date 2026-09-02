@@ -1,5 +1,15 @@
 # PRD Template
 
+**The PRD states the current promise. It is not a history of itself** — with one deliberate exception:
+Revision History, which is written for a reader who was not in the room and MUST NOT be collapsed into
+the corpus's present-tense rule. Everywhere else, see `corpus-guide.md` § The corpus is written in the
+present tense.
+
+**A derived fact has exactly one home, and it is never this document.** `FR`/`NFR`/`CAP` statements
+live in `.control/registry/requirements-<slug>.yaml`; this PRD cites their ids under each feature, never their
+text. The Glossary, Open Questions, and Assumptions Index are not sections here — see the WDI overrides
+below for where each actually lives. See `corpus-guide.md` § A derived fact has exactly one home.
+
 ## Essential Spine *(almost always present)*
 
 ```markdown
@@ -12,6 +22,15 @@ created: {YYYY-MM-DD}
 # PRD: {Initiative Name}
 *Working title — confirm.*
 
+> **This is the working PRD.** It cites requirement ids instead of repeating their text, so §3 lists
+> `FR`/`NFR` by id, and there is no Glossary, Non-Goals, Open Questions, or Assumptions Index section
+> here — each of those facts has its own home.
+>
+> **To read or hand over one complete, self-contained document, run `/wdi-report render prd`.**
+> It writes `.what-rendered/_prd/<slug>/prd.md` with the capabilities, the requirement statements and
+> proofs of done, the glossary terms this PRD uses, the non-goals, and the open questions filled in
+> from their own homes. That file is regenerated, never hand-edited.
+
 ## Revision History
 
 | Date | What changed | Why | Releases affected |
@@ -23,11 +42,12 @@ not in the room — so state what the promise now is, not which section was edit
 the memlog: the memlog records every decision inside a run and is an audit trail; this records what
 changed for the reader. Neither replaces the other.]
 
-## 0. Document Purpose
-[1 paragraph: who this PRD is for (PM, stakeholders, downstream workflow owners), how it's structured (Glossary-anchored vocabulary, features grouped with FRs nested, assumptions tagged inline and indexed). If UX work or other inputs already exist, name them here and reference where they live — this PRD builds on them, it does not duplicate.]
+## 1. Why This Initiative
 
-## 1. Vision
-[2-3 paragraphs: what this is, what it does for the user, why it matters. Compelling enough to stand alone.]
+[ONE paragraph, stated as a DELTA against the product's `Why` in `.what/_product-brief/brief.md`:
+what does THIS initiative change, add, or unlock that the brief's narrative does not already say? For
+a product with a single initiative, this MAY be a single sentence pointing back to the brief — "This
+initiative IS the product's Why; see brief.md." It MUST NOT restate the product's vision from scratch.]
 
 ## 2. Target User
 
@@ -60,64 +80,49 @@ changed for the reader. Neither replaces the other.]
 - **Lighter** — hobby/solo, library/CLI, or when the UJ is essentially a JTBD restated: a single sentence works (`{Persona}, {context}, {what they do and why}.`).
 - **Heavier** — auth, multi-device handoff, complex navigation, or anything feeding downstream UX/architecture: add a numbered Flow, an Edge cases list, and a capability → FR mapping (`The system must {capability}. → FR-N`).
 
-## 3. Glossary
-*Downstream workflows and readers must use these terms exactly. FRs, UJs, and SMs use Glossary terms verbatim; introducing a synonym anywhere in the PRD is a discipline violation. If §4 introduces a new domain noun, add it to the Glossary in the same pass.*
+## 3. Features
+*Each subsection is a coherent feature: behavioral description first, requirement ids nested under it,
+optional feature-specific NFRs and notes. Reference user journeys by ID inline ("realizes UJ-2") where
+the chain matters.*
 
-- **Term** — Definition. Relationships to other Glossary terms. Cardinality where relevant.
-- **Term** — ...
-
-[Every domain noun the rest of the document uses. Defined once. No synonyms anywhere else in the PRD.]
-
-## 4. Features
-*Each subsection is a coherent feature: behavioral description first, FRs nested under it, optional feature-specific NFRs and notes. FRs are numbered globally (FR-1 through FR-N) so downstream artifacts have stable references even if features get reorganized. Reference user journeys by ID inline ("realizes UJ-2") where the chain matters.*
-
-### 4.1 {Feature Name}
-**Capability:** CAP-N — serves BG-N. *(WDI. One feature is one capability; both IDs come from `requirements.yaml`. This is the link that makes the feature schedulable — size, priority, owner, target release, and dependencies on other capabilities all live on the `CAP` entry, not here.)*
+### 3.1 {Feature Name}
+**Capability:** CAP-N — serves BG-N. *(One feature is one capability; both IDs come from
+`requirements-<slug>.yaml`. This is the link that makes the feature schedulable — size, priority, owner,
+target release, and dependencies on other capabilities all live on the `CAP` entry, not here.)*
 
 **Description:** [Behavioral narrative — how this feature works, who uses it, the user experience, edge cases. Realizes UJ-X, UJ-Y. Use Glossary terms exactly. Embed inline `[ASSUMPTION: ...]` tags where you inferred without confirmation.]
 
-**Functional Requirements:**
+**Realizes:** FR-1, FR-2, NFR-3
 
-#### FR-1: {Short capability name}
+[The statement, proof of done, and enforcer for each id above live in `requirements-<slug>.yaml`, landed there
+by `wdi-product` as part of producing this PRD — landing the registry row is part of writing the
+feature, not a follow-up. Do NOT write a full FR block here; the registry entry is the only copy. If a
+requirement needs a longer technical restatement, that belongs in `addendum.md` or the SDD, never a
+second proof of done.]
 
-[Actor] can [capability] [under conditions]. Realizes UJ-X.
-
-**Proof of done:** *(WDI, required)* [One sentence a Product Owner can check without opening the code. Business language, no HTTP codes and no table names. This is the sentence that lets one FR become one testable unit of work — it is not the same as the technical consequences below, and one MUST NOT be written in place of the other.]
-
-**Consequences (testable):**
-- {Specific testable condition, e.g. "System returns HTTP 429 when request rate exceeds 100/sec per merchant."}
-- {Another testable condition.}
-
-**Out of Scope:** *(optional — what this FR explicitly does NOT cover)*
-- {bound}
-
-#### FR-2: ...
-
-**Feature-specific NFRs:** *(only if any apply uniquely to this feature)*
-- Performance / security / accessibility / etc. specific to this feature.
+**Feature-specific NFRs:** *(only if any apply uniquely to this feature — cite the id; see §6)*
 
 **Notes:** *(optional — open questions specific to this feature, `[NOTE FOR PM]` callouts)*
 
-### 4.2 {Feature Name}
+### 3.2 {Feature Name}
 ...
 
-## 5. Non-Goals (Explicit)
-[Bulleted. What this product is *not* and what it will *not* do in v1. Does outsized work for downstream readers and workflows — prevents the "let me also add this nearby thing" failure mode at every level (spec, ticket, code). Inline `[NON-GOAL for MVP]` callouts within §4 Features cover deferred items within features; this section captures the broader "we are not building X / we are not becoming Y" statements.]
+## 4. MVP Scope
 
-## 6. MVP Scope
-
-### 6.1 In Scope
+### 4.1 In Scope
 [Bulleted, crisp.]
 
-### 6.2 Out of Scope for MVP
+### 4.2 Out of Scope for MVP
 [Bulleted. Each item with a one-line reason if the reason matters. Mark items deferred to v2/v3 explicitly. Add `[NOTE FOR PM]` callouts where a deferred item is emotionally load-bearing — flags it for revisit if timeline permits.]
 
-## 7. Success Metrics
+## 5. Success Metrics
 
-*Each SM cross-references the FR(s) it validates. Counter-metrics counterbalance specific primary or secondary metrics.*
+*Each SM cross-references the FR(s) it validates, and the primary metric MUST relate back to the
+brief's Success Criteria — either the same figure narrowed to this initiative, or a stated reason it
+diverges. Counter-metrics counterbalance specific primary or secondary metrics.*
 
 **Primary**
-- **SM-1**: Metric — definition, target. Validates FR-X, FR-Y.
+- **SM-1**: Metric — definition, target. Validates FR-X, FR-Y. Relates to the brief's Success Criteria: {how}.
 
 **Secondary**
 - **SM-2**: Metric — definition, target. Validates FR-Z.
@@ -127,23 +132,21 @@ changed for the reader. Neither replaces the other.]
 
 [Length scales with stakes. Hobby/utility PRD: a single sentence may be enough ("Success: I use this weekly and don't abandon it after a month"). Public launch / enterprise: full quantitative breakdown with measurement methods. Counter-metrics are as load-bearing as primary metrics — they prevent the architect from optimizing the wrong thing and the dev from gaming the wrong target.]
 
-## 8. Open Questions
-[Numbered. Things still unknown — they become future tickets or follow-up research, not silent gaps.]
+## 6. Cross-Cutting NFRs
 
-## 9. Assumptions Index
-*Every `[ASSUMPTION]` from the document, surfaced for explicit confirmation:*
-- Inline assumption from §X.Y — short description.
-- ...
+[System-wide non-functional requirements not tied to a single feature — cite the `NFR-N` id; the
+statement and `enforced_by` live in `requirements-<slug>.yaml`, same as any other NFR.]
+
+## 7. Constraints and Guardrails
+
+[MUST state only the delta beyond `.what/_product-brief/brief.md` — what binds THIS initiative beyond
+the product's own constraints. MUST say "none beyond the brief" when there is nothing; an absent
+section reads as "not checked."]
 ```
 
 ---
 
 ## Adapt-In Menu *(add the clusters the product calls for)*
-
-### Cross-cutting quality and shape *(most non-trivial PRDs)*
-- **Cross-Cutting NFRs** — system-wide non-functional requirements not tied to a single feature (performance, security, reliability, observability). Add when system-wide quality attributes are meaningful.
-- **Constraints and Guardrails** — Safety, Privacy, Cost. Subsection per cluster. Add when any of these are real concerns.
-- **Why Now** — add when timing is load-bearing (a market shift, a technology enabler, a regulatory deadline). Drop when timing is incidental.
 
 ### Consumer / branded products
 - **Aesthetic and Tone** — visual references, anti-references, voice/tone for any product-generated text.
@@ -176,15 +179,14 @@ changed for the reader. Neither replaces the other.]
 - **Environmental and Reliability Requirements**.
 
 ### Small-scope all-inclusive *(use when scope is 1-2 tickets' worth and the user wants a single captured artifact — chosen during the Right-skill check in Discovery)*
-- **Tickets** — ticket-level detail listed inline at the end of the doc. Each ticket: *"As a [persona], I can [action] [under conditions]. Acceptance: [testable criteria]."* Numbered Ticket-1, Ticket-2, ... for reference. Pair with very lean §1 Vision, §2 Target User (often just JTBD + one UJ), §3 Glossary (handful of terms), §4 Features (often a single feature), §6 MVP Scope (in/out very tight). The whole doc fits on a page or two and captures intent + implementable tickets in one place. If the user doesn't want the captured artifact at all, running `/to-tickets` straight from the conversation is the better path — this cluster is only for "I want a doc *and* the tickets."
+- **Tickets** — ticket-level detail listed inline at the end of the doc. Each ticket: *"As a [persona], I can [action] [under conditions]. Acceptance: [testable criteria]."* Numbered Ticket-1, Ticket-2, ... for reference. Pair with very lean §1 Why, §2 Target User (often just JTBD + one UJ), §3 Features (often a single feature), §4 MVP Scope (in/out very tight). The whole doc fits on a page or two and captures intent + implementable tickets in one place. If the user doesn't want the captured artifact at all, running `/to-tickets` straight from the conversation is the better path — this cluster is only for "I want a doc *and* the tickets."
 
 
 ---
 
 ## Project overrides — WDI
 
-These rules replace the corresponding BMad defaults for this project. They are additive to the
-shape above; nothing in the shape is removed.
+These rules replace the corresponding BMad defaults for this project.
 
 - **Scope.** One PRD per **initiative / functional area** — not per product, not per component, and
   not per release. It is a **living document** and is never frozen.
@@ -193,33 +195,50 @@ shape above; nothing in the shape is removed.
   created because the release changed; create one only when the functional area is genuinely
   different and would not read well merged in.
 - **Revision History.** Every Update run MUST add exactly one row, written for an outside reader.
-  It is what preserves "what did we promise back then" now that the document is not frozen.
-- **Release.** Carried by `CAP.target_release` in `.control/registry/requirements.yaml` — the only
+  It is what preserves "what did we promise back then" now that the document is not frozen. This is
+  the one place in this template where history is written on purpose — nowhere else in the PRD is.
+- **§1 Why This Initiative is a delta, not a restatement.** BMad's default §1 Vision writes the
+  product's vision from scratch; that duplicates the brief's `Why` on the first PRD a product ever
+  gets. This section states only what changes, or points back to the brief when nothing does.
+- **§3 carries requirement IDs, not requirement text.** `FR-N`/`NFR-N` statement and proof of done
+  are authored straight into `requirements-<slug>.yaml` by `wdi-product` — landing the registry row is part
+  of writing the feature. A full FR block (statement, consequences, proof of done) MUST NOT be
+  written in this document; it is the registry's only copy.
+- **No Document Purpose section.** BMad's §0 explains what a PRD is in general — true of every PRD
+  in every project, so it carries no information specific to this one. Dropped.
+- **No Glossary section.** Every domain noun MUST already exist in `.control/product-glossary.md`,
+  used verbatim. A new noun this PRD needs MUST be raised through `wdi-question` in the same pass —
+  it is NOT added to a PRD-local glossary, which `wdi-blueprint` does not read at G3.
+- **No Non-Goals section.** What this PRD does not promise is either the product's own Scope Out
+  (already in the brief) or this release's Out of Scope for MVP (§4.2) — a third list restating both
+  is the same fact twice. The generated deliverable assembles both under one heading for a reader.
+- **No Open Questions section.** An unresolved question goes through `wdi-question` into
+  `.control/questions/` the moment it is found, not batched into a section read once at Finalize.
+- **No Assumptions Index.** Every `[ASSUMPTION]` tag is a marker for the conversation that produced
+  it, not an index entry — it MUST be registered through `wdi-question` into `assumptions.md` before
+  this PRD passes G2, and the tag is then just prose color, not a second bookkeeping copy.
+- **Release.** Carried by `CAP.target_release` in `.control/registry/requirements-<slug>.yaml` — the only
   place a promise's release is written — and by `release` in `specs.yaml` for the execution side. It
   MUST NOT be expressed through this document's folder name or title, and an `FR` MUST NOT carry a
   release of its own; it inherits one from its capability. Naming a release in prose as context MAY
   happen; the registry is what binds.
 - **Numbering.** `FR-N`, `NFR-N`, `UJ-N`, and `CAP-N` MUST be allocated from
-  `.control/registry/requirements.yaml`. They MUST NOT restart at 1 in a new PRD — the sequence is
+  `.control/registry/requirements-<slug>.yaml`, and `BG-N` from `goals.yaml`. They MUST NOT restart at 1 in a new PRD — the sequence is
   global to the product, and a later PRD continues the earlier one.
-- **Two Adapt-In clusters are not optional here.** `Cross-Cutting NFRs` and `Constraints and
-  Guardrails` MUST be present. G2 passes on numbered FR **and NFR**, so a PRD with no NFR section
-  cannot clear it; and a constraint discovered at G4 costs a decision that a sentence here would
-  have prevented. Every other Adapt-In cluster stays conditional as BMad intends.
+- **Two Adapt-In clusters are not optional here.** `Cross-Cutting NFRs` (§6) and `Constraints and
+  Guardrails` (§7) MUST be present — they are in the Essential Spine above, not conditional. G2
+  passes on numbered FR **and** NFR, so a PRD with no NFR cited cannot clear it; and a constraint
+  discovered at G4 costs a decision that a sentence here would have prevented.
 - **Constraints state the delta.** Product-wide constraints already live in
-  `.what/_product-brief/brief.md`. This section MUST carry only what binds *this initiative* beyond
+  `.what/_product-brief/brief.md`. §7 MUST carry only what binds *this initiative* beyond
   them, and MUST say "none beyond the brief" when there is nothing — an absent section reads as
   "not checked".
 - **Prerequisites are not written here.** An initiative that cannot start until another one ships is
-  a `depends_on` between `CAP` entries in `requirements.yaml`. Restating it in prose creates a
+  a `depends_on` between `CAP` entries, which MAY point at a capability in another initiative's file. Restating it in prose creates a
   second home that will drift.
 - **§2 MUST name which stakeholders from the brief this initiative serves**, using the same role
   names. A PRD that invents its own user labels breaks the trace back to `BG-N`.
-- **Vocabulary.** Every domain noun MUST already exist in `.control/product-glossary.md`, used verbatim. A
-  new noun introduced here MUST be added to the Glossary in the same pass, not defined inline.
 - **Boundary.** This document promises; it MUST NOT design. Behaviour of the system belongs to
   `SRS-<pc>.md`, and solution shape to `SDD-<pc>.md`.
-- **Assumptions.** Every `[ASSUMPTION]` left unresolved at Finalize MUST be registered through
-  `wdi-question` before this PRD passes G2.
 - **Memlog.** Written to `.control/memlog/prd-<slug>.md` via `--path`, never beside this file. The
   slug matches this PRD's folder.

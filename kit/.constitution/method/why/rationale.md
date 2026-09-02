@@ -244,7 +244,7 @@ symmetric, the rule demanded a section that would be empty or invented — and t
 exception but a field: `built` says whether the implementation is ours, and the match became one-directional.
 
 **A definition left unwritten will be re-argued in the next corpus.** That is the general lesson, and it is
-why `built` is checked by V25 rather than merely described here: prose that nothing verifies is prose that
+why `built` is checked by `container-built` rather than merely described here: prose that nothing verifies is prose that
 gets contradicted by the first person in a hurry.
 
 ## What is not here

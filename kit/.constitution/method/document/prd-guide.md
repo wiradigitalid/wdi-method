@@ -102,30 +102,36 @@ Naming a release in prose as context MAY happen; the registry is what binds.
 
 ## Numbering
 
-`BG-N`, `CAP-N`, `FR-N`, `NFR-N`, and `UJ-N` MUST be allocated from `.control/registry/requirements.yaml`
+`BG-N` is allocated from `.control/registry/goals.yaml`; `CAP-N`, `FR-N`, `NFR-N`, and `UJ-N` from this initiative's own `.control/registry/requirements-<slug>.yaml` — one file, one writer, one gate
 and MUST NOT restart at 1. The chain runs `BG → CAP → FR/NFR → UC → DEC → Ticket → Test`, and each
 child names only its parent:
 
-- Each feature in §4 MUST declare its `CAP-N` and the `BG-N` it serves.
+- Each feature in §3 MUST declare its `CAP-N` and the `BG-N` it serves.
 - Each `FR` MUST declare its `capability`. Its goal is reached *through* the capability and MUST NOT
   be restated on the FR.
 - Each `NFR` attaches to `BG` directly — it does not pass through `CAP`.
 
-V15 checks both links. An FR with no capability is a promise nobody asked for.
+`chain-links` checks both links. An FR with no capability is a promise nobody asked for.
 
-## Proof of done — one, in business language
+## `FR`/`NFR` text lives in the registry, not in this document
+
+The PRD cites `FR-N`/`NFR-N` under each feature's **Realizes:** line. It MUST NOT also write the
+statement, the proof of done, or the enforcer in prose — those fields live on the id's own row in
+`requirements-<slug>.yaml`, and landing them there is part of `wdi-product` producing this PRD, not a
+follow-up. A promise written in both places is one fact with two homes, and the copy a reader trusts
+is whichever they open first.
 
 Every `FR` MUST carry **exactly one** proof of done: a sentence a Product Owner can check without opening
 the code. It is what lets one `FR` become one testable unit of work, and it is why a spec is ideally one
 `FR`.
 
-**The double proof of done is repealed.** Requiring a business sentence *and* a technical restatement
-naming status codes, limits, and payloads meant writing the same acceptance twice, in two vocabularies that
-then drifted. The technical form is represented by the **test name** recorded in `specs.yaml`, where it is
-checked mechanically (V4) instead of read.
+**The double proof of done stays repealed.** A business sentence *and* a technical restatement naming
+status codes, limits, and payloads meant writing the same acceptance twice, in two vocabularies that
+then drifted. The technical form is represented by the **test name** recorded in `specs.yaml`, where it
+is checked mechanically (`ticket-has-test`) instead of read.
 
-A technical detail that genuinely has to be written down belongs in `addendum.md` or in the SDD, not in a
-second proof of done.
+A technical detail that genuinely has to be written down belongs in `addendum.md` or in the SDD, not in
+a second proof of done — and not in this document's prose either.
 
 ## Wording versus promise — two different journeys
 
@@ -148,7 +154,7 @@ gate and then get dropped.
 
 A domain entity MUST have exactly one owner authorised to write it. Usually that is a Product Component,
 declared as `owns:` on its row in `components.yaml`; an `FR` from another PRD that needs to change the entity
-MUST point at the owner's `FR` through `defers_to`, rather than promising to write it itself. V21 checks this.
+MUST point at the owner's `FR` through `defers_to`, rather than promising to write it itself. `entity-one-writer` checks this.
 
 **A few entities belong to no Product Component at all** — a product-wide setting, the trace of one shared
 outbound channel. Those are owned by `_platform` through `platform_owns`, and the test for when that is
@@ -162,18 +168,55 @@ moment it is written — not at the moment the code disagrees.
 
 ## Sections that stop being optional
 
-BMad's Adapt-In Menu is conditional by design. Two clusters MUST always be present here:
+BMad's Adapt-In Menu is conditional by design. Two clusters MUST always be present here, and are in
+the Essential Spine rather than the Adapt-In menu for exactly that reason:
 
-| Cluster | Why it is required |
-|---|---|
-| **Cross-Cutting NFRs** | G2 passes on numbered FR **and NFR**. Each NFR MUST name `enforced_by` — an `AD-N`, a `DEC-`, or a test name. An NFR nothing enforces is decoration (V5) |
-| **Constraints and Guardrails** | A constraint found at G4 costs a decision that one sentence here would have prevented |
+| Cluster | Section | Why it is required |
+|---|---|---|
+| **Cross-Cutting NFRs** | §6 | G2 passes on numbered FR **and NFR**. Each NFR MUST name `enforced_by` — an `AD-N`, a `DEC-`, or a test name. An NFR nothing enforces is decoration (`nfr-has-enforcer`) |
+| **Constraints and Guardrails** | §7 | A constraint found at G4 costs a decision that one sentence here would have prevented |
 
 Constraints MUST state only the delta beyond `.what/_product-brief/brief.md`, and MUST say "none
 beyond the brief" when there is nothing. An absent section reads as "not checked".
 
 Prerequisites MUST NOT be written as prose. An initiative blocked on another is a `depends_on`
 between `CAP` entries.
+
+## §1 Why This Initiative is a delta
+
+BMad's default §1 Vision writes the product's vision from scratch, in the same 2-3 paragraph shape as
+the brief's own narrative. On the first PRD a product ever gets, that duplicates `Why` in
+`.what/_product-brief/brief.md` almost sentence for sentence — the same defect Executive Summary and
+Vision had against each other inside the brief before they were merged.
+
+§1 states only what THIS initiative changes, adds, or unlocks beyond what the brief's `Why` already
+says. A product with a single initiative MAY reduce this to one sentence pointing back to the brief.
+The full narrative is never written twice.
+
+## Sections dropped from BMad's default, and where each fact actually lives
+
+Four of BMad's default sections carry no content specific to this PRD, or duplicate a fact this method
+already gives a home. Each is dropped rather than left conditional:
+
+| Dropped section | Where the fact lives instead |
+|---|---|
+| Document Purpose | Nowhere — it explained what a PRD is in general, true of every PRD, so it held no information specific to this one |
+| Glossary | `.control/product-glossary.md`. A term this PRD needs that is not there yet goes through `wdi-question` in the same pass — it is never added to a document-local glossary `wdi-blueprint` will not read at G3 |
+| Non-Goals | The product's own Scope Out (`.what/_product-brief/brief.md`), for what the product never does, and §4.2 Out of Scope for MVP, for what this release defers. A third list restating both is the same fact twice |
+| Open Questions | `.control/questions/`, the moment the question is found — not batched into a section read once at Finalize |
+| Assumptions Index | `.control/questions/assumptions.md`, through `wdi-question`, before G2. The inline `[ASSUMPTION]` tag stays as a marker for the conversation that produced it; it is not also an index entry |
+
+A reader who wants all of these assembled with the PRD's own content reads the generated deliverable —
+see below — rather than a hand-maintained index inside this document.
+
+## The generated deliverable
+
+A complete, self-contained copy for a reader who should not need to open the registry or
+`.control/questions/` lives at `.what-rendered/_prd/<slug>/prd.md` — written by `/wdi-report render prd`,
+which runs `validate.py --generate`. It assembles this PRD's own prose verbatim, the
+Vision from the brief's `Why` plus §1's delta, the `FR`/`NFR` rows from `requirements-<slug>.yaml`, the
+Glossary terms this PRD actually uses, Non-Goals from the brief's Scope Out and §4.2, and the open
+rows from `.control/questions/` that cite one of this PRD's ids. Nobody writes to it by hand.
 
 ## What goes to `addendum.md`
 

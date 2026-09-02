@@ -55,7 +55,7 @@ Nothing else about language is a setting, and a skill MUST NOT ask:
 - **Code identifiers, database columns, config keys** — §Code MUST be English, above.
 
 **A corpus written before these settings existed MUST NOT be migrated for them.** The readers accept
-both languages — `validate.py` matches `yes|ya`, and V23's keyword set is the union of both — so an
+both languages — `validate.py` matches `yes|ya`, and `high-risk-named`'s keyword set is the union of both — so an
 existing document keeps working and a new one is written in the chosen language. Rewriting a hundred
 documents so a regex looks tidier is a cost with no buyer.
 

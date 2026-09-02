@@ -3,8 +3,8 @@ type: srs
 component: '{pc}'
 status: draft            # draft · reviewed · locked · superseded
 created: '{YYYY-MM-DD}'
-satisfies: []            # FR / NFR ids this component carries, from requirements.yaml
-reviewed:                # V13. Filled only after wdi-review has actually run
+satisfies: []            # FR / NFR ids this component carries, from requirements-<slug>.yaml
+reviewed:                # `review-trace`. Filled only after wdi-review has actually run
   date: ''               # '{YYYY-MM-DD}'
   sha: ''                # commit it was reviewed at; without the SHA, staleness cannot be measured
   lenses: []             # the set risk_accepted names — NOT a fixed list
@@ -60,21 +60,17 @@ reviewed:                # V13. Filled only after wdi-review has actually run
 
 ## UC Catalogue · [G3]
 
-<!-- THE use case list, and at mode: catalog it is the whole use-case record. One line each, and the
-     line is the artifact — not a placeholder waiting for a file.
+UC Catalogue — see `.control/registry/usecases.yaml`, rows where `component: {pc}`.
 
-     A title MUST be a sentence a user would say, never a system term. G3 asks this as a starred
-     question.
+<!-- A POINTER, not a table. The catalogue's one home is `usecases.yaml`; this section used to carry a
+     second copy, and `uc-catalogue-matches` existed only to keep the two agreeing — it once caught 26
+     rows that had drifted. The rendered SRS (`.what-rendered/<pc>/SRS-<pc>.md`) and the blueprint
+     both show the table, from the registry.
 
-     `critical` is yes ONLY when the use case touches money, personal data, or an irreversible action.
-     Nothing else. If more than a third of this component's use cases are marked, the definition was
-     misapplied — derive it again rather than negotiating it.
-
-     `critical` decides something only at mode: deep, where every critical UC gets a full flow. -->
-
-| id | Use case | Actor | Satisfies | critical |
-| --- | --- | --- | --- | --- |
-| UC-{n} | {a sentence a user would say} | {from the Actor Register} | {FR-n} | no |
+     What is still decided HERE, when wdi-blueprint lands the rows: a title MUST be a sentence a user
+     would say, never a system term — G3 asks this as a starred question. `critical` is yes ONLY when
+     the use case touches money, personal data, or an irreversible action; more than a third marked
+     means the definition was misapplied. -->
 
 ## Constraints · [G3]
 

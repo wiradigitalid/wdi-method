@@ -1,0 +1,25 @@
+# goals.yaml — SSOT for BG, the product's goals. Nothing else lives here.
+#
+# Keys are English; prose values follow the product's chosen `doc_language`.
+#
+# ONE FILE, ONE WRITER, ONE GATE. This file is `wdi-problem`'s, written at G1 when the brief lands.
+# CAP, FR, NFR, and UJ all belong to an initiative instead, and live in
+# `requirements-<slug>.yaml` — the slug being that PRD's own folder name under `.what/_prd/`.
+# That file is `wdi-product`'s, written at G2.
+#
+# `CAP` is NOT here, and the reason is worth writing down because the opposite was tried first: a
+# capability is declared by a feature, one feature is one capability, and a feature lives in exactly
+# one PRD. The argument for keeping CAP at the product level was that `depends_on` between
+# capabilities crosses initiatives — but that buys nothing, because every validator reads the MERGED
+# view of all requirement files and never opens one by name. A cross-file `depends_on` resolves
+# exactly as well as a same-file one.
+#
+# IDS ARE ALLOCATED ONCE AND THE SEQUENCE IS GLOBAL TO THE PRODUCT. `FR-12` means one thing in this
+# repo no matter which file holds it — that is what lets a ticket say `satisfies: [FR-12]` without
+# also naming the PRD. `id-allocated-once` fails when two files declare the same id.
+
+goals: []
+# - id: BG-1
+#   title: "one line, the outcome the product exists for"
+#   measure: "how you would know it held"
+#   why: "only when the reason is not already carried by the brief's The Problem"

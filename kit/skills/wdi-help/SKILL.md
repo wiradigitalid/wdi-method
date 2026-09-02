@@ -48,6 +48,7 @@ mis-route in this flow, because every other gate is the same for every component
 
 | State | Next |
 |---|---|
+| `wdi-method update` just ran and its summary printed an `upgrade` line | `wdi-upgrade` — **before anything else**. Content is still in the old shape, and every skill below reads the new one |
 | No registry, or no global `mode` set | `wdi-init` intent `setup` — nothing has started |
 | No `.what/_product-brief/brief.md` | `wdi-problem` — G1 has not started |
 | A brief exists, and no PRD covers the area in play | `wdi-product` intent `prd` |
@@ -57,7 +58,7 @@ mis-route in this flow, because every other gate is the same for every component
 | A PRD exists, no `product_components` yet | `wdi-init` intent `component` — the slicing is born here, at the tail of G2 |
 | Components exist, `mode` or `risk_accepted` unset | `wdi-init` intents `mode` and `risk` — both are the owner's, and G4 cannot be read without them |
 | Components exist, no UC catalogue or no spine | `wdi-blueprint` — intent `catalog` first, then `platform` |
-| The blueprint is complete and G3 has not been held | The gate. Read `.control/generated/blueprint.md`, not seven files |
+| The blueprint is complete and G3 has not been held | The gate. Read `.how-rendered/blueprint.md`, not seven files |
 | G3 passed, a component at `outline`/`guarded`/`deep` has no depth | `wdi-component` |
 | G3 passed, the component is at `mode: catalog` | `wdi-build` — G4 is skipped by design |
 | Depth done and G4 passed for every component the work touches | `wdi-build` — it opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec |

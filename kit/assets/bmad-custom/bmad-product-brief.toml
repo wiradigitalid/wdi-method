@@ -22,9 +22,13 @@ doc_standards = ["file:{project-root}/.constitution/method/document/brief-guide.
 persistent_facts = [
   "Every memlog.py call — init, append, set, and the read on resume or intent Update — MUST use --path {project-root}/.control/memlog/brief.md. --workspace MUST NOT be used; it would place a .memlog.md inside .what/, and no memlog is allowed to live in the corpus.",
 
-  "The brief template opens with permission to drop a section that does not fit. That permission MUST NOT apply to the eight mandatory sections: The Problem, Who This Serves, Goals, Success Criteria, Scope In, Scope Out, Constraints, Assumptions — plus Prerequisites. Other template sections MAY be dropped.",
+  "The brief template opens with permission to drop a section that does not fit. That permission MUST NOT apply to the eight mandatory sections: Why, The Problem, Who This Serves, Goals, Success Criteria, Scope In, Scope Out, Constraints. The Solution and What Makes This Different stay optional. Other template sections MAY be dropped.",
 
-  "Goals MUST be numbered BG-1, BG-2, and so on. They MUST NOT be numbered G1, G2 — G1 through G5 are the names of this method's five gates, and BG is the first link in the BG -> CAP -> FR/NFR -> UC -> Ticket -> Test traceability chain.",
+  "The brief MUST NOT carry an Assumptions section or a Prerequisites section — both were removed from the template. An assumption belongs in .control/questions/assumptions.md, a prerequisite in .control/questions/external.md, each filed through wdi-question, never restated in the brief.",
+
+  "Goals MUST be numbered BG-1, BG-2, and so on. They MUST NOT be numbered G1, G2 — G1 through G5 are the names of this method's five gates, and BG is the first link in the BG -> CAP -> FR/NFR -> UC -> Ticket -> Test traceability chain. The brief's own Goals section is a POINTER ONLY — 'Goals — see goals.yaml -> goals:' — and MUST NOT restate a goal's statement. The statement for each BG-N is written directly into .control/registry/goals.yaml -> goals:, as part of finishing the brief, not left to a later step.",
+
+  "Success Criteria MUST name exactly ONE measurable figure, with a timeframe — not a mission statement, not a mix of signals. A criterion nobody could check without opening the code fails this.",
 
   "The Who This Serves table MUST carry exactly one row marked primary, and MUST cover every stakeholder including one who never opens the product.",
 

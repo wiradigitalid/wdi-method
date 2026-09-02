@@ -100,7 +100,7 @@ Check what came back against the guide. Report every failure; fix none of them b
 | 9 | `bmad-review` structure + prose ran at finalize | `doc_standards` did not fire |
 
 Check 8 is the one that MUST be fixed immediately rather than reported. A `.memlog.md` inside `.what/`
-or `.how/` is corpus pollution, and V16 rejects it.
+or `.how/` is corpus pollution, and `memlog-home` rejects it.
 
 ## Step 5 — Land, at two speeds
 
@@ -117,7 +117,7 @@ here is **when each one becomes possible**.
 - **Nothing is deferred any more.** A run lands whole, in the pass that produced it. `DESIGN.md`
   landing was coupled to the container because its screen `LC` rows need one — but the *file's* path,
   `.how/<pc>/01-ux/`, has no container in it, and the two were never the same requirement.
-- **A screen `LC` is registered now with `container:` empty**, and MUST NOT be given a guessed one. V25
+- **A screen `LC` is registered now with `container:` empty**, and MUST NOT be given a guessed one. `container-built`
   is silent on an empty container until the `LC`'s own Product Component lists containers; from that
   moment it is owed. `wdi-blueprint` intent `platform` fills every one of them in the same act as
   registering the containers, so the debt closes at G3 without anyone tracking it.
@@ -126,7 +126,7 @@ here is **when each one becomes possible**.
 - One run MAY land across several Product Components. Split by which `<pc>` the content serves; a
   screen whose `<pc>` is ambiguous MUST be raised through `wdi-question`, not assigned by guess.
 - Registering the screens is part of landing `DESIGN.md`, in the same act. A screen in `01-ux/`
-  without its `components.yaml` entry has been half-landed, and V12 catches it at a worse moment.
+  without its `components.yaml` entry has been half-landed, and `lc-registered` catches it at a worse moment.
 - `.how/_platform/` otherwise belongs to `wdi-blueprint`. `design-system.md` is the one file in it you
   own, and it has its own template; you MUST NOT touch any other.
 - The run folder MUST NOT be deleted after landing. Intent *update* reads it again.

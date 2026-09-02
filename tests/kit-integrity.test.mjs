@@ -126,12 +126,12 @@ test("no Python bytecode anywhere in the package surface — 0.5.2 shipped 123 k
     `bytecode inside the published surface — run \`npm run clean\`:\n  ${found.join("\n  ")}`);
 });
 
-test("a backtick cite of a method file resolves INSIDE the kit — the net V24 gave up", () => {
-  // V24 no longer scans `.constitution/method/` in a product, and it should not: a consumer cannot
+test("a backtick cite of a method file resolves INSIDE the kit — the net cites-resolve gave up", () => {
+  // cites-resolve no longer scans `.constitution/method/` in a product, and it should not: a consumer cannot
   // fix a guide that `update` overwrites, and a guide citing `.control/product-glossary.md` is
   // teaching where the glossary goes, not claiming this product already has one.
   //
-  // But a guide citing a SIBLING guide is a real link, and dropping V24 there would have left it
+  // But a guide citing a SIBLING guide is a real link, and dropping cites-resolve there would have left it
   // unchecked. So the check moves to where the fix would be made — here. Markdown links are already
   // covered above; this is the backtick form, which that walker never saw.
   const CITE = /`(\.constitution\/[A-Za-z0-9_./*-]+\.(?:md|yaml|yml|py))`/g;
@@ -229,4 +229,52 @@ test("wdi-ux does not wait for Product Components — that edge closes a deadloc
     + "land when wdi-init births the components.");
   assert.match(ux, /MUST NOT wait for Product Components|needs a PRD and nothing else/,
     "wdi-ux no longer states that a run needs only a PRD — the rule that keeps the cycle open.");
+});
+
+test("both working templates point at the render command, and the pointer does not leak into it", () => {
+  // The working brief and PRD are deliberately pointer-heavy now: Goals is one line, FR is an id,
+  // and four PRD sections are gone entirely. A reader who opens one and finds it thin needs the
+  // next step ON THE PAGE, or the split reads as a document that lost half its content.
+  const T = (n) => path.join(ROOT, "kit", ".constitution", "method", "document", "templates", n);
+  const brief = fs.readFileSync(T("brief.md"), "utf8");
+  const prd = fs.readFileSync(T("prd.md"), "utf8");
+
+  assert.match(brief, /`\/wdi-report render brief`/,
+    "the brief template does not name the command that produces the readable version");
+  assert.match(prd, /`\/wdi-report render prd`/,
+    "the PRD template does not name the command that produces the readable version");
+
+  // And it MUST sit ABOVE the first `##` heading the generator copies. `page_brief` and `page_prd`
+  // lift sections by heading, so a pointer placed inside one would be copied into the deliverable —
+  // where "run render to read the full document" is nonsense, because that IS the full document.
+  for (const [name, raw, first] of [["brief.md", brief, "## Why"], ["prd.md", prd, "## Revision History"]]) {
+    // Normalise line endings first: this repo is checked out CRLF on Windows, and splitting on a
+    // bare "\n" silently found nothing rather than failing loudly.
+    const body = raw.replace(/\r\n/g, "\n").split("```markdown\n")[1];
+    assert.ok(body, `${name} no longer carries a \`\`\`markdown block — this test reads the wrong thing now`);
+    assert.ok(body.indexOf("/wdi-report render") < body.indexOf(first),
+      `in ${name} the render pointer sits below \`${first}\`, so the generator will copy it into the `
+      + `deliverable and tell a reader to render the page they are already holding`);
+  }
+});
+
+test("no skill reads a -rendered page as input — those trees are output, and a skill reading one reads its own echo", () => {
+  // `.what-rendered/` and `.how-rendered/` are projections of the working documents plus the
+  // registry. A skill that listed one under Inputs would be reading a copy of what it already has,
+  // and — worse — treating a projection as a source. corpus-guide.md states the rule; this is what
+  // makes it hold when the 16th skill is written.
+  const skills = path.join(ROOT, "kit", "skills");
+  const hits = [];
+  for (const name of fs.readdirSync(skills)) {
+    const p = path.join(skills, name, "SKILL.md");
+    if (!fs.existsSync(p)) continue;
+    const lines = fs.readFileSync(p, "utf8").split(/\r?\n/);
+    let inInputs = false;
+    lines.forEach((line, i) => {
+      if (/^## /.test(line)) inInputs = /^## Inputs\b/.test(line);
+      if (inInputs && /-rendered\//.test(line)) hits.push(`${name}/SKILL.md:${i + 1}  ${line.trim()}`);
+    });
+  }
+  assert.deepEqual(hits, [],
+    `a skill lists a rendered page as an Input. It is output — read the working document and the registry:\n  ${hits.join("\n  ")}`);
 });

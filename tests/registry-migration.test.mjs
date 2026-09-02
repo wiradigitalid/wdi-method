@@ -90,7 +90,7 @@ test("update RENAMES waves.yaml to specs.yaml and the product's plan survives by
       + "it is the product's own migration, and guessing at it destroys real work");
     assert.ok(!fs.existsSync(reg("waves.yaml")),
       "waves.yaml is still there beside specs.yaml — two homes for one plan, which is exactly the "
-      + "state V18 exists to prevent");
+      + "state ticket-status-one-home exists to prevent");
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });
@@ -178,6 +178,149 @@ test("update REMOVES an override for a retired engine, and keeps what the produc
       + "so removal MUST be by an explicit retired list, never by 'not in the kit'");
     assert.match(out, /retired override/,
       "files were deleted from someone else's repo in silence");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+// The requirement registry split has the same shape of hazard as waves→specs, and the opposite
+// answer. There, a tool COULD move the data safely, so it did. Here it cannot: splitting FR rows per
+// PRD needs to know which initiative each promise belongs to, and nothing in the registry ever
+// recorded that. So the installer seeds the product file and leaves every row where it is — the
+// loader unions whatever it finds, which is what keeps a half-split repo working.
+
+const REAL_REQUIREMENTS = [
+  "goals:",
+  "  - id: BG-1",
+  '    statement: "Sesuatu yang nyata"',
+  "",
+  "functional:",
+  "  - id: FR-1",
+  "    capability: CAP-1",
+  '    statement: "Sebuah janji yang sudah dikirim"',
+  "",
+].join("\n");
+
+function repoWithRequirements() {
+  const t = tmp("req");
+  const reg = path.join(t, ".control", "registry");
+  fs.mkdirSync(reg, { recursive: true });
+  fs.writeFileSync(path.join(reg, "requirements.yaml"), REAL_REQUIREMENTS);
+  fs.writeFileSync(path.join(reg, "index.yaml"), "product:\n  name: A Product\n");
+  return t;
+}
+
+test("update SEEDS goals.yaml and does not touch one row of requirements.yaml", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithRequirements();
+  const reg = (n) => path.join(target, ".control", "registry", n);
+  try {
+    const out = update(pkg, target);
+    assert.ok(fs.existsSync(reg("goals.yaml")),
+      "the product file was not seeded, so nothing tells the owner where BG and CAP now live");
+    assert.equal(fs.readFileSync(reg("requirements.yaml"), "utf8"), REAL_REQUIREMENTS,
+      "requirements.yaml was altered. Which PRD an FR belongs to was never recorded, so any split "
+      + "an installer performs is a guess — and a promise filed under the wrong initiative is worse "
+      + "than one left where it is");
+    assert.match(out, /requirements-<slug>\.yaml/,
+      "the run said nothing about how to finish the split, which leaves the owner with two files "
+      + "and no instruction");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("a second update does not re-seed — the product file is the product's once it exists", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithRequirements();
+  const reg = (n) => path.join(target, ".control", "registry", n);
+  try {
+    update(pkg, target);
+    fs.writeFileSync(reg("goals.yaml"),
+      'goals:\n  - id: BG-1\n    statement: "Dipindahkan dengan tangan"\n');
+    update(pkg, target);
+    assert.match(fs.readFileSync(reg("goals.yaml"), "utf8"), /Dipindahkan dengan tangan/,
+      "the second update wrote over rows the owner had already moved in — the seed happens once");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+// A repo on 0.5.14 — the last version actually published — carries every OLD shape at once. `update`
+// MUST move what a tool can move, leave what needs judgment exactly where it is, and then SAY what is
+// left and which skill finishes it. An upgrade that breaks the repo, or one that silently leaves it
+// half-migrated, both fail the same person.
+function repoOn0514() {
+  const t = tmp("v0514");
+  const mk = (rel, body) => {
+    const f = path.join(t, rel);
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, body);
+  };
+  mk(".control/wdi-method.yaml", 'wdi_method: "0.5.14"\n');
+  mk(".control/registry/index.yaml", "product:\n  name: A Product\nmode: outline\n");
+  mk(".control/registry/waves.yaml", REAL_PLAN);
+  mk(".control/registry/requirements.yaml", REAL_REQUIREMENTS);
+  mk(".control/generated/brief.md", "# brief\n\nold human page in the machine folder\n");
+  mk(".what/_product-brief/brief.md",
+     "# Product Brief: X\n\n## Executive Summary\n\ntext\n\n## Goals\n\n- **BG-1** — Sesuatu yang nyata\n\n## Assumptions\n\n- a\n\n## Vision\n\nlater\n");
+  mk(".what/_prd/checkout/prd.md",
+     "# PRD: Checkout\n\n## 0. Document Purpose\n\nwho\n\n## 3. Glossary\n\n- **Order** — a thing\n\n## 4. Features\n\n#### FR-1: Place order\n\n**Proof of done:** an order exists\n");
+  mk(".what/checkout/SRS-checkout.md",
+     "# SRS\n\n## UC Catalogue · [G3]\n\n| id | Use case | Actor | Satisfies | critical |\n| --- | --- | --- | --- | --- |\n| UC-1 | Place an order | Visitor | FR-1 | no |\n");
+  mk(".how/checkout/SDD-checkout.md",
+     "# SDD\n\n## Inherited Constraints · [guarded]\n\n| AD | Quoted rule | How it lands here |\n| --- | --- | --- |\n| AD-1 | one writer | via owns |\n");
+  mk(".how/_platform/c4-l2-containers.md",
+     "# C4 L2\n\n## Product Components per container\n\n| Container | Product Components living in it |\n| --- | --- |\n| app | checkout |\n");
+  return t;
+}
+
+test("update from 0.5.14 moves the mechanical half, leaves the judgment half untouched, and names it", () => {
+  const pkg = isolatedPackage();
+  const target = repoOn0514();
+  const reg = (n) => path.join(target, ".control", "registry", n);
+  try {
+    // The summary colours its labels; strip the escapes so the assertions read the words.
+    const out = update(pkg, target).replace(/\[[0-9;]*m/g, "");
+
+    // mechanical half: DONE by the installer
+    assert.ok(fs.existsSync(reg("specs.yaml")) && !fs.existsSync(reg("waves.yaml")), "waves.yaml was not renamed");
+    assert.ok(fs.existsSync(reg("goals.yaml")), "goals.yaml was not seeded");
+    assert.ok(fs.existsSync(path.join(target, ".claude", "skills", "wdi-upgrade", "SKILL.md")),
+      "the wdi-upgrade skill was not installed — the owner is told to run a skill they do not have");
+
+    // judgment half: NOT touched — moving these takes a decision the installer cannot make
+    assert.equal(fs.readFileSync(reg("requirements.yaml"), "utf8"), REAL_REQUIREMENTS, "requirements.yaml rows were moved by a tool that cannot know which PRD owns them");
+    assert.match(fs.readFileSync(path.join(target, ".what", "_product-brief", "brief.md"), "utf8"), /## Executive Summary/, "the installer reshaped the brief — that is wdi-upgrade's, where a human sees it");
+    assert.match(fs.readFileSync(path.join(target, ".what", "checkout", "SRS-checkout.md"), "utf8"), /\| UC-1 \|/, "the installer emptied the SRS catalogue before checking usecases.yaml holds the row");
+
+    // and the summary SAYS what is left, item by item, and which skill finishes it
+    assert.match(out, /upgrade\s+\d+ items? still in the OLD shape/, `the summary did not report pending upgrade work:\n${out}`);
+    for (const item of ["requirements.yaml", "brief.md in the 14-section", "prd.md in the 12-section", "UC Catalogue table", "quoting AD-N", "PC x container", ".control/generated/", ".what-rendered"]) {
+      assert.ok(out.includes(item), `pending item not named in the summary: ${item}\n${out}`);
+    }
+    assert.match(out, /wdi-upgrade/, "the summary does not name the skill that finishes the job");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("on a repo already in the new shape, update reports nothing pending", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithRequirements();
+  try {
+    // Move the rows the way wdi-upgrade would, so the probe has nothing left to find.
+    const reg = (n) => path.join(target, ".control", "registry", n);
+    update(pkg, target);
+    fs.writeFileSync(reg("goals.yaml"), 'goals:\n  - id: BG-1\n    statement: "Sesuatu yang nyata"\n');
+    fs.rmSync(reg("requirements.yaml"));
+    const out = update(pkg, target).replace(/\[[0-9;]*m/g, "");
+    assert.doesNotMatch(out, /still in the OLD shape/,
+      `a repo with nothing left to upgrade was told to upgrade — the probe is not idempotent:\n${out}`);
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

@@ -125,7 +125,7 @@ answered — then moved to `answered.md`. You MUST NOT delete the entry.
 **A fossil is closed, not answered, and you MUST look for fossils first.** A row questioning a rule, a
 layer, or a validator that has since been repealed cannot bite again: it closes with the repeal as its
 answer and MUST NOT be put to the owner as a decision. These are free, and a long list usually holds
-several — one real corpus was still carrying a question about `V11`'s shape after the layer `V11` runs
+several — one real corpus was still carrying a question about `parallel-tickets-blocked`'s shape after the layer `parallel-tickets-blocked` runs
 on had been retired.
 
 **An answer goes into the document it belongs to, and that is usually the end of it.** An `FR` in the

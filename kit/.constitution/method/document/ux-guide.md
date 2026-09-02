@@ -44,7 +44,7 @@ promise.
   lands them in the same act as birthing the components.
 - **A container is not required to land UX.** `.how/<pc>/01-ux/` has no container in its path; only a
   screen's `LC` row needs one, and that row is registered with `container:` empty and filled at G3 by
-  `wdi-blueprint` intent `platform`, in the same act that registers the containers. V25 stays silent on
+  `wdi-blueprint` intent `platform`, in the same act that registers the containers. `container-built` stays silent on
   an empty container until the `LC`'s Product Component lists one — the answer is demanded when it
   exists, not when it is thinnest.
 
@@ -57,7 +57,7 @@ Placement is not finished when the files have moved.
 
 - **Every screen in `DESIGN.md` MUST be registered as an `LC` of type `ui-screen`** in
   `.control/registry/components.yaml`, with its `container`. A screen that exists in the design and not
-  in the registry is a change nothing will trace, and V12 catches it **at spec close**.
+  in the registry is a change nothing will trace, and `lc-registered` catches it **at spec close**.
 - A composite that is reused across screens is an `LC` of type `ui-composite`, not a screen.
 - Tokens and base components — colour, type scale, spacing, buttons, inputs — MUST go to
   `.how/_platform/design-system.md`, not into any one component's `01-ux/`. They cross Product

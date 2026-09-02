@@ -30,14 +30,16 @@ MAY be dropped.
 
 | Section | Why it cannot be dropped |
 |---|---|
-| The Problem | The gate decides on this. Without it there is nothing to approve |
+| Why | The narrative the gate is read against. Without it there is nothing to approve |
+| The Problem | The gate decides on this |
 | Who This Serves | Names who the problem belongs to |
 | Goals | `BG-N` is the first link of the traceability chain; without it the chain has no root |
 | Success Criteria | The measure that makes "done" checkable |
 | Scope In / Scope Out | The boundary the PRD is later held against |
 | Constraints | What design MUST NOT trade away |
-| Assumptions | What the brief would be wrong without |
-| Prerequisites | What blocks work before it starts |
+
+`The Solution` and `What Makes This Different` stay optional — G1's seven questions never ask what is
+being built, only whether the problem is real and worth the cost.
 
 ## Decision rules
 
@@ -46,24 +48,45 @@ MAY be dropped.
   discovery is not finished and the gate MUST NOT open.
 - Every user and stakeholder who touches the product MUST appear in the table, including those who
   never open it — whoever pays for it, approves it, or is accountable for it.
+- **Success Criteria MUST name exactly one measurable figure**, with a timeframe. This is a ★
+  question at G1 and the section most often left as a mission statement instead — check 5 in
+  `wdi-problem` exists because nothing else caught this.
 - Goals MUST be numbered `BG-1`, `BG-2`, … and MUST NOT be numbered `G1`, `G2` — `G1`–`G5` name the
   five gates. `BG` IDs are cited downstream and MUST stay stable once written.
+- **Goals is a pointer, not a list.** The section states `Goals — see goals.yaml → goals:` and
+  nothing more. The statement for each `BG-N`, and an optional `why:` when a goal needs a reason
+  beyond its statement, are authored straight into `.control/registry/goals.yaml` — landing
+  that row is part of producing the brief, done by `wdi-problem` in the same pass, not a follow-up.
+  A goal's text written in this section as well as in the registry is the same fact with two homes,
+  and the copy people read is whichever they open first.
 - Scope Out MUST be written as items. Leaving it to be inferred from absence defeats its only
   purpose, which is naming what someone will otherwise assume is coming.
-- Per-release MVP scope belongs to the PRD, not here. This section states the product boundary.
+- Per-release MVP scope belongs to the PRD, not here. This section states the product boundary — what
+  belongs to the product at all, ever, not what ships first.
 
-## The three product-level sections
+## Constraints — the one product-level section still authored here
 
-BMad has no home for these; they exist because of that gap, and each has a rule about where it goes
-when it stops being a statement.
+BMad has no home for a product-wide constraint; this section exists because of that gap.
 
 | Section | Boundary | When it moves |
 |---|---|---|
 | Constraints | What is fixed before design starts. Technical constraints that only shape implementation belong in `addendum.md` | A constraint that emerges from a design decision becomes `AD-N` in the spine and MUST NOT be appended here later |
-| Assumptions | What is believed but unverified, stated so it could be proven false | An assumption that starts to wobble MUST become a row in `.control/registry/risks.yaml` with an owner |
-| Prerequisites | What MUST exist or be granted before work can start | Any prerequisite not yet satisfied MUST have a row in `.control/questions/external.md` naming who is being waited on and by when |
 
-An assumption nobody would act differently about is not worth listing.
+## No Assumptions or Prerequisites section
+
+Both are dropped from the brief entirely — they were the two sections with no home anywhere else in
+the corpus, and now they do:
+
+- An assumption goes through `wdi-question` into `.control/questions/assumptions.md`. State it so it
+  could be proven false; one that starts to wobble MUST become a row in
+  `.control/registry/risks.yaml` with an owner. An assumption nobody would act differently about is
+  not worth listing.
+- A prerequisite goes through `wdi-question` into `.control/questions/external.md`, naming who is
+  being waited on and by when.
+
+Neither is restated in the brief itself — the brief citing a row it does not own is exactly the second
+copy this section used to be. A reader who wants both assembled with everything else reads the
+generated deliverable, `.what-rendered/_product-brief/brief.md`, which renders the open rows from both files.
 
 ## No Product Component list
 
@@ -89,6 +112,14 @@ from, and every later gate inherits the guess.
 - The brief MUST have been through `bmad-review` lenses structure + prose before it reaches the
   gate. Gate time is for deciding, not for catching mistakes. This one fires on its own — it is the
   *Polish* step of `bmad-product-brief`, driven by `doc_standards`, and nobody invokes it. Verifying
-  that it actually ran is check 9 in `wdi-problem`.
+  that it actually ran is check 11 in `wdi-problem`.
 - Invoke through `wdi-problem`, not `bmad-product-brief` directly — the wrapper is what checks the
   rules on this page.
+
+## The generated deliverable
+
+A complete, self-contained copy for a reader who should not need to open the registry lives at
+`.what-rendered/_product-brief/brief.md` — written by `/wdi-report render brief`, which runs
+`validate.py --generate`. It assembles this document's own sections verbatim, the goals rendered from
+`goals.yaml`, and the open rows from `assumptions.md` and `external.md`. Nobody writes to it by
+hand — it is regenerated, never hand-patched, the same as `blueprint.md` and `decisions.md`.

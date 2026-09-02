@@ -24,7 +24,8 @@ You MUST NOT write or edit `prd.md` yourself. If a check fails, name what is mis
 |---|---|
 | `.what/_product-brief/brief.md` | The problem, the primary user, the boundary the PRD MUST respect |
 | `.what/_prd/*/prd.md` | Which initiatives already have a PRD, and what each already promises |
-| `.control/registry/requirements.yaml` | The next `CAP`/`FR`/`NFR`/`UJ` ids, allocated globally |
+| `.control/registry/goals.yaml` | The `BG` this initiative serves |
+| `.control/registry/requirements-*.yaml` | Every initiative's `FR`/`NFR`/`UJ`, so the next id continues the product's sequence |
 | `.control/decisions/` | `applied` decisions the PRD MUST already reflect |
 | `.constitution/method/document/prd-guide.md` | The rules the result is checked against |
 | `.control/product-glossary.md` | Terms already fixed |
@@ -67,33 +68,44 @@ they arrive through `persistent_facts` and `doc_standards` in `_bmad/custom/bmad
 Name the brief and, for `update`, the existing PRD and every `applied` decision that reaches it. The skill
 globs its own default locations, which this project redirects.
 
-## Step 4 — Verify
+## Step 4 — Land the requirements
+
+Each feature's **Realizes:** line cites `FR-N`/`NFR-N` ids. The template gives the statement, the proof
+of done, and the enforcer no home inside `prd.md` any more — write them straight into
+`.control/registry/requirements-<slug>.yaml` — the slug being this PRD's own folder name — on the id's own row, as part of producing this PRD. The `CAP` row goes in the same file: one feature is one capability, and a feature lives in exactly one PRD. This is
+landing, not editing `prd.md`: the same duty `wdi-problem` Step 4 carries for `BG-N`.
+
+An `update` run that adds or changes a promise lands the same way — the registry row changes, the PRD
+keeps citing the id, and Revision History (Step 6 below) records what changed for a reader.
+
+## Step 5 — Verify
 
 | # | Check | Fails when |
 |---|---|---|
 | 1 | Home | Anything outside `.what/_prd/<initiative>/`, or a folder still named `ISI-slug-inisiatif` |
 | 2 | Ids allocated from the registry | `FR-1` restarted, or an id invented in prose |
-| 3 | Every `FR` names its `capability`; every `NFR` names its `goal` | V15 has nothing to check |
-| 4 | Every `FR` has **exactly one** proof of done, in business language | Zero, or a second technical restatement beside it |
-| 5 | Every `NFR` names `enforced_by` | An `NFR` nothing enforces is decoration (V5) |
-| 6 | Cross-Cutting NFRs and Constraints both present | An absent section reads as "not checked" |
-| 7 | No solution shape | A framework, a table, or a transport named in `prd.md` rather than in `addendum.md` |
-| 8 | One Revision History row for this run, written for someone not in the room | Zero rows, several rows, or a row that says "Updated §4.2" |
-| 9 | Memlog at `.control/memlog/prd-<slug>.md`, slug matching the folder | A `.memlog.md` appeared inside `.what/` — `--workspace` was used |
-| 10 | `bmad-review` ran through `doc_standards` on `prd.md` and `addendum.md` | It did not fire |
+| 3 | Every `FR` names its `capability`; every `NFR` names its `goal` | `chain-links` has nothing to check |
+| 4 | Every `FR`'s statement and proof of done, every `NFR`'s statement and `enforced_by`, live only in `requirements-<slug>.yaml` | Full prose written in `prd.md` instead of, or as well as, the registry row from Step 4 |
+| 5 | Cross-Cutting NFRs (§6) and Constraints and Guardrails (§7) both present | An absent section reads as "not checked" |
+| 6 | No solution shape | A framework, a table, or a transport named in `prd.md` rather than in `addendum.md` |
+| 7 | §1 Why This Initiative states a delta against the brief's `Why`, not a restatement of it | The product's own vision written out again on the first PRD |
+| 8 | No Document Purpose, Glossary, Non-Goals, Open Questions, or Assumptions Index section | Any of the five appeared instead of being routed to its real home — see `prd-guide.md` |
+| 9 | One Revision History row for this run, written for someone not in the room | Zero rows, several rows, or a row that says "Updated §4.2" |
+| 10 | Memlog at `.control/memlog/prd-<slug>.md`, slug matching the folder | A `.memlog.md` appeared inside `.what/` — `--workspace` was used |
+| 11 | `bmad-review` ran through `doc_standards` on `prd.md` and `addendum.md` | It did not fire |
 
-Check 9 MUST be fixed immediately rather than reported. V16 rejects a memlog inside the corpus.
+Check 10 MUST be fixed immediately rather than reported. `memlog-home` rejects a memlog inside the corpus.
 
-## Step 5 — `owns:`, and the collision it prevents
+## Step 6 — `owns:`, and the collision it prevents
 
 A new or changed `FR` that claims write authority over a domain entity MUST be checked against `owns:` in
 `components.yaml`. An entity has exactly one owning Product Component; an `FR` from another PRD that needs to
-change it MUST point at the owner's `FR` rather than promising to write it itself. V21 checks this, and the
+change it MUST point at the owner's `FR` rather than promising to write it itself. `entity-one-writer` checks this, and the
 collision has already happened once for real.
 
 Report a collision. You MUST NOT resolve it by widening one PRD's claim.
 
-## Step 6 — Impact
+## Step 7 — Impact
 
 A changed promise changes what other documents can still claim. Check, and **report** — never edit.
 
@@ -111,7 +123,7 @@ NOT reopen one yourself.
 
 - You MUST NOT write a second PRD for an area that already has one. The reader test decides, and its answer
   is `update` far more often than it feels.
-- You MUST NOT open G2 on a PRD that has not been through check 10. Gate time is for deciding, not
+- You MUST NOT open G2 on a PRD that has not been through check 11. Gate time is for deciding, not
   proofreading.
 - The gate reads `prd.md` and `EXPERIENCE.md` together. A PRD that passes while the experience side is
   missing has answered half of what G2 decides.
@@ -123,5 +135,6 @@ NOT reopen one yourself.
 
 ## Output
 
-Intent dispatched · what the promise now is in one line · the result of all ten checks naming the failures ·
-the `owns:` check · impact found and where it was routed · the gates the matrix names · open questions filed.
+Intent dispatched · what the promise now is in one line · the requirements landed in Step 4 · the result of
+all eleven checks naming the failures · the `owns:` check · impact found and where it was routed · the gates
+the matrix names · open questions filed.

@@ -94,9 +94,10 @@ Branches MUST go to `05-scenarios/` rather than making the UC file fat, and only
 
 ## Actor Register is the SSOT
 
-It MUST stay in the SRS kernel, never moved to a slot. The SDD MAY carry a **mirror** of it, and the mirror
-MUST NOT be edited on the SDD side. A `System` actor MAY be decomposed into the internal components that
-play it, but that decomposition belongs to the SDD.
+It MUST stay in the SRS kernel, never moved to a slot. The SDD MUST NOT carry a copy of it — a mirror was
+once permitted with the rule "not edited on the SDD side", and nothing checked that rule. The rendered SDD
+shows the actors it needs from here. A `System` actor MAY be decomposed into the internal components that
+play it, but that decomposition belongs to the SDD, and it cites the actor, never restates it.
 
 ## Business rules — two homes, one test
 
@@ -139,11 +140,11 @@ artifacts move.
 ## Passing the gate
 
 - At **G3**: the actor list, the UC catalogue, and the domain model complete for every component, and the
-  roll-up in `.control/generated/blueprint.md` regenerated. V1, V2, V6, and V15 green — V2 is the ★
+  roll-up in `.how-rendered/blueprint.md` regenerated. `goal-has-fr`, `fr-has-uc`, `refs-resolve`, and `chain-links` green — `fr-has-uc` is the ★
   question: every `FR` has at least one `UC`, unless it carries `no_uc:` with a stated reason.
 - At **G4**: whatever this component's `mode` requires, and nothing beyond it.
 - `wdi-review` MUST have run with the lens set `risk_accepted` names for a **first** review or a review
   opening this gate; a later re-review runs the lighter set, and `wdi-review` owns when. The `reviewed:`
-  trace is stamped only on components at `risk_accepted` `low` or `medium` — V13, where absence fails and
+  trace is stamped only on components at `risk_accepted` `low` or `medium` — `review-trace`, where absence fails and
   staleness is advisory between gates.
-- A `UC` that exists but is wrong passes V2 and fails `wdi-reconcile`. Run it before the gate, not after.
+- A `UC` that exists but is wrong passes `fr-has-uc` and fails `wdi-reconcile`. Run it before the gate, not after.

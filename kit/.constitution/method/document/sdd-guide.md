@@ -81,7 +81,7 @@ NOT be written at all.
 | Behaviour | How the three move together, per use case | `06-flows/` |
 
 From `guarded` up, every Boundary object MUST correspond to an `LC` in `.control/registry/components.yaml`;
-at `deep`, Control objects too. Registration is checked **when the spec closes** — V12 — not before a ticket
+at `deep`, Control objects too. Registration is checked **when the spec closes** — `lc-registered` — not before a ticket
 is picked up.
 
 Flows **into and out of** each boundary MUST be stated, not just the boundary. A boundary listed without its

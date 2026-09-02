@@ -2,7 +2,7 @@
 type: uc
 id: UC-{NN}                  # allocated from .control/registry/usecases.yaml
 component: '{pc}'
-satisfies: []                # FR ids — V2 checks every FR has at least one UC
+satisfies: []                # FR ids — `fr-has-uc` checks every FR has at least one UC
 critical: false              # true ONLY when it touches money, personal data, or an irreversible
                              # action. Nothing else — the two elastic criteria are repealed
 created: '{YYYY-MM-DD}'

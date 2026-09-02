@@ -112,7 +112,7 @@ derived from the other: one component MAY be thin on purpose and reviewed the ha
 `.constitution/method/document/delivery-flow-guide.md` owns both;
 `.constitution/method/why/rationale.md` says why they are separate.
 
-## The five gates and the fifteen skills
+## The five gates and the sixteen skills
 
 | Gate | Decides | Skill |
 |---|---|---|
@@ -137,7 +137,7 @@ verifies the result, and lands the memlog.
   fixed in the WDI Method package, then brought here with `npx wdi-method update`.
 - A file in `_bmad-output/prior-knowledge/` MUST NOT be copied into `.what/` or `.how/`. It enters
   the corpus only through the skill that owns the slot.
-- `.control/generated/` MUST NOT be written by hand — it is the output of `validate.py` and
+- `.control/generated/`, `.what-rendered/`, and `.how-rendered/` MUST NOT be written by hand — they are the output of `validate.py` and
   `timeline.py`.
 - The two structure maps in `.control/` MUST NOT be edited by hand — `wdi-init` intent `structure`
   re-derives them.

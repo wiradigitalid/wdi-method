@@ -1,6 +1,6 @@
 ---
 name: wdi-review
-description: Use to review any corpus document at any time, and always before a gate on the four artifacts no doc_standards covers — the architecture spine, SRS, SDD, and SPEC. Reads the lens set from the component's risk_accepted, dispatches bmad-review, and stamps the V13 trace on those four only. Not for code review.
+description: Use to review any corpus document at any time, and always before a gate on the four artifacts no doc_standards covers — the architecture spine, SRS, SDD, and SPEC. Reads the lens set from the component's risk_accepted, dispatches bmad-review, and stamps the `review-trace` trace on those four only. Not for code review.
 ---
 
 # WDI Review
@@ -42,7 +42,7 @@ Four rules, and together they are what keeps this skill from becoming a treadmil
 precedent elsewhere in the method; none of them lowers what a review looks for.
 
 - **The trace has to be fresh at a gate and at spec close. Between those points a stale trace is
-  advisory.** V13 reports it and does not fail; what catches a
+  advisory.** `review-trace` reports it and does not fail; what catches a
   gate opening on a stale review is G4's ★ question — *validators green **and** the review leaving no open
   finding* — not a validator firing on every commit.
 - **A wording-only change MUST NOT trigger a re-run.** The split is `prd-guide.md`'s: an `FR`'s
@@ -124,13 +124,13 @@ this artifact needs rewriting, not reviewing. Sixty findings is not thoroughness
 failed to reach a conclusion, and the owner pays for it twice. You MUST NOT register a finding as
 blocking to be safe.
 
-**V13 stamps only components at `risk_accepted` `low` or `medium`.** At `high` the owner has already
+**`review-trace` stamps only components at `risk_accepted` `low` or `medium`.** At `high` the owner has already
 accepted the risk, and demanding the trace there is bookkeeping with no buyer. The contract keeps its
 trace in the registry rather than in itself: `to-spec` and `to-tickets` overwrite hand edits.
 
 **Anything in the corpus MAY be reviewed here when asked** — a `DEC-`, minutes, a guide, a brief, a PRD,
 a `DESIGN.md`. What is restricted is the **stamp**, not the reading: only the four rows above carry a
-trace V13 reads. The five artifacts with `doc_standards` review themselves at finalize; a review here is
+trace `review-trace` reads. The five artifacts with `doc_standards` review themselves at finalize; a review here is
 never required for them and MUST NOT leave a `reviewed:` block, because a second trace implies the first
 was optional.
 
@@ -159,7 +159,7 @@ MUST be filed through `wdi-question`, or opened as a `DEC-` through `wdi-decisio
 chat that dies with the session.
 
 You MUST NOT stamp an artifact whose findings are still open. A trace on unresolved findings is
-worse than no trace: V13 goes green and the gate opens on a review nobody acted on.
+worse than no trace: `review-trace` goes green and the gate opens on a review nobody acted on.
 
 ## Step 4 — Stamp
 
@@ -173,10 +173,10 @@ reviewed:
 ```
 
 - `sha` MUST be the commit the artifact was reviewed at. Without it staleness cannot be measured, only
-  felt — the same reason a structure map requires one. V13 no longer reads the stamping commit itself as
+  felt — the same reason a structure map requires one. `review-trace` no longer reads the stamping commit itself as
   a change, so a fresh stamp does not make its own review look stale.
 - You MUST NOT write the trace unless `bmad-review` actually ran in this session. Filling it as a
-  formality turns V13 into a rubber stamp, which is worse than having no validator.
+  formality turns `review-trace` into a rubber stamp, which is worse than having no validator.
 - You MUST NOT touch `status:` while stamping. `status: reviewed` states a **stage**; the `reviewed:`
   block states an **event**. Raising the status is a separate act.
 - You MUST NOT edit the artifact's content. Fixing a finding is the author's act, not the

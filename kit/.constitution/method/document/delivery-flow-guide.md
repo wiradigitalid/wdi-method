@@ -104,7 +104,7 @@ sit at `mode: catalog` and still be reviewed the hardest.
 Two things are not free, and `wdi-init` owns the conversation around both: `risk_accepted: high` on a
 component touching money, personal data, an irreversible action, a contractual promise, or an
 un-rollbackable integration requires a named acceptance in `risk_accepted_by` — a person and a date,
-written beside the risk (V23) — and an outside party who will demand the artifacts as a deliverable puts
+written beside the risk (`high-risk-named`) — and an outside party who will demand the artifacts as a deliverable puts
 the touched component at `mode: deep` and `risk_accepted: low` whatever the global setting says.
 
 ## Five gates
@@ -162,7 +162,7 @@ build. Gating per component means approving seven times, each time seeing a seve
 Two blueprint contents cannot be per component: a per-component DB inventory is a lie because tables are
 shared, and a per-component spine contradicts what a spine is.
 
-**What is reviewed at G3 is the generated roll-up**, `.control/generated/blueprint.md`, not seven files. The
+**What is reviewed at G3 is the generated roll-up**, `.how-rendered/blueprint.md`, not seven files. The
 catalogue, actor list, and domain model stay in their component kernels as their permanent home; the roll-up
 assembles them into one page to read. One fact, one home, one view.
 
@@ -209,7 +209,7 @@ tail of G2. G4 reads the `mode` of the component in front of it.
 
 ### G3 Blueprint · 45'
 
-Read against `.control/generated/blueprint.md`, not against seven files.
+Read against `.how-rendered/blueprint.md`, not against seven files — every one of the seven questions below is answerable from that page.
 
 1. ★ Is every use case title a sentence a user would say, not a system term?
 2. ★ Any `FR` with no use case? (the validator answers this, not an opinion)
@@ -260,7 +260,7 @@ proof of done. One `FR` MAY span several specs, one spec MAY carry several small
 spec MAY be a standalone slice of one large `FR`.
 
 A spec MAY cross several Product Components. One condition: **G4 has passed for every component the spec
-touches**, or that component is at `mode: catalog`, whose G4 is skipped by design (V22). That is why G4 and
+touches**, or that component is at `mode: catalog`, whose G4 is skipped by design (`spec-after-g4`). That is why G4 and
 the spec are deliberately different units — G4 decides *how one component is built*, a spec decides *which
 work happens now*.
 
@@ -298,12 +298,12 @@ read; the ticket's prose stays where the tracker put it.
 
 **Two edge fields, and the difference is not cosmetic.** A spec `depends_on` another spec — an ordering
 between units of delivery. A ticket is `blocked_by` other tickets, which is the word the tracker uses for
-the same relation and the field the frontier is read from. V7 walks both graphs; V11 reads the ticket one.
+the same relation and the field the frontier is read from. `no-cycles` walks both graphs; `parallel-tickets-blocked` reads the ticket one.
 
 **Where a ticket lives, and what it is called.** `{spec_folder}/issues/<NN>-<slug>.md`. Only the root is
 ours: the folder, the numbering from `01` in dependency order, and the file's shape belong to the engine
 that writes them. A ticket's `id` in `specs.yaml` is `<spec-id>-<NN>` — `SPEC-3-01` — because the engine's
-number is unique only inside one spec and the RTM needs a key that is unique across the corpus. V18 finds
+number is unique only inside one spec and the RTM needs a key that is unique across the corpus. `ticket-status-one-home` finds
 the file from the number at the tail of the id.
 
 **Parallelism.** Between tickets through their blocking edges plus the `touches` check; between specs
@@ -338,7 +338,7 @@ Answered as each ticket finishes, before the next is picked up.
 3. Test names matching what `specs.yaml` records?
 
 Five items left this list and did not disappear — they moved to **spec close**, where the information is
-actually available: `LC` registration (V12), the `touches` check, SPEC companion distillation, and the
+actually available: `LC` registration (`lc-registered`), the `touches` check, SPEC companion distillation, and the
 structure-map refresh. Registering an `LC` before a ticket was `ready-for-agent` demanded the answer at the
 moment it was thinnest.
 

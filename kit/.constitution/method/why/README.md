@@ -91,7 +91,7 @@ and `.how/`.
 | An estimate or a task list is needed | `wdi-report` intent `estimate` |
 | You do not know where you are | `wdi-help` |
 
-## Fifteen skills
+## Sixteen skills
 
 Named for the **gate they serve**, so *"which skill do I run"* is answered by *"which gate am I at"*.
 
@@ -115,6 +115,7 @@ Named for the **gate they serve**, so *"which skill do I run"* is answered by *"
 | `wdi-question` | Something that cannot be decided now |
 | `wdi-log` | A meeting finished, or a non-technical fact now binds |
 | `wdi-help` | "Where am I, what next" |
+| `wdi-upgrade` | `wdi-method update` just moved the method version, and the summary listed content still in the old shape. Moves it, never invents it; one commit |
 | `wdi-reconcile` | Any time. Read-only — it reports, it never edits |
 | `wdi-review` | Over any document, any time |
 | `wdi-systematic-debugging` | A bug, a failed test, a failed build, unexpected behaviour |

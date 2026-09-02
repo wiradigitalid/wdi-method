@@ -1,26 +1,28 @@
 ---
 name: wdi-report
-description: Use when someone needs numbers about this project — progress for a client update, an estimate before the work is committed, or task rows ready to paste into a tracker. Three intents, progress and estimate and dispatch. Never invents a number.
+description: Use when someone needs numbers about this project — progress for a client update, an estimate before the work is committed, task rows ready to paste into a tracker, or a self-contained brief/PRD deliverable. Four intents, progress and estimate and dispatch and render. Never invents a number.
 ---
 
 # WDI Report
 
-Three intents, and the first is deliberately fenced off from the other two **because their rules are opposite**.
+Four intents. The first three are fenced off from each other **because their rules are opposite**; `render`
+answers a different question from all three — not a number, a document.
 
 | Intent | Answers | Rule |
 |---|---|---|
 | `progress` | What has moved, what is late, how much is proven | **Entirely derived.** MUST NOT write one number, date, or percentage that did not come from the registry or from git |
 | `estimate` | How big this is, what the tasks are, how much load, what the timeline looks like | **Forward-facing.** MUST state which inputs exist and how precise that makes it, and MUST be labelled an estimate |
 | `dispatch` | Task rows ready for an outside tracker | Reads the same table as `estimate`; recomputes nothing |
+| `render` | The page a human reads at each gate — brief, PRD, blueprint, SDD — and a complete SRS per component | **A projection.** Assembles the working document verbatim plus what the registry and `.control/questions/` complete; adds no fact and no sentence of its own |
 
-Confusing the first two is the failure this split exists to prevent: a forward-looking figure presented in the
+Confusing the first two is the failure that split exists to prevent: a forward-looking figure presented in the
 voice of a derived one is the most expensive kind of wrong.
 
 ## What owns what
 
 | Owner | Produces |
 |---|---|
-| `.constitution/method/scripts/validate.py` | `generated/rtm` · `dag` · `status` · `risks` · `components` · `decisions` · `blueprint` · `estimate` |
+| `.constitution/method/scripts/validate.py` | `generated/rtm` · `dag` · `status` · `risks` · `components` · `decisions` · `estimate` — and every page under `.what-rendered/` and `.how-rendered/` |
 | `.constitution/method/scripts/timeline.py` | `generated/timeline` · `generated/report` · `.control/reports/<period>.md` |
 | `.constitution/method/scripts/inventory.py` | The three inventories, derived from code |
 | `wdi-reconcile` | Drift between corpus and registry — read-only, no file |
@@ -64,7 +66,7 @@ copy is the one that goes wrong.
 ## Step 3 — Read `generated/timeline` and `generated/report`
 
 `timeline` gives one row per `CAP`, plan beside actual, plus a gantt. `state` is `not-started`, `in-progress`,
-`done`, or **`overdue`** — the last being V14.
+`done`, or **`overdue`** — the last being `plan-dates`.
 
 You MUST list every overdue row **by name**, with what it is waiting on. The script prints them individually for
 the same reason: aggregating them into a count is how a slipping plan stays comfortable.
@@ -127,7 +129,7 @@ one thing this intent can get badly wrong.
 
 ## Step 2 — Inputs
 
-`requirements.yaml` (`estimate_mandays`, `priority`, `depends_on`, `target_release`) · `components.yaml` (`mode`,
+`goals.yaml` (the `BG` list) · every `requirements-<slug>.yaml` (`CAP` with `estimate_mandays`, `priority`, `depends_on`, `target_release`, plus its `FR`) · `components.yaml` (`mode`,
 `risk_accepted`, `risk_note`) · the three `inventory-*.md` when they exist.
 
 `estimate_mandays` on `CAP` is the **source**, and it is used for real here rather than being decoration. When it is
@@ -183,12 +185,59 @@ sub-task cannot carry the blocking relation the frontier is read from; `delivery
 
 ---
 
+# Intent `render`
+
+Produces a self-contained reader's copy of the brief or a PRD — the shape that used to be written by hand,
+now assembled instead of duplicated. `brief-guide.md` § The generated deliverable and `prd-guide.md` § The
+generated deliverable own what each page assembles; this intent is the one place either is actually run.
+
+Both working templates point here by name, so this is what an owner will type:
+
+| They ask for | They run |
+|---|---|
+| The full, readable brief | `/wdi-report render brief` |
+| The full, readable PRD | `/wdi-report render prd` |
+
+Either form runs the same single command in Step 1 — the argument says which page they came for, and
+which path to lead the report with. It does NOT narrow what gets regenerated, and you MUST NOT pretend
+it did.
+
+## Step 1 — Generate
+
+```bash
+uv run .constitution/method/scripts/validate.py --generate
+```
+
+This regenerates the machine tables in `.control/generated/` AND every human page in `.what-rendered/` and
+`.how-rendered/` — the brief, every PRD, the blueprint, every SRS, and the SDD of every component above
+`catalog`. One run, not a per-document command, because the pages cite each other's ids.
+
+## Step 2 — Report what changed
+
+`generate()` writes `brief.md` unconditionally and one `prd-<slug>.md` per folder found under
+`.what/_prd/`. Name the paths written. If a working document does not exist yet, its page says so instead
+of a crash — report that as "not started" rather than a failure.
+
+## Step 3 — Say what the page is, and is not
+
+> This is a **projection**, assembled from `brief.md` / `prd.md`, the requirement registry,
+> `.control/product-glossary.md`, and `.control/questions/`. It carries no fact the working documents and
+> the registry do not already hold, and it MUST NOT be edited by hand — the next `render` overwrites it.
+
+- You MUST NOT hand-patch a generated page to "fix" something that reads wrong. The defect is in the
+  working document or the registry, and that is where it MUST be fixed.
+- A reader asking for "the full brief" or "the complete PRD" wants this page, not `.what/_product-brief/brief.md`
+  or `.what/_prd/<slug>/prd.md` read directly — those are now pointer-heavy working documents, not the
+  deliverable.
+
+---
+
 ## Rules
 
 - You MUST NOT invent progress. When a table is missing or stale, name it and stop.
 - You MUST NOT report `progress` in tickets. The planning layer speaks in `CAP`, `FR`, and defects; tickets are the
   execution layer and are born too late to plan against.
-- You MUST NOT hand-write anything under `generated/`. There is no exception.
+- You MUST NOT hand-write anything under `generated/`, `.what-rendered/`, or `.how-rendered/`. There is no exception.
 - You MUST NOT re-run `--publish` to "fix" a report. The refusal is the rule working.
 - When plan dates have moved since the last report, you MUST say so and point at the commit.
 - When there is no previous report, say the period is unbounded on the left rather than picking a date.
@@ -204,3 +253,5 @@ individually, never counted away.
 a commitment.
 
 **`dispatch`:** the paste-ready rows, on screen, with candidates marked.
+
+**`render`:** the paths written, which working documents were missing, and the projection notice above.

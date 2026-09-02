@@ -91,14 +91,15 @@ Repealed: `_platform/architecture/` (one file does not earn a folder) and `<pc>/
 
 | File | Holds | Present at |
 |---|---|---|
-| `.control/registry/requirements.yaml` | `BG` · `CAP` · `FR` · `NFR` · `UJ` | every mode |
+| `.control/registry/goals.yaml` | `BG` | every mode |
+| `.control/registry/requirements-<slug>.yaml` | `CAP` · `FR` · `NFR` · `UJ`, one file per PRD initiative | every mode |
 | `.control/registry/usecases.yaml` | `UC-N` with `critical` and the `FR` it satisfies | every mode |
 | `.control/registry/components.yaml` → `product_components` | Component · `mode` · `risk_accepted` · `risk_note` · `owns` · `g4_passed` | every mode |
 | `.control/registry/components.yaml` → `containers` | The containers from C4 L2 | every mode |
 | `.control/registry/components.yaml` → `platform_owns` | Entities no Product Component's promise explains. `_platform` is not a component and has no `mode` | every mode |
 | `.control/registry/components.yaml` → `logical_components` | `LC` | boundary from `guarded`; boundary + control at `deep` |
 | `.control/registry/decisions.yaml` · `specs.yaml` · `defects.yaml` · `risks.yaml` · `index.yaml` | Decisions · work · defects · risks · the global `mode` and gate map | every mode |
-| `.control/generated/blueprint.md` | **The one-page roll-up reviewed at G3** | every mode |
+| `.how-rendered/blueprint.md` | **The one-page roll-up reviewed at G3** | every mode |
 | `.control/generated/decisions.md` | The flat index of every `DEC-` | every mode |
 | `.control/generated/estimate.md` | The candidate task table | every mode |
 | `.control/generated/rtm` · `status` · `dag` · `components` · `risks` | Traceability and progress | every mode |

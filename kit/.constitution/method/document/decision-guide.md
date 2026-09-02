@@ -57,7 +57,7 @@ document:
 | Was | Is now |
 |---|---|
 | Contradicting an `AD-N` demanded a `DEC-` | It **stops and reaches the owner**. Nobody narrows an invariant silently. The record is the edited `AD-N`, present tense, plus the commit — a `DEC-` only if the reason cannot be read from the spine |
-| `risk_accepted: high` on a sensitive component demanded a risk-acceptance `DEC-` | `risk_accepted_by` names **a person and a date**, in `components.yaml` where the risk is set. V23 checks it, and still resolves a `DEC-` id if one is given |
+| `risk_accepted: high` on a sensitive component demanded a risk-acceptance `DEC-` | `risk_accepted_by` names **a person and a date**, in `components.yaml` where the risk is set. `high-risk-named` checks it, and still resolves a `DEC-` id if one is given |
 | Cancelling >30% of a spec's tickets demanded a `DEC-` | The spec is **re-cut** rather than patched. `specs.yaml` is the record |
 
 What each of those bought was that a human made the call. That is preserved. What each of them also
@@ -191,7 +191,7 @@ chosen and what it cost.
   has to change, the decision is incomplete and is sent back.
 - Applying MUST NOT widen beyond what the decision says. A neighbouring paragraph that now looks wrong
   is a finding to report.
-- V8 checks that every `applied` `DEC-` names a non-empty `touches`. It MUST NOT check that a decision
+- `applied-dec-touches` checks that every `applied` `DEC-` names a non-empty `touches`. It MUST NOT check that a decision
   serves an `FR` or `NFR` — *"the filter works like this"* serves none, and it is exactly the kind of
   decision this guide exists to keep.
 - `ADR-NNN` written inside a document frozen before 2026-08-18 is a **retired alias** for `DEC-NNN`

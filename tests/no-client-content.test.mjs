@@ -5,10 +5,10 @@
 // pool_integration_test.go beside it. A generic guide had been written by pointing at one product's
 // tree and was never generalised.
 //
-// It surfaced as a V24 failure, but V24 could never have been the guard: it only fires in a
+// It surfaced as a cites-resolve failure, but cites-resolve could never have been the guard: it only fires in a
 // CONSUMER, and only when the cited file is missing. The client whose tree it named stayed green
 // precisely because it owned the file. So the detector has to live here, where the sentence is
-// written — and it has to survive V24 no longer scanning `.constitution/method/` at all.
+// written — and it has to survive cites-resolve no longer scanning `.constitution/method/` at all.
 //
 // Two shapes, because client content leaks in two ways:
 //   1. a code path — `src/…`, `web/…`, `public/…`, `deploy/…`

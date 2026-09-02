@@ -56,7 +56,7 @@ owner answered it.
 ## Step 2 — Run the validators first
 
 Run `uv run .constitution/method/scripts/validate.py`, and `uv run .constitution/method/scripts/inventory.py` when code
-exists. V1–V24 answer everything that can be **counted**, and you MUST NOT re-derive by reading what they
+exists. `goal-has-fr`–`cites-resolve` answer everything that can be **counted**, and you MUST NOT re-derive by reading what they
 already report. Carry their findings as they came, then spend the reading on what no validator can see.
 
 `.control/generated/` is their output and MUST NOT be read as an independent source. When it is
@@ -68,7 +68,7 @@ missing or stale, say so and name `validate.py --generate` rather than working a
 |---|---|
 | Top-down | Does every `applied` `DEC-` actually appear in the files its `touches` names? |
 | Bottom-up | Does anything in `.how/<pc>/` describe behaviour that `.what/<pc>/` never promised? |
-| Decisions | Is there an `accepted` `DEC-` that was never applied, or an `applied` one with an empty `touches`? The second is V8; the first no validator can see |
+| Decisions | Is there an `accepted` `DEC-` that was never applied, or an `applied` one with an empty `touches`? The second is `applied-dec-touches`; the first no validator can see |
 | Chain | `BG → CAP → FR/NFR → UC → ticket → test` — where does it break? |
 | Depth | Does any document carry more than its component's `mode` demands? Over-writing is drift too, and it is the direction nobody looks for |
 | Vocabulary | Does any document use a domain noun that `.control/product-glossary.md` does not define, or a synonym for one it does? Detect against the rule in `wdi-blueprint`; MUST NOT keep a second rule here |
@@ -76,10 +76,10 @@ missing or stale, say so and name `validate.py --generate` rather than working a
 | Inventory | Do the three inventories still match the code? `inventory.py` answers it; carry its findings rather than re-deriving them |
 | **Constitution** | Does an artifact break the rule its own guide states? |
 | **Homeless output** | Does anything in `_bmad-output/` have no row in the ownership table in `corpus-guide.md`, or a row whose named owner is not installed? |
-| **Evidence** | V24 answers the mechanical half — does every cited path still resolve. What is left for a reader: does the file still **contain** what is cited |
+| **Evidence** | `cites-resolve` answers the mechanical half — does every cited path still resolve. What is left for a reader: does the file still **contain** what is cited |
 
 The chain check overlaps the validators on purpose. Validators answer what can be counted; this pass
-answers what has to be read — a `UC` that exists and is wrong passes V2 and fails here.
+answers what has to be read — a `UC` that exists and is wrong passes `fr-has-uc` and fails here.
 
 ### The Constitution check
 
@@ -120,8 +120,8 @@ re-reported here:
 | Already answered by | Case |
 |---|---|
 | A red RTM row | Promised, not built yet |
-| V2 · V3 | Documented, never scheduled |
-| V4 | A ticket closed with no named test |
+| `fr-has-uc` · `uc-scheduled` | Documented, never scheduled |
+| `ticket-has-test` | A ticket closed with no named test |
 | `inventory.py` | The plan and the code disagreeing about a table, endpoint, or screen |
 
 That leaves exactly one gap, and it is the one this check fills: **a descriptive claim about code

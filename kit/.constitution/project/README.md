@@ -27,7 +27,7 @@ Normative rules that hold **only in this product**, and are not code conventions
 `inventory-readers.py` — how this product's code is read, for the three inventories. It sits in the
 room for the same reason the rules do: the method's engine is generic, reading a stack is not, and
 `update` MUST NOT overwrite what a product wrote about its own code. What ships is a **skeleton** —
-no patterns, no stack — and `wdi-init` intent `readers` fills it in against this repo. `V27` does not
+no patterns, no stack — and `wdi-init` intent `readers` fills it in against this repo. `custom-room-declared` does not
 look at it: only `.md` is a rule.
 
 ## What does not
@@ -48,7 +48,7 @@ very failure this rule prevents.
 
 ## The shape of a file here
 
-Frontmatter is required, and `V27` checks it:
+Frontmatter is required, and `custom-room-declared` checks it:
 
 ```yaml
 ---

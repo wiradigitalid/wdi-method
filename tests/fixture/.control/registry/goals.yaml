@@ -1,0 +1,5 @@
+# The product's BG. CAP/FR/NFR/UJ live per initiative in requirements-<slug>.yaml.
+
+goals:
+  - id: BG-1
+    title: "A visitor can buy without an account"

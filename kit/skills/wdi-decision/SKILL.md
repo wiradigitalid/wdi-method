@@ -155,7 +155,7 @@ reopen a gate yourself, and you MUST NOT treat a green application as a gate tha
 - Fill `touches:` with the files that were **actually** changed, in the `DEC-` and in `decisions.yaml`. Raise
   `status: applied`. **From that point the file MUST NOT be edited** — not the Decision, not the Cost, not a
   typo in the Why. Documents cite it now.
-- V8 checks that an `applied` decision names a non-empty `touches`.
+- `applied-dec-touches` checks that an `applied` decision names a non-empty `touches`.
 - Regenerate `.control/generated/decisions.md` with `validate.py --generate`. That table is how a decision is
   found now; searching the memlog for decisions is retired, and the memlog is a run log again.
 - Report what changed, and what the decision implied but was **not** changed.

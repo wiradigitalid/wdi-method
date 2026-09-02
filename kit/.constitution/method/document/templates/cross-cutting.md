@@ -46,7 +46,7 @@ created: '{YYYY-MM-DD}'
 ## Platform-owned
 
 <!-- REQUIRED as soon as anything is owned by `_platform` — a `platform_owns` entity, an inventory row,
-     an LC. V21 checks it.
+     an LC. `entity-one-writer` checks it.
 
      Something lands here only when NO Product Component's promise is the reason it exists AND more than
      one component depends on it. corpus-guide.md owns that test, and it refuses the one use people

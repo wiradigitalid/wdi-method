@@ -36,9 +36,9 @@ that cannot provide them is **blocked**, not excused.
 
 | Check | When it fails |
 |---|---|
-| Every component this spec touches has passed G4, **or** sits at `mode: catalog` | Route to `wdi-component`. V22 checks it, and `catalog` skipping G4 is by design, not an exception |
+| Every component this spec touches has passed G4, **or** sits at `mode: catalog` | Route to `wdi-component`. `spec-after-g4` checks it, and `catalog` skipping G4 is by design, not an exception |
 | An isolated worktree | Isolate first. MUST NOT run in a shared checkout |
-| Every `prd` slug names a real `.what/_prd/<initiative>/` folder | A spec without a promise covering it is a spec nobody agreed to (V17) |
+| Every `prd` slug names a real `.what/_prd/<initiative>/` folder | A spec without a promise covering it is a spec nobody agreed to (`spec-names-release-prd`) |
 
 The repo commits straight to `main` and opens a PR only when asked. **Invoking this skill is that ask**, for
 this spec only; it MUST NOT be read as standing permission for the next change.
@@ -51,7 +51,7 @@ that is where they are born.
 | Field | Rule |
 |---|---|
 | `id` | `SPEC-<N>`, monotonic, never reused. A `W<N>` id in a frozen record is a **retired alias** and MUST NOT be rewritten |
-| `release` | MUST be stated. The release↔spec cadence is situational and MUST NOT be inferred from numbering (V17) |
+| `release` | MUST be stated. The release↔spec cadence is situational and MUST NOT be inferred from numbering (`spec-names-release-prd`) |
 | `prd` | MUST be stated: which initiative PRDs this spec delivers against. MUST NOT be derived from `release` |
 | `fr` | The `FR` this spec satisfies. Ideally one — an `FR` is human-testable from birth |
 | `size` | `S` · `M` · `L`. MAY be raised mid-flight; MUST NOT be lowered |
@@ -62,9 +62,9 @@ that is where they are born.
 
 **`tickets` is an index, not a store.** The ticket's prose lives where the tracker put it; the row carries only
 what RTM and the validators read. And ticket **status** MUST NOT be copied here — it is read from the ticket
-itself when `.control/generated/` regenerates (V18). Two homes for one fact is how registries start lying.
+itself when `.control/generated/` regenerates (`ticket-status-one-home`). Two homes for one fact is how registries start lying.
 
-V18 finds the file at `{spec_folder}/issues/<NN>-*.md`, from the number at the tail of the id, and reads its
+`ticket-status-one-home` finds the file at `{spec_folder}/issues/<NN>-*.md`, from the number at the tail of the id, and reads its
 status from either a `**Status:**` body line — what the engine writes, because a ticket file is a tracker
 payload and trackers do not read YAML — or `status:` in frontmatter.
 
@@ -127,7 +127,7 @@ satisfied MUST NOT be started, however ready it looks.
 
 **Step 1 is the change that matters most.** It used to be a plan, judged from a frontmatter field a builder
 wrote about itself. Now it is a **failing test suite** — the acceptance criteria, encoded, and demonstrably
-red. That is evidence rather than a claim, and it is what `V4` and G5's ★2 have always been asking for:
+red. That is evidence rather than a claim, and it is what `ticket-has-test` and G5's ★2 have always been asking for:
 *acceptance criteria proven by a test, not by an agent's statement.* Under TDD the test exists **before** the
 code, so the proof is not retrofitted.
 
@@ -136,7 +136,7 @@ code, so the proof is not retrofitted.
 - **MUST judge Steps 1 and 2 from the test suite**, not from a report and not from a status field. Red at the
   right assertions closes Step 1; green with a clean typecheck closes Step 2. A builder's chat report MUST NOT
   settle either.
-- Ticket **status** is read from the ticket itself. It MUST NOT be copied into `specs.yaml` (V18).
+- Ticket **status** is read from the ticket itself. It MUST NOT be copied into `specs.yaml` (`ticket-status-one-home`).
 - Every step MUST start from a **fresh context**, and a fix round MUST NOT go back to whoever produced the
   code. The ticket carries everything the next builder needs, and inherited context is how a step stops judging
   the artifact on its own merits. Where one session runs consecutive steps itself, it MUST re-read the artifact
@@ -282,7 +282,7 @@ The five items that left this list moved to Phase 4, where the information actua
 ### Parallel tickets
 
 Tickets with no blocking edge between them MAY run at once — that is what the frontier is — but four
-conditions MUST hold: each concurrent builder in its own worktree; V11 green for every pair released together;
+conditions MUST hold: each concurrent builder in its own worktree; `parallel-tickets-blocked` green for every pair released together;
 the first ticket that establishes a component's shape already closed, so later tickets inherit its code map;
 and no shared registry write in flight.
 
@@ -298,7 +298,7 @@ out.
 **Six steps.** Run in this order and stop at the first failure.
 
 1. **Registry catch-up.** Every `LC` the spec's design named is registered in `components.yaml`, and every
-   `touches` value resolves — V12. This is the moment those questions have answers.
+   `touches` value resolves — `lc-registered`. This is the moment those questions have answers.
 2. **Inventories refreshed from code.** Run `.constitution/method/scripts/inventory.py`. The plan-versus-reality
    difference is reported as a finding; it MUST NOT be patched into agreement by hand.
 3. **Structure maps refreshed** through `wdi-init` intent `structure`, if a base folder was born or removed or a
