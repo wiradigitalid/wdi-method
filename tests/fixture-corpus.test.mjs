@@ -729,3 +729,33 @@ test("no-cycles still sees a depends_on that crosses two initiative files", (t) 
     `no-cycles stopped seeing a depends_on cycle once the two capabilities sat in different files. That `
     + `edge is how an initiative says it waits on another one:\n${out}`);
 });
+
+// A migrated PRD may keep the numbers its kit gave it — `## 4. Features`, `## 8. MVP Scope`. The renderer
+// keyed on "3. Features" and went blind: on a real 0.5.12 corpus the rendered PRD lost Features, MVP
+// Scope, Success Metrics, Cross-Cutting NFRs, and Constraints, and every FR fell into the fallback list.
+test("the rendered PRD finds its sections by NAME — a PRD numbered by an older kit still renders whole", (t) => {
+  if (requireUv(t)) return;
+  const tmp = briefPrdCorpus();
+  try {
+    const prd = path.join(tmp, ".what", "_prd", "checkout-v1", "prd.md");
+    const renumbered = fs.readFileSync(prd, "utf8")
+      .replace("## 3. Features", "## 4. Features")
+      .replace("### 3.1 Guest Checkout", "### 4.1 Guest Checkout")
+      .replace("## 4. MVP Scope", "## 8. MVP Scope")
+      .replace("### 4.1 In Scope", "### 8.1 In Scope")
+      .replace("### 4.2 Out of Scope for MVP", "### 8.2 Out of Scope for MVP")
+      .replace("## 5. Success Metrics", "## 9. Success Metrics");
+    assert.notEqual(renumbered, fs.readFileSync(prd, "utf8"), "the fixture PRD did not carry the headings this test renumbers");
+    fs.writeFileSync(prd, renumbered);
+    generateIn(tmp);
+    const rendered = fs.readFileSync(path.join(tmp, ".what-rendered", "_prd", "checkout-v1", "prd.md"), "utf8");
+    for (const h of ["## Features", "## MVP Scope", "## Success Metrics"]) {
+      assert.ok(rendered.includes(h), `${h} is missing from the rendered PRD — the renderer keyed on a section number:\n${rendered}`);
+    }
+    assert.ok(rendered.indexOf("### 4.1 Guest Checkout") < rendered.indexOf("#### FR-1 — ")
+      && rendered.indexOf("#### FR-1 — ") < rendered.indexOf("### Capabilities"),
+      "FR-1 fell into the fallback list instead of landing under its feature");
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

@@ -75,8 +75,13 @@ that says something the other did not. Each `BG-N` statement under `## Goals` MU
 item becomes a row in `.control/questions/assumptions.md` with `Whose: owner`; each `## Prerequisites`
 item a row in `external.md` — **after** checking that no `OQ-` row already states it, because a brief
 written under an earlier kit usually landed them already and a second row is a copy. A prerequisite
-the brief itself marks satisfied is dropped, not landed as open. Delete both sections, and say how
-many items were already rows. Check `## Success Criteria` names one measurable
+the brief itself marks satisfied is dropped, not landed as open. A `questions/` table written before
+the `Whose` column existed (`| id | Assumption | Cost if wrong | Taken | By |`) gets the column added —
+header and separator, and an empty cell on every existing row, which the validator counts as
+`unstated`, which is what they are. The rows this skill lands say `owner`. `Cost if wrong` is `—` when
+the source never stated one; it is not invented. An open question the source never marked blocking is
+filed in `assumptions.md`, as the template's three tests say. Delete both sections, and say how many
+items were already rows. Check `## Success Criteria` names one measurable
 figure — if it does not, that is a finding for the owner, not a sentence for this skill to invent.
 
 **4 — each PRD.** Sections are matched **by name, never by number**: the numbers moved between kits
@@ -88,8 +93,11 @@ this PRD's `MVP Scope → Out of Scope` — if neither holds it, add it to the o
 delete `Non-Goals`. Every `Open Questions` and `Assumptions Index` item becomes a `questions/` row
 (after the same already-a-row check as the brief's); delete both.
 Under each feature, every `FR` block is folded into its row in `requirements-<slug>.yaml` (Step 2)
-before the block goes: the block's description paragraph becomes the row's `statement:` when the row
-has none (the row's `title` stays); its `**Consequences (testable):**` bullets move verbatim to
+before the block goes: the block's description paragraph — the prose between the `#### FR-N` heading
+and the first `**…:**` label — becomes the row's `statement:` when the row has none (the row's `title`
+stays). **This is the one move with no validator behind it**, so count it: blocks with a paragraph
+versus rows that now carry `statement:` MUST match, and Step 5 reports both numbers. A run that deletes
+the blocks and lands zero statements has thrown the requirement's own sentence away; its `**Consequences (testable):**` bullets move verbatim to
 `addendum.md` under `## Technical how — testable consequences per FR`, appended **after** the sections
 already there, one `### FR-N — title` each,
 because `prd-guide.md` repealed the double proof of done and that is where the technical restatement
@@ -97,7 +105,11 @@ lives now; its `**Proof of done:**` is compared with the row's `proof` — when 
 **registry is kept** (it is the declared SSOT), the PRD's is dropped, and both texts are reported side
 by side for the owner, never merged. Then the block becomes `**Realizes:** FR-a, FR-b, NFR-c`, and a
 `**Functional Requirements:**` label left with nothing under it is deleted — the rendered page rebuilds
-the blocks from the rows. A `UJ-N` the prose names that has no row in any requirement file is
+the blocks from the rows. When the deletions are done, **renumber the surviving `##` headings to the
+template's order** — 1 Why This Initiative · 2 Target User · 3 Features · 4 MVP Scope · 5 Success
+Metrics · 6 Cross-Cutting NFRs · 7 Constraints and Guardrails — and the `###` beneath them to match
+(`### 8.2` → `### 4.2`). Numbers are not sentences; leaving `## 4. Features` beside `## 8. MVP Scope`
+tells the next reader two sections went missing. A `UJ-N` the prose names that has no row in any requirement file is
 not given one — it is marked with an HTML comment where it stands and reported; `wdi-product`
 allocates ids. A moved sentence that cites a section number (`§ 8`) of a section this step deletes
 keeps the number — it is reported as wording for the owner, not repointed, because its new home is a
@@ -159,5 +171,6 @@ event.
 ## Output
 
 The Step 1 checklist with each item marked done · skipped (already new shape) · left for the owner, with
-the id list for the last · the registry rows landed · the path of every rendered page · the validator
-result · the commit.
+the id list for the last · the registry rows landed · **statements landed / FR blocks that had a
+paragraph** · consequences moved · `questions/` rows added and rows found already present · proof-of-done
+divergences, both texts · the path of every rendered page · the validator result · the commit.
