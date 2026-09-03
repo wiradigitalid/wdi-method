@@ -29,7 +29,7 @@ Never a rule. When it disagrees with a guide, the guide wins and the disagreemen
 
 | File | Opened when |
 |---|---|
-| [`why/README.md`](why/README.md) | You want the whole shape in five minutes — five gates, two settings, sixteen skills, WDI ↔ BMad |
+| [`why/README.md`](why/README.md) | You want the whole shape in five minutes — five gates, two settings, seventeen skills, WDI ↔ BMad |
 | [`why/artifact-map.md`](why/artifact-map.md) | "Where does this file go", or "does this document exist at my `mode`" |
 | [`why/mode-risk-map.md`](why/mode-risk-map.md) | A `mode` and a `risk_accepted` are set and you want the two side by side — all twelve cells |
 | [`why/rationale.md`](why/rationale.md) | Before changing a rule, to know what you would break |

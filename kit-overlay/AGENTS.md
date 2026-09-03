@@ -112,7 +112,7 @@ derived from the other: one component MAY be thin on purpose and reviewed the ha
 `.constitution/method/document/delivery-flow-guide.md` owns both;
 `.constitution/method/why/rationale.md` says why they are separate.
 
-## The five gates and the sixteen skills
+## The five gates and the seventeen skills
 
 | Gate | Decides | Skill |
 |---|---|---|
@@ -125,7 +125,7 @@ derived from the other: one component MAY be thin on purpose and reviewed the ha
 Before G1 and at the tail of G2: `wdi-init`, five intents — `setup` · `component` · `mode` · `risk` ·
 `structure`.
 
-Any time: `wdi-decision` · `wdi-question` · `wdi-log` · `wdi-help` · `wdi-reconcile` · `wdi-review` ·
+Any time: `wdi-decision` · `wdi-question` · `wdi-log` · `wdi-help` · `wdi-explain-to-me` · `wdi-reconcile` · `wdi-review` ·
 `wdi-report` · `wdi-systematic-debugging`.
 
 **No BMad skill is invoked directly.** Each has a wrapper, and the wrapper is what checks position,
@@ -166,6 +166,7 @@ verifies the result, and lands the memlog.
 | Looking for a non-technical fact — a domain, an account, a legal entity, a locked date | `.control/project-non-technical-log.md` |
 | Naming anything — a code identifier, a file, a database column | `.constitution/method/language-guide.md` |
 | Asking "which gate now, what next" | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-help` |
+| Having to decide something, and wanting the reading done first | skill `wdi-explain-to-me` — it briefs, and changes nothing |
 | Setting or changing `mode` or `risk_accepted` | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-init` |
 | Invoking a BMad skill | `.constitution/method/document/bmad-guide.md` · `.constitution/method/document/bmad-skill-register.md` |
 | Writing or reviewing a product brief | `.constitution/method/document/brief-guide.md` |

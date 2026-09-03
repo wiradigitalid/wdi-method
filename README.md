@@ -282,7 +282,7 @@ which review lenses run, and which review traces a validator will demand.
 
 ---
 
-## Five gates, sixteen skills
+## Five gates, seventeen skills
 
 | Gate | Decides | Skill |
 |---|---|---|
@@ -293,7 +293,7 @@ which review lenses run, and which review traces a validator will demand.
 | **G5 Release** | Whether it is done and proven | `wdi-build` |
 
 Around them: `wdi-init` (scaffold, component birth, depth and risk settings, structure maps),
-`wdi-decision`, `wdi-question`, `wdi-log`, `wdi-help`, `wdi-reconcile`, `wdi-review`, `wdi-report`,
+`wdi-decision`, `wdi-question`, `wdi-log`, `wdi-help`, `wdi-explain-to-me`, `wdi-reconcile`, `wdi-review`, `wdi-report`,
 `wdi-systematic-debugging`, and `wdi-upgrade` (moves a corpus written under an older kit into the current
 shape — content moves, nothing is invented).
 
@@ -382,9 +382,9 @@ English, whatever the settings say — it travels to every repo through this pac
 
 | | |
 |---|---|
-| Overwrites | everything in `.constitution/method/` · the sixteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
+| Overwrites | everything in `.constitution/method/` · the seventeen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
 | Renames | a file whose content needs no judgment to move — `waves.yaml` → `specs.yaml`, the pre-0.5 registry names. Content is never rewritten |
-| Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the sixteen. Each removal is printed |
+| Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the seventeen. Each removal is printed |
 | Reports | what is still in the OLD shape, as an `upgrade` line — and names `wdi-upgrade` as the next step. The installer does not move content; that is a decision, and the skill's |
 | Keeps | All of `.constitution/project/`, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
 | Never resurrects | A folder you retired. On update, absence is treated as a decision |

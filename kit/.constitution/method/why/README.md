@@ -101,7 +101,7 @@ and the Fast Path do not.
 | `wdi-method update` printed an `upgrade` line | `wdi-upgrade`, before any other skill — it moves content into the new shape, never invents it, one commit |
 | You do not know where you are | `wdi-help` |
 
-## Sixteen skills
+## Seventeen skills
 
 Named for the **gate they serve**, so *"which skill do I run"* is answered by *"which gate am I at"*.
 
@@ -125,6 +125,7 @@ Named for the **gate they serve**, so *"which skill do I run"* is answered by *"
 | `wdi-question` | Something that cannot be decided now |
 | `wdi-log` | A meeting finished, or a non-technical fact now binds |
 | `wdi-help` | "Where am I, what next" |
+| `wdi-explain-to-me` | "Brief me so I can decide this" — an open question, a defect, a design fork. Reads everything, writes nothing; the decision then goes to `wdi-decision` or `wdi-question` |
 | `wdi-upgrade` | `wdi-method update` just moved the method version, and the summary listed content still in the old shape. Moves it, never invents it; one commit |
 | `wdi-reconcile` | Any time. Read-only — it reports, it never edits |
 | `wdi-review` | Over any document, any time |

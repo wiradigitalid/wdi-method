@@ -137,7 +137,7 @@ where BMad's own meaning is wider, the narrower one here wins.
 | `epics.md` · `sprint-status.yaml` · `bmad-sprint-planning` · `bmad-create-epics-and-stories` · `stories.yaml` | Tickets, each carrying its own status and its blocking edges |
 | Validator `V10` | Nothing. Its number is not reused |
 | `bmad-help` as the answer to "where am I" | `wdi-help` |
-| The skills `wdi-analysis` · `wdi-architecture` · `wdi-design` · `wdi-glossary` · `wdi-structure` · `wdi-apply` · `wdi-correct-course` · `wdi-wave` · `wdi-ship-story` · `wdi-product-brief` · `wdi-meeting` · `wdi-project-log` | The fifteen in `why/README.md`. `why/rationale.md` says which absorbed which, and why |
+| The skills `wdi-analysis` · `wdi-architecture` · `wdi-design` · `wdi-glossary` · `wdi-structure` · `wdi-apply` · `wdi-correct-course` · `wdi-wave` · `wdi-ship-story` · `wdi-product-brief` · `wdi-meeting` · `wdi-project-log` | The seventeen in `why/README.md`. `why/rationale.md` says which absorbed which, and why |
 | An Indonesian synonym for a `mode` value — *ringkas*, *terjaga*, *katalog* as prose | The English value, used as written: `catalog` · `outline` · `guarded` · `deep` |
 
 ## Synonyms that MUST NOT be coined

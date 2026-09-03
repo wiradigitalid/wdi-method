@@ -124,7 +124,7 @@ someone else performs. `../document/corpus-guide.md` holds the binding version o
 | `wdi-report` | `.control/reports/<period>.md` |
 | a script | everything in `.control/generated/`, and the three inventories once code exists |
 
-Four skills write **no file at all**, and that is deliberate: `wdi-reconcile`, `wdi-help`,
+Five skills write **no file at all**, and that is deliberate: `wdi-reconcile`, `wdi-help`, `wdi-explain-to-me`,
 `wdi-report` intent `dispatch`, and `wdi-review` apart from one frontmatter block. What reports MUST NOT
 also change things — otherwise there is nothing left to check with.
 

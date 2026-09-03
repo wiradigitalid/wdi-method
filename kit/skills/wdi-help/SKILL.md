@@ -64,6 +64,7 @@ mis-route in this flow, because every other gate is the same for every component
 | Depth done and G4 passed for every component the work touches | `wdi-build` — it opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec |
 | A small fix touching no `FR`, `UC`, `AD-N`, or domain model | Fast Path: the owner runs `/implement` directly. It stops and becomes a spec `S` the moment an `FR` is touched |
 | A planning assumption turned out void | `wdi-decision` intent `open` — it proposes, and changes nothing |
+| The owner has to decide something and wants the reading done first | `wdi-explain-to-me` — it briefs, and changes nothing; the decision then goes to `wdi-decision` or `wdi-question` |
 | An accepted `DEC-` has not reached its documents | `wdi-decision` intent `apply` |
 | A bug, a failing test, unexpected behaviour | `wdi-systematic-debugging`, before any fix is proposed |
 | Numbers are wanted before the work is committed | `wdi-report` intent `estimate` |

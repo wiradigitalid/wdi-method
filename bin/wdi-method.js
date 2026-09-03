@@ -48,6 +48,7 @@ const WDI_SKILLS = [
   "wdi-question",
   "wdi-log",
   "wdi-help",
+  "wdi-explain-to-me",
   "wdi-reconcile",
   "wdi-review",
   "wdi-report",
