@@ -51,12 +51,15 @@ Anything not in the list is not this skill's. A brief that already has `## Why` 
 
 **1 — the requirement split.** Which PRD a row belongs to is read from the rows before it is read
 from the prose. A `CAP` or `UJ` with a `prd:` field goes to `requirements-<that slug>.yaml`; an `FR`
-follows its `capability:` to that CAP's file; an `NFR` follows its `goal:` only if exactly one PRD
-realizes that goal, else its `component:` to the PRD whose CAPs own that component. Only a row with
-none of those fields falls back to the PRD whose prose cites its id — and an id cited by **two** PRDs
+follows its `capability:` to that CAP's file; an `NFR` follows its `component:` to the PRD whose CAPs
+own that component — a `BG` is product-level and never decides an NFR's home on its own, so `goal:` is
+only a tie-breaker when that component's CAPs span two PRDs. Only a row with none of those fields
+falls back to the PRD whose prose cites its id — and an id cited by **two** PRDs
 is reported, not placed. The citation scan still runs on every row as a cross-check: a row whose
 structural home and citing PRD disagree is reported with both names. Write the row, unchanged, into
-its file; `goals:` rows go to `goals.yaml`. A row with no home is reported by id, not guessed: the
+its file; `goals:` rows go to `goals.yaml`. A sentence moved into a YAML value keeps its punctuation
+and its markup: when it holds `: ` or `#` or starts with a quote, wrap the value in double quotes or a
+`>-` block — never trade a colon for a dash or strip `**` and backticks to make it a plain scalar. A row with no home is reported by id, not guessed: the
 owner names it. When every row has moved, delete `requirements.yaml`; `id-allocated-once` fails if a
 row was copied instead of moved.
 
@@ -82,13 +85,18 @@ belongs to; then delete §5. Every `## 8` and `## 9` item becomes a `questions/`
 Under each feature, every `FR` block is folded into its row in `requirements-<slug>.yaml` (Step 2)
 before the block goes: the block's description paragraph becomes the row's `statement:` when the row
 has none (the row's `title` stays); its `**Consequences (testable):**` bullets move verbatim to
-`addendum.md` under `## Technical how — testable consequences per FR`, one `### FR-N — title` each,
+`addendum.md` under `## Technical how — testable consequences per FR`, appended **after** the sections
+already there, one `### FR-N — title` each,
 because `prd-guide.md` repealed the double proof of done and that is where the technical restatement
 lives now; its `**Proof of done:**` is compared with the row's `proof` — when they differ, the
 **registry is kept** (it is the declared SSOT), the PRD's is dropped, and both texts are reported side
 by side for the owner, never merged. Then the block becomes `**Realizes:** FR-a, FR-b, NFR-c`, and a
 `**Functional Requirements:**` label left with nothing under it is deleted — the rendered page rebuilds
-the blocks from the rows. `## 1. Vision` becomes `## 1. Why This Initiative`: delete only the sentences
+the blocks from the rows. A `UJ-N` the prose names that has no row in any requirement file is
+not given one — it is marked with an HTML comment where it stands and reported; `wdi-product`
+allocates ids. A moved sentence that cites a section number (`§ 8`) of a section this step deletes
+keeps the number — it is reported as wording for the owner, not repointed, because its new home is a
+judgment. `## 1. Vision` becomes `## 1. Why This Initiative`: delete only the sentences
 that also appear, word for word, in the brief's `Why`; what remains is left whole under an HTML comment
 saying the new shape wants a delta, because deciding which paraphrases are copies is the owner's. On a
 single-initiative product that is one line pointing at the brief — write it and say so.
@@ -133,6 +141,9 @@ event.
   finding for the owning skill, later.
 - You MUST NOT invent a home. An `FR` no PRD cites, a Non-Goal neither boundary holds, an `AD-N` not
   in the spine — each is reported by id and left where it was.
+- You MUST NOT write your findings into the corpus. A registry file carries rows and nothing about
+  the upgrade that produced them; a gap in this skill goes in the Step 5 report. The one exception is
+  the HTML comment the steps above name, placed where the owner will read the document.
 - You MUST NOT re-cut `specs.yaml`. That is `wdi-build`'s, where a human can see it.
 - You MUST NOT touch `.control/decisions/` or `.control/reports/`. A frozen `DEC-` that cites `V26` or
   `W3` is history; the alias rule in `corpus-guide.md` covers it.

@@ -436,10 +436,9 @@ function seedRequirementSplit(target) {
   note("seeded .control/registry/goals.yaml");
   if (fs.existsSync(path.join(reg, "requirements.yaml"))) {
     note("  requirements.yaml was left exactly as it is, and is still read — nothing broke");
-    note("  move `goals:` into goals.yaml through wdi-problem");
-    note("  cut `capabilities:`, `functional:`, `nonfunctional:`, and `journeys:` into");
-    note("  requirements-<slug>.yaml per PRD through wdi-product. <slug> is the PRD's folder");
-    note("  name under .what/_prd/");
+    note("  the wdi-upgrade skill moves `goals:` into goals.yaml and cuts `capabilities:`,");
+    note("  `functional:`, `nonfunctional:`, and `journeys:` into requirements-<slug>.yaml per PRD.");
+    note("  <slug> is the PRD's folder name under .what/_prd/");
   }
   return true;
 }
