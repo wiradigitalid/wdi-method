@@ -9,9 +9,22 @@
 
 ---
 
+## Prerequisites — two engines, and which gates need them
+
+| Engine | What it does here | Needed from | Install |
+|---|---|---|---|
+| **BMad Method** | Writes the documents behind G1–G4 — brief, PRD, architecture, UX | the first skill | `npx bmad-method install` — the installer refuses to run without it |
+| **mattpocock-skills** | Cuts the work at G5 — `to-spec`, `to-tickets`; runs the Fast Path — `implement` | `wdi-build` | `/plugin install mattpocock-skills@claude-plugins-official`, then `/setup-matt-pocock-skills` to name your issue tracker. The installer reports whether it found them and does not block |
+
+No engine skill is invoked on its own. Each has a wrapper (`wdi-*`) that checks where the project is,
+runs the engine, verifies what came back, and records it. The engine is the pen; the wrapper knows what
+page it is on.
+
+---
+
 ## Install
 
-BMad first, then this. The wrappers call BMad skills; without BMad they cannot run.
+BMad first, then this — see the prerequisites above.
 
 ```bash
 cd /path/to/your/product-repo
@@ -45,6 +58,112 @@ npx wdi-method install --yes --agents claude,codex --product "Your Product" \
 
 Then invoke the **`wdi-help`** skill and ask what to do next. It reads where the project actually is and
 answers with the gate you are at, not with a menu.
+
+---
+
+## How to use it — the walk
+
+A gate is a moment where a human reads **one page** and decides. Between gates the AI works in a
+pointer-heavy working set it does not need you to read. So the walk is: run a skill, read the page it
+renders, decide — advance or refine.
+
+| # | You run | You read | You decide |
+|---|---|---|---|
+| 0 | `wdi-init` intent `setup` | — | the global `mode`: how deep this product goes by default |
+| 1 | `wdi-problem` | `.what-rendered/_product-brief/brief.md` | **G1** — is this the problem, whose is it, and does it earn the work? |
+| 2 | `wdi-product` intent `prd` — `wdi-ux` first when the interface *is* the promise | `.what-rendered/_prd/<slug>/prd.md` | **G2** — is this what we build, and how does it feel? |
+| 3 | `wdi-init` intent `component` | the rows it adds to `components.yaml` | each component's `mode` and `risk_accepted` |
+| 4 | `wdi-blueprint` — `catalog`, then `platform` | `.how-rendered/blueprint.md` | **G3** — does the whole hold together? **Once per product** |
+| 5 | `wdi-component` — one component | `.how-rendered/<pc>/SDD-<pc>.md` | **G4** — is this how we build it? **Skipped at `mode: catalog`** |
+| 6 | `wdi-report` intent `estimate` | `.control/generated/estimate.md` | which candidate row becomes the next spec |
+| 7 | `wdi-build` — for that row | nothing: tickets are machine contracts. You answer `to-tickets`' quiz on granularity and blocking edges | **G5** — is it done and proven? Once per spec |
+| 8 | `wdi-report` intent `progress` | the report it writes | what has moved, what is late, what is proven |
+
+**Refine, do not advance.** When a page does not convince you, run the same skill again and say what is
+wrong — it updates the document it owns. Nothing downstream exists yet, so nothing breaks. Advancing past a
+page you did not believe is how every later page inherits the doubt.
+
+**After the first pass**, steps 0–4 never run again for that product. The next component enters at step 5
+(or 6, at `catalog`); a new initiative enters at step 2; a small fix touching no `FR`, `UC`, `AD-N`, or
+domain model skips every gate and runs `/implement` directly — and **stops to become a spec `S`** the
+moment it touches an `FR`. `wdi-help` tells you which of these you are in; it reads the registry, not you.
+
+---
+
+## Why the steps are in this order
+
+- **One question per gate.** The brief answers *why*, the PRD *what*, the blueprint *the whole*, the SDD
+  *how one part*, the spec *is it done*. Every document that grew unreadable did so by answering a
+  neighbour's question too. A gate that asks one question can be passed in ten minutes.
+- **The page you read is rendered; the page the AI edits points.** A goal lives once, in
+  `goals.yaml`; the working brief says `Goals — see goals.yaml`; the rendered brief shows the goals in
+  full. So the human gets a complete document and the corpus has no copies — and the validators check
+  **drift against the code**, never whether two copies agree, because there are none to compare.
+- **Cost follows the unit of change.** G3 is once per product because the portrait is one thing. G4 is per
+  component because that is what changes when you build. G5 is per spec because that is what ships.
+  Repeating the blueprint per component was the single largest waste the earlier shape carried.
+- **Two knobs that never merge.** `mode` decides which gates *exist* for a component (`catalog` skips G4
+  outright); `risk_accepted` decides how much *proof* a gate demands. Merged into one "rigor" dial, a
+  low-risk component either drowns in ceremony or a high-risk one escapes it.
+- **Estimate before build.** Step 6 derives the candidate tasks from the promises already made —
+  `CAP` and `FR` — so nobody invents a backlog. One candidate row becomes one spec, three neighbours
+  may merge into one, and the estimate page says so about itself: it is forward-looking, never a record.
+- **The engine cuts; the wrapper frames.** `to-spec` and `to-tickets` are the best ticket-cutting
+  engine we found: vertical tracer-bullet slices, blocking edges, a quiz with the owner. What a cutter
+  cannot know, `wdi-build` supplies: that every component the spec touches passed G4; that every ticket
+  names the `UC` it `satisfies`, so `FR → UC → ticket → test` stays one chain; that a spec restates
+  promises and never makes new ones; that code is judged by the test suite going red then green, from a
+  fresh context per step, never by a builder's report; and that a closed spec leaves the registry caught
+  up and the inventories re-derived from code.
+- **Documents follow the code.** At spec close the inventories are regenerated from what was built and
+  the difference is *reported*, never patched into agreement. A record that contradicts the code is
+  corrected; code is never changed to match a record.
+
+---
+
+## The file tree, and why
+
+```
+.constitution/
+  method/            the method — overwritten by every update; never edit here
+  project/           your own rules and readers — kept by every update
+.control/
+  registry/          SSOT for every ROW: goals.yaml · requirements-<slug>.yaml · components.yaml
+                     usecases.yaml · specs.yaml · risks.yaml · defects.yaml · index.yaml
+  questions/         open questions, assumptions, external prerequisites — one row each
+  decisions/         DEC-N files; frozen once applied
+  generated/         machine tables: rtm · dag · status · estimate · timeline — regenerated, never edited
+.what/               what is PROMISED — the AI's working set, pointer-heavy, few files
+  _product-brief/brief.md
+  _prd/<slug>/prd.md · addendum.md
+  <pc>/SRS-<pc>.md + 02-rules · 03-domain · 04-usecases · 05-scenarios
+.how/                how it is BUILT — same discipline
+  _platform/         ARCHITECTURE-SPINE.md · c4-l2-containers.md · inventories
+  <pc>/SDD-<pc>.md + 01-ux · 02-contracts · 04-components · 05-model · 06-flows
+.what-rendered/      the human's tree: brief · _prd/<slug>/prd.md · <pc>/SRS-<pc>.md — one complete page each
+.how-rendered/       blueprint.md (root — it spans every component) · <pc>/SDD-<pc>.md
+_bmad-output/        a skill run's working output; empties as its spec closes
+.work/               scratch; empties when the task closes
+<spec_folder>/issues/  one file per ticket — the tracker's payload, not yours to read
+```
+
+Three layers, and the rule that keeps them honest:
+
+| Layer | Holds | Who writes | Who reads |
+|---|---|---|---|
+| **Registry** | every row — a goal, a requirement, a component, a ticket index | the skill that owns the gate | validators, renderers, every other skill |
+| **Working documents** (`.what/`, `.how/`) | the prose that reasons — why, boundaries, what makes it different — and **pointers** at the rows | the owning skill | the AI |
+| **Rendered pages** (`*-rendered/`) | one complete page per gate, rows filled in from their homes | `validate.py --generate`, never a hand | the human, and the client |
+
+Why split the human's tree from the AI's: a document that is both the AI's working surface and the
+human's deliverable ends up serving neither — too long to point, too gappy to hand over. Why the
+registry is per initiative (`requirements-<slug>.yaml`) but goals are per product: a capability is
+declared by one feature in one PRD; a goal belongs to the product before any PRD exists. Why
+`blueprint.md` sits at the root of `.how-rendered/` and not under `_platform/`: `_platform` means
+"belongs to no component"; the blueprint spans all of them. Why rendered pages are never a skill's
+input: a skill that read a projection would be reading a copy, and the copy would start to drift the
+day someone edited it. A test in this package fails if any `SKILL.md` lists a `-rendered` path as an
+Input.
 
 ---
 
@@ -127,7 +246,7 @@ which review lenses run, and which review traces a validator will demand.
 
 ---
 
-## Five gates, fifteen skills
+## Five gates, sixteen skills
 
 | Gate | Decides | Skill |
 |---|---|---|
@@ -138,8 +257,9 @@ which review lenses run, and which review traces a validator will demand.
 | **G5 Release** | Whether it is done and proven | `wdi-build` |
 
 Around them: `wdi-init` (scaffold, component birth, depth and risk settings, structure maps),
-`wdi-decision`, `wdi-question`, `wdi-log`, `wdi-help`, `wdi-reconcile`, `wdi-review`, `wdi-report`, and
-`wdi-systematic-debugging`.
+`wdi-decision`, `wdi-question`, `wdi-log`, `wdi-help`, `wdi-reconcile`, `wdi-review`, `wdi-report`,
+`wdi-systematic-debugging`, and `wdi-upgrade` (moves a corpus written under an older kit into the current
+shape — content moves, nothing is invented).
 
 **No BMad skill is invoked directly.** Each has a wrapper, and the wrapper is what checks position,
 verifies the result, and records what happened.
@@ -157,8 +277,11 @@ A `DEC-` freezes when it is applied. A change of mind produces a new one; it nev
 
 ## The mechanical half
 
-`validate.py` runs **V1–V27** over the registries and the corpus, and `inventory.py` derives the three
-inventories from code and reports the difference against the plan without patching either side.
+`validate.py` runs twenty-six named validators — `goal-has-fr`, `cites-resolve`, `no-cycles`,
+`id-allocated-once`, and the rest, each named for the thing it checks — over the registries and the
+corpus, and `inventory.py` derives the three inventories from code and reports the difference against the
+plan without patching either side. There is no validator that compares two copies of one fact, because
+the corpus keeps no copies.
 
 The validators exist because prose that nothing checks is prose that gets contradicted by the first
 person in a hurry. Every one of them also states **the state in which it does not apply** — a rule that
@@ -223,7 +346,7 @@ English, whatever the settings say — it travels to every repo through this pac
 
 | | |
 |---|---|
-| Overwrites | everything in `.constitution/method/` · the fifteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
+| Overwrites | everything in `.constitution/method/` · the sixteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
 | Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the fifteen. Each removal is printed |
 | Keeps | All of `.constitution/project/`, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
 | Never resurrects | A folder you retired. On update, absence is treated as a decision |

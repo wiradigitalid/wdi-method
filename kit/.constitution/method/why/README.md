@@ -69,13 +69,20 @@ matters is in `rationale.md`; what each value demands is in `../document/deliver
 | 3 | Birth the components, set `mode` and `risk_accepted`, and land the waiting UX halves | `wdi-init` intent `component` | — (tail of G2) |
 | 4 | Blueprint | `wdi-blueprint` intent `catalog`, then `platform` | **G3** |
 | 5 | One component's depth | `wdi-component` — as deep as its `mode`; **skipped at `catalog`** | **G4** |
-| 6 | Build | `wdi-build` — opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec | **G5** |
+| 6 | Pick the work | `wdi-report` intent `estimate` — candidate tasks derived from `CAP`/`FR`; one row becomes one spec | — |
+| 7 | Build | `wdi-build` — opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec | **G5** |
 
-After step 6 the next component enters at **step 5**, not at the beginning. Steps 0–4 happen once in the
-life of the product.
+After step 7 the next component enters at **step 5** (at `mode: catalog`, at step 6), not at the
+beginning. Steps 0–4 happen once in the life of the product.
 
-`SPEC.md` and ticket files are **not read by humans**. The human review surface stops at the PRD, `.what/`,
-and `.how/`.
+**What the human reads is one rendered page per gate**: `.what-rendered/_product-brief/brief.md` at G1,
+`.what-rendered/_prd/<slug>/prd.md` at G2, `.how-rendered/blueprint.md` at G3,
+`.how-rendered/<pc>/SDD-<pc>.md` at G4. The working documents under `.what/` and `.how/` point at the
+registry instead of repeating it and are the AI's. `SPEC.md` and ticket files are **not read by humans**.
+
+`to-spec`, `to-tickets`, and `implement` are the `mattpocock-skills` plugin, installed per user
+(`/plugin install mattpocock-skills@claude-plugins-official`, then `/setup-matt-pocock-skills` to name
+the tracker). G1–G4 run without them; `wdi-build` and the Fast Path do not.
 
 ## The run, every time after
 
@@ -153,6 +160,7 @@ itself.
 | What currently holds — a decision, a question, a registry, a map | `.control/` |
 | What is promised — the brief, a PRD, a use case, a business rule | `.what/` |
 | How it is built — the spine, C4, an inventory, an SDD, a contract | `.how/` |
+| The complete page a human reads at a gate — regenerated, never edited | `.what-rendered/` · `.how-rendered/` |
 | A skill run's working output | `_bmad-output/` |
 | Scratch that empties when the task closes | `.work/` |
 | The application | `src/` · `web/` |

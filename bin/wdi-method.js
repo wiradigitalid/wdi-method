@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -63,6 +64,12 @@ const GENERIC_FOLDER_PATTERNS = new Set([
 ]);
 
 const BMAD_INSTALL = `npx bmad-method install`;
+// The ticket engines G5 runs. BMad writes the documents; these cut the work. They are a Claude Code
+// plugin installed per USER, not per repo, so the check reads the plugin registry — and the check
+// warns instead of blocking, because G1–G4 run without them and a first install has no G5 yet.
+const ENGINES_PLUGIN = "mattpocock-skills@claude-plugins-official";
+const ENGINES_INSTALL = `/plugin install ${ENGINES_PLUGIN}`;
+const ENGINES_SETUP = "/setup-matt-pocock-skills";
 const REPO_URL = "https://github.com/wiradigitalid/wdi-method";
 const HELP_SKILL = "wdi-help";
 const INIT_SKILL = "wdi-init";
@@ -278,6 +285,20 @@ function requireTarget(dir) {
     die(`target is not a directory: ${target}`);
   }
   return target;
+}
+
+/** `to-spec` · `to-tickets` · `implement` — present as a user-level plugin, or copied into the repo. */
+function enginesPresent(target) {
+  if (fs.existsSync(path.join(target, ".claude", "skills", "to-tickets", "SKILL.md"))) return true;
+  const cfg = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), ".claude");
+  const registry = path.join(cfg, "plugins", "installed_plugins.json");
+  if (!fs.existsSync(registry)) return false;
+  try {
+    const plugins = JSON.parse(fs.readFileSync(registry, "utf8")).plugins || {};
+    return Object.keys(plugins).some((k) => k.startsWith("mattpocock-skills@"));
+  } catch {
+    return false;
+  }
 }
 
 function bmadMissingMessage() {
@@ -937,6 +958,10 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
                         `run the ${INIT_SKILL} skill, intent ${DIM}readers${RESET}, ` +
                         `to write it for this repo's stack`);
   }
+  summaryLine("engines", enginesPresent(target)
+    ? `to-spec · to-tickets · implement — found (${ENGINES_PLUGIN})`
+    : `to-spec · to-tickets · implement — NOT found. G5 (wdi-build) and the Fast Path need them: ` +
+      `${DIM}${ENGINES_INSTALL}${RESET} then ${DIM}${ENGINES_SETUP}${RESET}. G1–G4 run without them`);
   const pending = first ? [] : pendingUpgrades(target);
   if (pending.length) {
     summaryLine("upgrade", `${pending.length} item${pending.length === 1 ? "" : "s"} still in the OLD shape — ` +
@@ -1245,6 +1270,9 @@ async function runWizard(pre) {
       ? `BMad Method: installed${readBmadVersion(target) ? ` (${readBmadVersion(target)})` : ""}`
       : "BMad Method: not installed",
     hasWdi ? "WDI Method: already present — the installer will offer an update" : "WDI Method: not present",
+    enginesPresent(target)
+      ? "Ticket engines (mattpocock-skills): installed"
+      : `Ticket engines (mattpocock-skills): not found — needed at G5 only; ${ENGINES_INSTALL}`,
     nonempty ? "Folder is not empty (normal for a product repo already under way)" : "Folder is empty",
   ].join("\n");
   p.note(facts, "Detected");
