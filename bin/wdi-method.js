@@ -815,7 +815,8 @@ function pendingUpgrades(target) {
   if (has(".control", "registry", "requirements.yaml")) items.push("requirements.yaml → goals.yaml + requirements-<slug>.yaml");
   if (/^\s*-\s*id:\s*W\d+|^\s*(epics|stories):/m.test(read(".control", "registry", "specs.yaml"))) items.push("specs.yaml rows still W<n>/epics/stories (wdi-build re-cuts)");
   if (/^## (Executive Summary|Vision|Assumptions|Prerequisites)\s*$/m.test(read(".what", "_product-brief", "brief.md"))) items.push("brief.md in the 14-section shape");
-  if (anyIn(".what/_prd", "prd.md", /^## (0\. Document Purpose|3\. Glossary|5\. Non-Goals|8\. Open Questions|9\. Assumptions Index)|\*\*Proof of done:\*\*/m)) items.push("a prd.md in the 12-section shape, or with FR blocks");
+  // Sections by NAME: the numbers moved between kits (Non-Goals was §7 in one, §5 in the next).
+  if (anyIn(".what/_prd", "prd.md", /^## (\d+\.\s*)?(Document Purpose|Glossary|Non-Goals|Open Questions|Assumptions Index)\b|\*\*Proof of done:\*\*/m)) items.push("a prd.md in the 12-section shape, or with FR blocks");
   const whatDir = path.join(target, ".what");
   if (fs.existsSync(whatDir)) {
     for (const pc of fs.readdirSync(whatDir)) {
@@ -834,12 +835,17 @@ function pendingUpgrades(target) {
   if (/\|\s*Container\s*\|\s*Product Components living in it\s*\|/.test(read(".how", "_platform", "c4-l2-containers.md"))) items.push("c4-l2 with a PC x container table (now a pointer)");
   if (has(".control", "generated", "brief.md") || has(".control", "generated", "blueprint.md")) items.push("human pages still in .control/generated/ (render clears them)");
   if (has(".what", "_product-brief", "brief.md") && !has(".what-rendered")) items.push("no .what-rendered/ yet (render creates it)");
-  const SKIP = new Set([".git", "node_modules", "target", ".constitution", ".claude", ".agents", ".agent", ".what-rendered", ".how-rendered", "dist", "build"]);
+  // Skipped: what the validator never reads (kit copies, rendered output, dependencies) and what it
+  // treats as a record of the PAST — memlog, decisions, reports, _bmad-output. A stale path in a log
+  // is history, not a finding, and repointing it would falsify the record.
+  const SKIP = new Set([".git", "node_modules", "target", ".constitution", ".claude", ".agents", ".agent",
+    ".what-rendered", ".how-rendered", "dist", "build", "memlog", "decisions", "reports", "meetings", "_bmad-output", ".work"]);
   const OLD_PAGE = /\.control\/generated\/(brief|blueprint|prd-[a-z0-9-]+)\.md/;
   const citesOldPage = (dir, depth) => {
     if (depth > 8) return false;
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
       if (e.isDirectory()) { if (!SKIP.has(e.name) && citesOldPage(path.join(dir, e.name), depth + 1)) return true; continue; }
+      if (e.name === "answered.md") continue;
       if (e.name.endsWith(".md") && OLD_PAGE.test(fs.readFileSync(path.join(dir, e.name), "utf8"))) return true;
     }
     return false;

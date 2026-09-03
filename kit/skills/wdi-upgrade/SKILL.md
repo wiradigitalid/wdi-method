@@ -37,7 +37,7 @@ before an earlier one lands content in a file that the earlier item is about to 
 | 1 | `.control/registry/requirements.yaml` exists | one file for `BG` · `CAP` · `FR` · `NFR` · `UJ` | `goals.yaml` (`BG`) · `requirements-<slug>.yaml` per PRD (`CAP` · `FR` · `NFR` · `UJ`) |
 | 2 | `specs.yaml` has `W<n>` ids, or `epics:` / `stories:` keys | pre-rename plan | re-cut through `wdi-build` — **not this skill**; report it and move on |
 | 3 | `brief.md` has `## Executive Summary`, `## Vision`, `## Assumptions`, or `## Prerequisites`; or `## Goals` lists `BG-` statements | 14-section brief | 8 sections: `Why` merges Summary + Vision; Goals is a pointer, its rows in `goals.yaml`; Assumptions → `questions/assumptions.md`; Prerequisites → `questions/external.md` |
-| 4 | any `prd.md` has `## 0. Document Purpose`, `## 3. Glossary`, `## 5. Non-Goals`, `## 8. Open Questions`, `## 9. Assumptions Index`, or `**Proof of done:**` under a feature | 12-section PRD with `FR` blocks | 7 sections; `FR`/`NFR` text → `requirements-<slug>.yaml`, the PRD keeps `Realizes:` ids; Glossary → `product-glossary.md`; §8/§9 → `questions/`; §1 becomes a delta |
+| 4 | any `prd.md` has a section **named** Document Purpose, Glossary, Non-Goals, Open Questions, or Assumptions Index — under whatever number that kit gave it — or `**Proof of done:**` under a feature | 12-section PRD with `FR` blocks | 7 sections; `FR`/`NFR` text → `requirements-<slug>.yaml`, the PRD keeps `Realizes:` ids; Glossary → `product-glossary.md`; §8/§9 → `questions/`; §1 becomes a delta |
 | 5 | any `SRS-<pc>.md` `## UC Catalogue` has `\| UC-` rows | catalogue copied from `usecases.yaml` | one pointer line; the rows live in `usecases.yaml` |
 | 6 | any `SDD-<pc>.md` `## Inherited Constraints` has a `Quoted rule` column, or `> ` blockquote lines under an `**AD-N — …**` heading, or the sentence `Quoted verbatim from` | `AD-N` text copied from the spine, in either of the two shapes SDDs were written in | ids only; the rendered SDD shows the text |
 | 7 | `c4-l2-containers.md` has a `\| Container \| Product Components living in it \|` table | matrix copied from `components.yaml` | one pointer line |
@@ -53,8 +53,9 @@ Anything not in the list is not this skill's. A brief that already has `## Why` 
 from the prose. A `CAP` or `UJ` with a `prd:` field goes to `requirements-<that slug>.yaml`; an `FR`
 follows its `capability:` to that CAP's file; an `NFR` follows its `component:` to the PRD whose CAPs
 own that component — a `BG` is product-level and never decides an NFR's home on its own, so `goal:` is
-only a tie-breaker when that component's CAPs span two PRDs. Only a row with none of those fields
-falls back to the PRD whose prose cites its id — and an id cited by **two** PRDs
+only a tie-breaker when that component's CAPs span two PRDs. On a product with exactly **one** PRD every row belongs to that
+PRD by construction — write them all to its file and skip the citation scan. Otherwise, only a row with
+none of those fields falls back to the PRD whose prose cites its id — and an id cited by **two** PRDs
 is reported, not placed. The citation scan still runs on every row as a cross-check: a row whose
 structural home and citing PRD disagree is reported with both names. Write the row, unchanged, into
 its file; `goals:` rows go to `goals.yaml`. A sentence moved into a YAML value keeps its punctuation
@@ -78,10 +79,14 @@ the brief itself marks satisfied is dropped, not landed as open. Delete both sec
 many items were already rows. Check `## Success Criteria` names one measurable
 figure — if it does not, that is a finding for the owner, not a sentence for this skill to invent.
 
-**4 — each PRD.** Delete `## 0. Document Purpose`. Every `## 3. Glossary` term not yet in
-`.control/product-glossary.md` is added there, verbatim; then delete §3. Every `## 5. Non-Goals` item
-MUST already be in the brief's Scope Out or this PRD's §4.2 — if neither holds it, add it to the one it
-belongs to; then delete §5. Every `## 8` and `## 9` item becomes a `questions/` row; delete both.
+**4 — each PRD.** Sections are matched **by name, never by number**: the numbers moved between kits
+(one kit numbers Non-Goals §5 and Open Questions §8; an older one numbers Non-Goals §7, MVP Scope §8,
+Open Questions §10), so a step that says "delete §8" deletes MVP Scope on the wrong corpus. Delete
+`Document Purpose`. Every `Glossary` term not yet in `.control/product-glossary.md` is added there,
+verbatim; then delete `Glossary`. Every `Non-Goals` item MUST already be in the brief's Scope Out or
+this PRD's `MVP Scope → Out of Scope` — if neither holds it, add it to the one it belongs to; then
+delete `Non-Goals`. Every `Open Questions` and `Assumptions Index` item becomes a `questions/` row
+(after the same already-a-row check as the brief's); delete both.
 Under each feature, every `FR` block is folded into its row in `requirements-<slug>.yaml` (Step 2)
 before the block goes: the block's description paragraph becomes the row's `statement:` when the row
 has none (the row's `title` stays); its `**Consequences (testable):**` bullets move verbatim to
@@ -112,10 +117,12 @@ cited here that is not in the spine is a finding.
 **7 — C4 L2.** Every PC listed in the table MUST have that container in its `containers:`. Then the
 table becomes the pointer line.
 
-**8 — pointers at the moved pages.** Every `.md` outside `.constitution/` that cites
-`.control/generated/brief.md`, `blueprint.md`, or `prd-<slug>.md` is repointed to the new path — a path
-substitution, nothing else in the sentence changes. This includes a product's own scratch and issue
-notes: `cites-resolve` reads them too.
+**8 — pointers at the moved pages.** Every `.md` that cites `.control/generated/brief.md`,
+`blueprint.md`, or `prd-<slug>.md` **and that `cites-resolve` reads** is repointed to the new path — a
+path substitution, nothing else in the sentence changes. That includes a product's own scratch and
+issue notes. It excludes what the validator excludes: `.control/memlog/`, `.control/decisions/`,
+`.control/reports/`, `questions/answered.md`, and `_bmad-output/` — those describe the past, and a
+path rewritten there falsifies a record; the installer's probe skips them for the same reason.
 
 ## Step 4 — Render, then validate
 

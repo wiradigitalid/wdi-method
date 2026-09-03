@@ -360,3 +360,29 @@ test("a FRESH install validates GREEN — the scaffold cites nothing that the ki
     fs.rmSync(target, { recursive: true, force: true });
   }
 });
+
+// A 0.5.12 PRD numbers its sections differently from a 0.5.15 one — Non-Goals is §7, Open Questions §10.
+// A probe keyed to "## 5. Non-Goals" is silent on it, and a skill step that says "delete §8" deletes MVP
+// Scope. Both must key on the section NAME.
+test("update detects the OLD PRD shape under 0.5.12 numbering, and ignores a stale page path inside history", () => {
+  const pkg = isolatedPackage();
+  const target = tmp("v0512");
+  try {
+    fs.mkdirSync(path.join(target, ".control", "registry"), { recursive: true });
+    fs.writeFileSync(path.join(target, ".control", "registry", "index.yaml"), "product:\n  name: A Product\n");
+    fs.mkdirSync(path.join(target, ".what", "_prd", "desk"), { recursive: true });
+    fs.writeFileSync(path.join(target, ".what", "_prd", "desk", "prd.md"),
+      "# PRD: Desk\n\n## 1. Vision\n\nx\n\n## 7. Non-Goals (Explicit)\n\n- none\n\n## 8. MVP Scope\n\nx\n\n## 10. Open Questions\n\n- q\n");
+    fs.mkdirSync(path.join(target, ".control", "memlog"), { recursive: true });
+    fs.writeFileSync(path.join(target, ".control", "memlog", "pass-1.md"),
+      "---\nartifact: .what/_prd/desk/prd.md\n---\nregenerated `.control/generated/blueprint.md`\n");
+    const out = update(pkg, target).replace(/\x1b\[[0-9;]*m/g, "");
+    assert.match(out, /a prd\.md in the 12-section shape/,
+      `Non-Goals §7 / Open Questions §10 went undetected — the probe is keyed to another kit's numbers:\n${out}`);
+    assert.doesNotMatch(out, /cites \.control\/generated/,
+      `a stale path inside .control/memlog/ was reported — that is history, and cites-resolve does not read it:\n${out}`);
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
