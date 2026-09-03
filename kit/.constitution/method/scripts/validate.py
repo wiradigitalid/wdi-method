@@ -2065,9 +2065,11 @@ def _inline(path: Path, level: int = 3) -> str:
 
 
 def _text(row: dict) -> str:
-    """The one-line text of a registry row. `title` is what every corpus written so far carries; the
-    other two are accepted so a row is never rendered blank because of a field name."""
-    return str(row.get("title") or row.get("statement") or row.get("text") or "")
+    """The one-line LABEL of a registry row. `title` is what newer corpora carry, `text` what older ones
+    do — both are the short label and rank first. `statement` is the full sentence and comes last, so a
+    row that has a label never renders its paragraph as the heading. Ranking it higher once made an
+    upgrade copy `text` into `title` on every row to get a readable page."""
+    return str(row.get("title") or row.get("text") or row.get("statement") or "")
 
 
 def _proof(row: dict) -> str:

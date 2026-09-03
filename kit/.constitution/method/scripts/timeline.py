@@ -186,7 +186,7 @@ def gen_timeline(c: Corpus, asof: dt.date) -> dict:
         planned_end = str(cap.get("planned_end") or "")
         row = {
             "id": cid,
-            "text": str(cap.get("text") or ""),
+            "text": str(cap.get("title") or cap.get("text") or ""),
             "size": str(cap.get("size") or ""),
             "priority": str(cap.get("priority") or ""),
             "owner": str(cap.get("owner") or ""),
@@ -206,7 +206,7 @@ def gen_timeline(c: Corpus, asof: dt.date) -> dict:
             f_start, f_end, f_closed = span_of(c, f_items, spans)
             children.append({
                 "id": fid,
-                "text": str(fr.get("text") or ""),
+                "text": str(fr.get("title") or fr.get("text") or ""),
                 "tickets": sorted(str(t.get("id")) for t in f_items),
                 "actual_start": f_start or "",
                 "actual_end": f_end or "",

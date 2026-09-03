@@ -759,3 +759,29 @@ test("the rendered PRD finds its sections by NAME — a PRD numbered by an older
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// Older registries carry `text:` where newer ones carry `title:`. Both are the short label; `statement:`
+// is the sentence. Ranking the sentence above `text` made a migrated row render its paragraph as the
+// heading — and an upgrade run then copied `text` into `title` on 23 rows to get a readable page.
+test("a row labelled with `text:` renders that label as its heading, and its `statement:` below — no copy into `title:` needed", (t) => {
+  if (requireUv(t)) return;
+  const tmp = briefPrdCorpus();
+  try {
+    const reg = path.join(tmp, ".control", "registry", "requirements-checkout-v1.yaml");
+    const before = fs.readFileSync(reg, "utf8");
+    const after = before.replace(
+      '    title: "A visitor can place an order without creating an account"',
+      '    text: "A visitor can place an order without creating an account"\n'
+      + '    statement: "A visitor who has no account, and wants none, can still place an order and reopen it later."');
+    assert.notEqual(after, before, "the fixture FR-1 row did not carry the title this test relabels");
+    fs.writeFileSync(reg, after);
+    generateIn(tmp);
+    const rendered = fs.readFileSync(path.join(tmp, ".what-rendered", "_prd", "checkout-v1", "prd.md"), "utf8");
+    assert.match(rendered, /^#### FR-1 — A visitor can place an order without creating an account$/m,
+      `the heading is not the row's label — \`statement\` outranked \`text\`:\n${rendered}`);
+    assert.match(rendered, /A visitor who has no account, and wants none, can still place an order/,
+      "the statement must still render, below the heading");
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

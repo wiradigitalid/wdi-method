@@ -49,8 +49,10 @@ Anything not in the list is not this skill's. A brief that already has `## Why` 
 
 ## Step 2 — Registry first
 
-**1 — the requirement split.** Which PRD a row belongs to is read from the rows before it is read
-from the prose. A `CAP` or `UJ` with a `prd:` field goes to `requirements-<that slug>.yaml`; an `FR`
+**1 — the requirement split.** A row written under an older kit carries `text:` where a newer one
+carries `title:`; both are the short label, the renderer and `timeline.py` read either, and one MUST
+NOT be copied into the other — that is two homes for one fact. Which PRD a row belongs to is read from
+the rows before it is read from the prose. A `CAP` or `UJ` with a `prd:` field goes to `requirements-<that slug>.yaml`; an `FR`
 follows its `capability:` to that CAP's file; an `NFR` follows its `component:` to the PRD whose CAPs
 own that component — a `BG` is product-level and never decides an NFR's home on its own, so `goal:` is
 only a tie-breaker when that component's CAPs span two PRDs. On a product with exactly **one** PRD every row belongs to that
@@ -105,8 +107,9 @@ lives now; its `**Proof of done:**` is compared with the row's `proof` — when 
 **registry is kept** (it is the declared SSOT), the PRD's is dropped, and both texts are reported side
 by side for the owner, never merged. Then the block becomes `**Realizes:** FR-a, FR-b, NFR-c`, and a
 `**Functional Requirements:**` label left with nothing under it is deleted — the rendered page rebuilds
-the blocks from the rows. When the deletions are done, **renumber the surviving `##` headings to the
-template's order** — 1 Why This Initiative · 2 Target User · 3 Features · 4 MVP Scope · 5 Success
+the blocks from the rows. When the deletions are done, **put the surviving `##` sections in the
+template's order and renumber them** — moving a whole section is a move, not an edit, and a file whose
+`## 6` sits above its `## 4` tells the AI reader the numbers lie. The order — 1 Why This Initiative · 2 Target User · 3 Features · 4 MVP Scope · 5 Success
 Metrics · 6 Cross-Cutting NFRs · 7 Constraints and Guardrails — and the `###` beneath them to match
 (`### 8.2` → `### 4.2`). Numbers are not sentences; leaving `## 4. Features` beside `## 8. MVP Scope`
 tells the next reader two sections went missing. A `UJ-N` the prose names that has no row in any requirement file is
