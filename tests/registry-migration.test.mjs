@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 
@@ -321,6 +321,40 @@ test("on a repo already in the new shape, update reports nothing pending", () =>
     const out = update(pkg, target).replace(/\[[0-9;]*m/g, "");
     assert.doesNotMatch(out, /still in the OLD shape/,
       `a repo with nothing left to upgrade was told to upgrade — the probe is not idempotent:\n${out}`);
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+// A first install MUST validate green before a single product word is written. It did not, for
+// three releases: three scaffold files cited method guides at the path they had before the kit moved
+// under `.constitution/method/`, and cites-resolve caught them on every fresh repo. The installer's
+// own tests never ran the validator on what they installed, so nothing here went red.
+test("a FRESH install validates GREEN — the scaffold cites nothing that the kit does not place", (t) => {
+  if (spawnSync("uv", ["--version"], { stdio: "ignore" }).status !== 0) {
+    console.error("\n!!  uv is NOT installed — the fresh-install validation was NOT exercised.\n");
+    t.skip("uv is not installed");
+    return;
+  }
+  const pkg = isolatedPackage();
+  const target = tmp("fresh");
+  try {
+    execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "install", target, "--yes", "--skip-bmad-check",
+       "--agents", "claude", "--product", "Shopfront"],
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    let out = "";
+    try {
+      out = execFileSync("uv", ["run", path.join(target, ".constitution", "method", "scripts", "validate.py"),
+                                "--root", target, "--check"],
+                         { cwd: target, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+                           env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" } });
+    } catch (e) {
+      out = String(e.stdout || "") + String(e.stderr || "");
+    }
+    assert.match(out, /^GREEN/m,
+      `a fresh install is RED — the first thing a new product's owner sees is a finding they did not cause:\n${out}`);
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

@@ -5,7 +5,7 @@
 The SSOT for **product** vocabulary — what this product talks about. Every term is defined **once**
 here, then used as-is across the corpus.
 
-**Method** vocabulary lives in `.constitution/method-glossary.md` and MUST NOT be redefined here. The
+**Method** vocabulary lives in `.constitution/method/method-glossary.md` and MUST NOT be redefined here. The
 split test: does this term still hold if used in another product? Yes → `method-glossary.md`, no →
 here.
 

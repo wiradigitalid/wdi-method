@@ -8,7 +8,7 @@ commit: null
 # Document Structure
 
 Written and refreshed only by `wdi-init` intent `structure`, never by hand. Rules live in
-`.constitution/structure-guide.md`.
+`.constitution/method/structure-guide.md`.
 
 ## Verified
 
