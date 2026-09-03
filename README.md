@@ -13,8 +13,8 @@
 
 | Engine | What it does here | Needed from | Install |
 |---|---|---|---|
-| **BMad Method** | Writes the documents behind G1–G4 — brief, PRD, architecture, UX | the first skill | `npx bmad-method install` — the installer refuses to run without it |
-| **mattpocock-skills** | Cuts the work at G5 — `to-spec`, `to-tickets`; runs the Fast Path — `implement` | `wdi-build` | `/plugin install mattpocock-skills@claude-plugins-official`, then `/setup-matt-pocock-skills` to name your issue tracker. The installer reports whether it found them and does not block |
+| [**BMad Method**](https://github.com/bmad-code-org/BMAD-METHOD) | Writes the documents behind G1–G4 — brief, PRD, architecture, UX | the first skill | `npx bmad-method install` in the product repo, picking the same agents you will give this installer. The installer refuses to run without it |
+| [**mattpocock/skills**](https://github.com/mattpocock/skills) | Cuts the work at G5 — `to-spec`, `to-tickets`; runs the Fast Path — `implement` | `wdi-build` | **Claude Code:** `/plugin install mattpocock-skills` (a managed bundle that updates on its own). **Codex, Cursor, other agents:** `npx skills@latest add mattpocock/skills` — copies the skills into the repo; take `setup-matt-pocock-skills` with them. Pick one path, not both. Then run `/setup-matt-pocock-skills` once to name your issue tracker. The installer reports whether it found them and does not block |
 
 No engine skill is invoked on its own. Each has a wrapper (`wdi-*`) that checks where the project is,
 runs the engine, verifies what came back, and records it. The engine is the pen; the wrapper knows what

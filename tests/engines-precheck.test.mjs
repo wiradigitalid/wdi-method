@@ -32,8 +32,11 @@ test("install on a machine WITHOUT the ticket engines names them, names the gate
     const out = install(target, cfg);
     assert.match(out, /engines\s+to-spec · to-tickets · implement — NOT found/,
       `the summary did not warn about the missing engines:\n${out}`);
-    assert.match(out, /\/plugin install mattpocock-skills@claude-plugins-official/,
+    assert.match(out, /\/plugin install mattpocock-skills/,
       "the warning must carry the exact install command — a reader should not have to look it up");
+    assert.match(out, /npx skills@latest add mattpocock\/skills/,
+      "the warning must also carry the path for agents that are not Claude Code — the installer supports them");
+    assert.match(out, /github\.com\/mattpocock\/skills/, "the warning must name the source");
     assert.match(out, /G1–G4 run without them/, "the warning must say the install is still usable");
     assert.ok(fs.existsSync(path.join(target, ".control", "wdi-method.yaml")),
       "a missing engine blocked the install — it is needed at G5 only");

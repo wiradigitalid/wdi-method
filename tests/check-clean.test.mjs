@@ -23,6 +23,7 @@ function read(rel) {
 const ALLOWED_GITHUB = [
   "github.com/wiradigitalid/wdi-method",
   "github.com/bmad-code-org/",
+  "github.com/mattpocock/skills", // the G5 ticket engines — public, an engine like BMad, not a client
 ];
 
 describe("published kit stays generic", () => {
