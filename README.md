@@ -11,10 +11,10 @@
 
 ## Prerequisites — two engines, and which gates need them
 
-| Engine | What it does here | Needed from | Install |
+| Engine | What it does here | Needed from | Source |
 |---|---|---|---|
-| [**BMad Method**](https://github.com/bmad-code-org/BMAD-METHOD) | Writes the documents behind G1–G4 — brief, PRD, architecture, UX | the first skill | `npx bmad-method install` in the product repo, picking the same agents you will give this installer. The installer refuses to run without it |
-| [**mattpocock/skills**](https://github.com/mattpocock/skills) | Cuts the work at G5 — `to-spec`, `to-tickets`; runs the Fast Path — `implement` | `wdi-build` | **Claude Code:** `/plugin install mattpocock-skills` (a managed bundle that updates on its own). **Codex, Cursor, other agents:** `npx skills@latest add mattpocock/skills` — copies the skills into the repo; take `setup-matt-pocock-skills` with them. Pick one path, not both. Then run `/setup-matt-pocock-skills` once to name your issue tracker. The installer reports whether it found them and does not block |
+| **BMad Method** | Writes the documents behind G1–G4 — brief, PRD, architecture, UX | the first skill | [github.com/bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) |
+| **mattpocock/skills** | Cuts the work at G5 — `to-spec`, `to-tickets`; runs the Fast Path — `implement` | `wdi-build` | [github.com/mattpocock/skills](https://github.com/mattpocock/skills) |
 
 No engine skill is invoked on its own. Each has a wrapper (`wdi-*`) that checks where the project is,
 runs the engine, verifies what came back, and records it. The engine is the pen; the wrapper knows what
@@ -24,16 +24,38 @@ page it is on.
 
 ## Install
 
-BMad first, then this — see the prerequisites above.
+Three steps, in this order. The first is required before step 3 will run; the second can wait until
+you reach G5, but doing it now means nothing stops you later.
+
+**1. BMad Method** — in the product repo, picking the same agents you will give this installer:
 
 ```bash
 cd /path/to/your/product-repo
 npx bmad-method install
+```
+
+**2. mattpocock/skills** — one of the two paths, not both (both leaves every skill twice):
+
+```bash
+# Claude Code — a managed bundle that updates when its author ships
+claude plugins install mattpocock-skills      # or, inside a session:  /plugin install mattpocock-skills
+
+# Codex, Cursor, OpenCode, other agents — copies the skills into this repo; keep setup-matt-pocock-skills selected
+npx skills@latest add mattpocock/skills
+```
+
+Then, once, inside your agent, run `/setup-matt-pocock-skills`: it asks which issue tracker `to-tickets`
+should publish to (local files, GitHub, Linear, …).
+
+**3. WDI Method:**
+
+```bash
 npx wdi-method
 ```
 
-The second command opens a TUI: it checks BMad, detects install versus update, asks the product name and
-the document language, lets you pick agents, shows what it will write, and prints what to do next.
+This opens a TUI: it checks BMad, reports whether it found the ticket engines, detects install versus
+update, asks the product name and the document language, lets you pick agents, shows what it will
+write, and prints what to do next.
 
 **Every field arrives with an answer already in it, and Enter accepts it.** On an update that answer is
 what the repo already says; on a first install the product name is the folder name made readable —
