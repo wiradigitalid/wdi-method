@@ -67,9 +67,23 @@ A value only changes when you actually answer. A run that does not mention langu
 repo already chose, and says so.
 
 ```bash
-npx wdi-method update      # later, to take a newer method
-npx wdi-method verify      # check the method files are all present
+npx wdi-method@latest update      # later, to take a newer method — @latest, or npx may reuse a cached one
+npx wdi-method verify             # check the method files are all present
 ```
+
+**Upgrading from 0.5.x to 0.6** is two halves. `update` does the mechanical one — overwrites the kit,
+renames files whose content needs no judgment, seeds what is new — and then prints an `upgrade` line
+naming what is still in the old shape: a single `requirements.yaml`, a 14-section brief, a PRD carrying
+its FR text. The second half is a decision about content, so it belongs to a skill:
+
+```bash
+npx wdi-method@latest update --yes      # 1 — mechanical; read the `upgrade` line it prints
+# 2 — in your agent, run the wdi-upgrade skill: it moves every sentence into its new home, word for
+#     word, invents nothing, reports what it could not place, and ends in one commit.
+```
+
+Run the skill before any other skill. `wdi-help` and the validators read the new shape; a corpus half
+in the old one answers them wrongly.
 
 Non-interactive, for CI:
 
@@ -369,7 +383,9 @@ English, whatever the settings say — it travels to every repo through this pac
 | | |
 |---|---|
 | Overwrites | everything in `.constitution/method/` · the sixteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
-| Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the fifteen. Each removal is printed |
+| Renames | a file whose content needs no judgment to move — `waves.yaml` → `specs.yaml`, the pre-0.5 registry names. Content is never rewritten |
+| Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the sixteen. Each removal is printed |
+| Reports | what is still in the OLD shape, as an `upgrade` line — and names `wdi-upgrade` as the next step. The installer does not move content; that is a decision, and the skill's |
 | Keeps | All of `.constitution/project/`, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
 | Never resurrects | A folder you retired. On update, absence is treated as a decision |
 

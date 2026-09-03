@@ -988,7 +988,7 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
   console.log(`${DIM}${"─".repeat(62)}${RESET}`);
 }
 
-function printNextSteps({ first, productSet }) {
+function printNextSteps({ first, productSet, upgradePending }) {
   console.log("");
   console.log(first ? "After install:" : "After update:");
   if (first) {
@@ -1010,6 +1010,10 @@ function printNextSteps({ first, productSet }) {
     console.log("  1. The <!-- BEGIN:wdi-method --> block in AGENTS.md was replaced. Read the diff.");
     console.log("  2. constitution.md Articles 1-2-5, ## Code, and *.user.toml were not overwritten.");
     console.log("  3. If BMad has new skills, install those first, then run this update again.");
+    if (upgradePending) {
+      console.log("  4. The summary listed an `upgrade` line: run the wdi-upgrade skill before any other skill.");
+      console.log("     It moves content into the new shape and never invents any; one commit.");
+    }
   }
 }
 
@@ -1069,6 +1073,7 @@ function apply(target, agents,
   printNextSteps({
     first,
     productSet: Boolean(product) && !identityIsPlaceholder(product),
+    upgradePending: !first && pendingUpgrades(target).length > 0,
   });
 }
 

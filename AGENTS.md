@@ -53,7 +53,7 @@ product repo — that change belongs here instead. `CONTRIBUTING.md` states what
 
 ```bash
 npm test
-git grep -ilE "<client>|<product>" -- kit kit-overlay scaffold bin lib README.md
+git grep -ilE "<client>|<product>" -- kit kit-overlay scaffold bin lib README.md tests
 ```
 
 The second command MUST return nothing. This repository is public.

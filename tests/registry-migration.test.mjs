@@ -381,6 +381,10 @@ test("update detects the OLD PRD shape under 0.5.12 numbering, and ignores a sta
       `Non-Goals §7 / Open Questions §10 went undetected — the probe is keyed to another kit's numbers:\n${out}`);
     assert.doesNotMatch(out, /cites \.control\/generated/,
       `a stale path inside .control/memlog/ was reported — that is history, and cites-resolve does not read it:\n${out}`);
+    // The summary's `upgrade` line is one of a dozen; "After update:" is the list a reader treats as
+    // the to-do. When content is still in the old shape, that list MUST name the skill too.
+    assert.match(out, /After update:[\s\S]*wdi-upgrade/,
+      `"After update:" did not name wdi-upgrade while the summary listed pending items:\n${out}`);
   } finally {
     fs.rmSync(pkg, { recursive: true, force: true });
     fs.rmSync(target, { recursive: true, force: true });

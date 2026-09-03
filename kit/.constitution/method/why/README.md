@@ -98,6 +98,7 @@ and the Fast Path do not.
 | A bug, a failing test, unexpected behaviour | `wdi-systematic-debugging`, **before** any fix is proposed |
 | A planning assumption turned out void | `wdi-decision` — it wraps `bmad-correct-course`, proposes, and changes nothing itself |
 | An estimate or a task list is needed | `wdi-report` intent `estimate` |
+| `wdi-method update` printed an `upgrade` line | `wdi-upgrade`, before any other skill — it moves content into the new shape, never invents it, one commit |
 | You do not know where you are | `wdi-help` |
 
 ## Sixteen skills

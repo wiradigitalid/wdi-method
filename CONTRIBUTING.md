@@ -140,6 +140,25 @@ whoever happened to be working takes that signal away.
 
 Patch releases are expected to be frequent. That is what a patch is for.
 
+## Releasing — tag first, publish second
+
+The GitHub release is drafted by a workflow; the npm publish is not. `.github/workflows/release.yml`
+fires on a `v*` tag, runs `npm test`, refuses a tag that disagrees with `package.json`, and creates the
+release with generated notes. It deliberately does **not** run `npm publish`: a patch bump is something
+an agent may do, and a workflow that published on tag would hand npm releases to whoever bumped last.
+
+```bash
+npm test && npm publish --dry-run                 # below — the only command that shows publish warnings
+npm version patch -m "chore(release): %s"         # minor/major: the maintainer only. Commits and tags v<version>
+git push --follow-tags                            # a plain push does not send the tag npm version just made
+# → Actions: release.yml tests, checks tag == package.json, drafts the GitHub release
+npm publish                                       # the maintainer, after that run is green
+gh release edit v<version> --notes-file NOTES.md  # optional — replace the generated notes with written ones
+```
+
+Then, in a consuming repo, `npx wdi-method@latest update --yes` is the tarball smoke test: the installed
+package is not the working tree, and `files` in `package.json` decides what shipped.
+
 ## Before you publish
 
 ```bash
@@ -164,10 +183,11 @@ This repository is **public**. It MUST NOT contain a client name, a product name
 repository. Before publishing, check:
 
 ```bash
-git grep -ilE "your-client|your-product" -- kit kit-overlay scaffold bin lib README.md
+git grep -ilE "your-client|your-product" -- kit kit-overlay scaffold bin lib README.md tests
 ```
 
-An empty result is the only acceptable one. `promote` scrubs the four files that normally carry a product
+An empty result is the only acceptable one. `tests/` is in the list because the fixture corpus is the
+one place a real product name is easy to paste and never read again. `promote` scrubs the four files that normally carry a product
 name, and `walkFiles` refuses build output — a `.pyc` embeds the absolute path it was compiled from,
 which is how a client folder name once reached this repo through a file nobody wrote.
 
