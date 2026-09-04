@@ -24,7 +24,10 @@ coordinator, with three consequences and no others: the engines run by **read-an
 that names the engine's `SKILL.md` path and carries out its process — or from a copy in the repo, and the ledger
 names which; the seams, the `to-tickets` quiz, and § When the code turns out to be right are decided by the
 coordinator and written to the ledger, one row each; and whatever the mandate lists as `parked` still stops,
-reported for the owner rather than decided. Nothing else in this skill relaxes. `wdi-autopilot` owns the
+reported for the owner rather than decided. One thing changes **shape** rather than owner: a mandate is one
+unit of work and reaches `main` through **one PR**, so Step 4 commits the ticket to the run branch instead of
+opening a PR per ticket, and Step 5's push and CI watch happen at every spec close on that one PR — the
+checklist, the head-SHA rule, and the caps are unchanged. Nothing else in this skill relaxes. `wdi-autopilot` owns the
 mandate, the ledger, and the loop; this skill MUST NOT restate them.
 
 **No orchestration tool is required, and this skill MUST NOT name one.** How the work is carried out is the

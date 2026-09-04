@@ -1,6 +1,6 @@
 ---
 name: wdi-autopilot
-description: Use when the owner wants the agent to carry the product from where it stands to every FR delivered, without being asked a question in between. Two doors — a preflight that ends in one mandate the owner accepts, then unattended iterations fired by a loop. Every decision the agent takes lands in one ledger the owner reviews in parallel, never as a prompt.
+description: Use when the owner wants the agent to carry the product from where it stands to every FR delivered, without being asked a question in between. Two doors — a preflight that ends in one mandate the owner accepts, then unattended iterations fired by a loop, each working as far as it safely can. One run, one branch, one PR. Every decision the agent takes lands in one ledger the owner reviews in parallel, never as a prompt.
 ---
 
 # WDI Autopilot
@@ -16,7 +16,7 @@ Two doors, and one fact in the registry picks the door: **is there a `DEC-` of `
 | Door | When | Does | Asks |
 |---|---|---|---|
 | **Preflight** | No active mandate | Checks everything, prints one page, waits for the owner's confirmation, writes the mandate, starts the loop | Yes — this is the only place this skill MAY ask |
-| **Iteration** | Active mandate | Reads the registry and the ledger, does one step from where the last iteration stopped, records, returns | **Never** |
+| **Iteration** | Active mandate | Reads the registry and the ledger, works from where the last iteration stopped for as long as it safely can, records, returns only at one of three stops | **Never** |
 
 Typing `/wdi-autopilot` while a mandate is active opens the iteration door, not the preflight. To change a
 setting, the owner supersedes the mandate with a new one — `wdi-decision` owns supersession.
@@ -44,6 +44,7 @@ NOT start the loop while any row in the first two groups is red.
 | | `loop` — the interval between iterations | — (default `5m`) |
 | | `expires` — the date the mandate lapses | — (default 7 days from today; a `/loop` task expires then too) |
 | | Where the ledger and the final report will be written | — |
+| | The **run branch** — `autopilot/<mandate-id>` in the isolated worktree — and that the run will open **one** PR from it | The branch already exists with commits nobody can account for |
 | **Runtime** | The session runs with permission prompts bypassed | Cannot be verified from inside the session. Printed as a line the owner confirms |
 
 **Every row arrives with its default already in it**, and the owner changes only what they want changed —
@@ -85,8 +86,52 @@ finishes first; the next firing waits.
 
 ## Door 2 — One iteration
 
-Read `.control/generated/status`, the mandate row, and the ledger's last entry. Then do **one** step of the
-table below and return. The ledger is what makes the next firing continue rather than restart.
+Read `.control/generated/status`, the mandate row, and the ledger's last entry. Then work the table below
+**from the top, for as long as the work can be done safely** — not one row and return. The loop is a safety
+net that restarts a run that died, not the pacer of one that is alive; an iteration that stops after one step
+while work remains turns a five-minute interval into five minutes of waiting per step.
+
+An iteration returns at exactly **three stops**, and names which:
+
+| Stop | Means |
+|---|---|
+| **Done** | Every `FR` in scope is closed, or only parked rows remain — go to § Finish |
+| **Capacity** | The session's context is near its limit, or a dispatched step cannot be spawned here. The ledger's last row is a boundary the next firing resumes from |
+| **Blocked** | A step failed at its cap — two return trips in `wdi-build`, a third failed fix — and is recorded as blocked. The next firing tries the next runnable row, not the same one |
+
+The ledger is what makes the next firing continue rather than restart, so every step boundary lands there
+**before** the next step starts.
+
+### Faster is allowed; unsafe is not
+
+Everything that shortens the run without changing what it produces is in scope: dispatching a step to a
+subagent, running the review panel while the next ticket's tests are being written, building tickets with no
+blocking edge between them at once, holding G3 for several components in one pass. Four limits, all already
+the method's, and none of them relaxes here:
+
+- **`wdi-build` § Parallel tickets sets the conditions** — each concurrent builder in its own worktree,
+  `parallel-tickets-blocked` green for every pair released together, the shape-setting ticket closed first, no shared registry
+  write in flight. The coordinator holds every registry write and every merge into the run branch, serially.
+- **Specs run in parallel only where `depends_on` says they may.** A wide refactor's batches never do.
+- **Every step is judged from the artifact**, never from a builder's report — the same rule, whoever runs
+  the step. A step whose reviewer is also its builder is a self-report and does not count.
+- **Nothing lands on the run branch red.** A ticket merges into it only with its tests green and the full
+  suite green once; a merge that turns the branch red is reverted, not patched forward.
+
+### One run, one branch, one PR
+
+A mandate is **one unit of work**, and it reaches `main` through **one door**: a single PR from the run
+branch, which the **owner** merges after the final review. This is what makes the result reviewable as a
+whole instead of as a stream of PRs nobody read.
+
+| In `wdi-build` | Under a mandate |
+|---|---|
+| Step 4 pushes a ticket branch and opens a PR per ticket | The ticket is committed to the run branch — directly, or merged in from its own worktree by the coordinator. The ticket-closing checklist is still answered first. **No PR per ticket** |
+| Step 5 watches CI per PR | The coordinator pushes the run branch **at every spec close**; the first push opens the one PR as a **draft**; CI is watched per push, on the pushed head SHA, and judged exactly as Step 5 says |
+| `MUST NOT merge` | Holds harder. The run never merges to `main`; the owner does, once, after § Finish |
+
+A second PR is a red flag. Where a change cannot ride the run branch — a hotfix `main` needs today — it is
+reported for the owner, not opened by the run.
 
 | The registry says | Do |
 |---|---|
@@ -135,8 +180,8 @@ ledger decides nothing and records everything.
 what it decided while running* — and this is exactly one. `memlog-home` holds it where every memlog lives.
 
 Frontmatter `artifact:` names the mandate's `DEC-` file — `memlog-home` demands it of every memlog. Header: the
-mandate id, its parameters as a pointer to the row, the start commit. Then one row per decision, appended,
-never rewritten:
+mandate id, its parameters as a pointer to the row, the run branch, the start commit. Then one row per
+decision, appended, never rewritten:
 
 | Column | Holds |
 |---|---|
@@ -160,9 +205,11 @@ When the table above reaches § Finish:
    the whole deliverable.
 2. `validate.py --generate`, then `wdi-report` intent `progress`.
 3. Raise the mandate to `applied`, `touches` naming the ledger.
-4. Cancel the loop: in Claude Code, the `loop` skill's cancel; elsewhere, tell the owner the loop has nothing
+4. Push the run branch, wait for CI to conclude on that head SHA, and mark the one PR **ready for review**.
+   Red CI here is reported red; the run MUST NOT patch to turn it green at the door.
+5. Cancel the loop: in Claude Code, the `loop` skill's cancel; elsewhere, tell the owner the loop has nothing
    left to do.
-5. Write the final report as the Output below.
+6. Write the final report as the Output below. The owner merges; the run never does.
 
 ## Red Flags — STOP
 
@@ -172,6 +219,10 @@ When the table above reaches § Finish:
 - Deciding something the mandate parks, or parking something the mandate did not
 - A decision taken and not written to the ledger
 - Restarting from the first row instead of reading the ledger's last entry
+- Returning after one step while work remains and none of the three stops applies
+- A second PR, a ticket branch pushed on its own, or any merge into `main` by the run
+- Merging a red ticket into the run branch, or patching the branch forward instead of reverting the merge
+- Parallel builders sharing a worktree, or a registry written by anyone but the coordinator
 - Claiming a Skill-tool invocation of `to-spec`, `to-tickets`, or `implement` — the route is read-and-follow
   or a repo copy, and the ledger names which
 - Editing a guard, a test, or an assertion to go green — no mandate reaches that
@@ -181,12 +232,14 @@ When the table above reaches § Finish:
 
 Preflight: the one page, then the mandate id and the loop command actually issued.
 
-Iteration: one line — the step taken, the ledger rows added, what the next firing will find.
+Iteration: the steps taken in order, the ledger rows added, which of the three stops ended it and why, and
+what the next firing will find.
 
 Finish, following the Agent Rules `Answer Closing` block and carrying:
 
-- **what was done** — every `FR` closed, with its spec and PR; the smoke test result per `FR`, or the
-  words *not run, by mandate*; the ledger path and its row count
+- **what was done** — the one PR, its branch and head SHA, and CI's verdict on it; every `FR` closed, with
+  its spec; the smoke test result per `FR`, or the words *not run, by mandate*; the ledger path and its row
+  count
 - **what blocked it** — the parked list, each with the `FR` it holds and the decision the owner owes;
   anything left red; whether the run lapsed at `expires`
 - **what comes next** — **the test script**: for every closed `FR`, its proof of done from the PRD as one
