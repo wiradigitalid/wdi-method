@@ -124,6 +124,12 @@ A mandate is **one unit of work**, and it reaches `main` through **one door**: a
 branch, which the **owner** merges after the final review. This is what makes the result reviewable as a
 whole instead of as a stream of PRs nobody read.
 
+**The rule is about how the run ENDS, not how it works.** During the run, branches and worktrees are tools
+and MAY be used freely — a worktree per parallel builder, a branch per ticket, a throwaway branch to try a
+migration. What MUST NOT happen is that any of them survive: every working branch is merged into the run
+branch by the coordinator and deleted, and **only the run branch is ever pushed**. The end state is one
+branch, one PR, nothing else on the remote.
+
 | In `wdi-build` | Under a mandate |
 |---|---|
 | Step 4 pushes a ticket branch and opens a PR per ticket | The ticket is committed to the run branch — directly, or merged in from its own worktree by the coordinator. The ticket-closing checklist is still answered first. **No PR per ticket** |
@@ -220,7 +226,8 @@ When the table above reaches § Finish:
 - A decision taken and not written to the ledger
 - Restarting from the first row instead of reading the ledger's last entry
 - Returning after one step while work remains and none of the three stops applies
-- A second PR, a ticket branch pushed on its own, or any merge into `main` by the run
+- A second PR, any branch but the run branch pushed, a working branch left alive at Finish, or any merge
+  into `main` by the run — working branches and worktrees during the run are fine; surviving ones are not
 - Merging a red ticket into the run branch, or patching the branch forward instead of reverting the merge
 - Parallel builders sharing a worktree, or a registry written by anyone but the coordinator
 - Claiming a Skill-tool invocation of `to-spec`, `to-tickets`, or `implement` — the route is read-and-follow
