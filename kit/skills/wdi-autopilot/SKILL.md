@@ -40,11 +40,11 @@ NOT start the loop while any row in the first two groups is red.
 | | `from_gate` — the first gate the run will hold itself | Below the last passed gate. Default: the gate after the last one passed |
 | **Settings** | `scope` — the `FR` ids to deliver, or `all` | — (default `all` open `FR`) |
 | | `parked` — what stops for the owner instead of being decided: any of `promise` · `ad-n` · `sensitive` | — (default **empty**: full authority) |
-| | `smoke_test` — `agent` or `owner` | — (default `agent`) |
+| | `smoke_test` — `agent` or `owner` | — (default `agent`, and **`owner` when `codebase-stack-guide.md` names no way to run the app** — an agent cannot smoke-test what it cannot launch) |
 | | `loop` — the interval between iterations | — (default `5m`) |
 | | `expires` — the date the mandate lapses | — (default 7 days from today; a `/loop` task expires then too) |
 | | Where the ledger and the final report will be written | — |
-| | The **run branch** — `autopilot/<mandate-id>` in the isolated worktree — and that the run will open **one** PR from it | The branch already exists with commits nobody can account for |
+| | The **run branch** — `autopilot/<mandate-id>`, using the next free `DEC-` id from `decisions.yaml`, which the mandate then takes — and that the run will open **one** PR from it | The branch already exists with commits nobody can account for |
 | **Runtime** | The session runs with permission prompts bypassed | Cannot be verified from inside the session. Printed as a line the owner confirms |
 
 **Every row arrives with its default already in it**, and the owner changes only what they want changed —
@@ -87,7 +87,7 @@ finishes first; the next firing waits.
 ## Door 2 — One iteration
 
 Read `.control/generated/status`, the mandate row, and **the ledger's `## Resume` section only** — see
-§ The ledger for why that is a section and not a file. Then work the table below
+§ The ledger for why that is a section and not a file. Then work § The work table
 **from the top, for as long as the work can be done safely** — not one row and return. The loop is a safety
 net that restarts a run that died, not the pacer of one that is alive; an iteration that stops after one step
 while work remains turns a five-minute interval into five minutes of waiting per step.
@@ -96,12 +96,37 @@ An iteration returns at exactly **three stops**, and names which:
 
 | Stop | Means |
 |---|---|
-| **Done** | Every `FR` in scope is closed, or only parked rows remain — go to § Finish |
+| **Done** | Every `FR` in scope is closed, or nothing left is **runnable** — every remaining row is parked or blocked. Go to § Finish |
 | **Capacity** | The session's context is near its limit, or a dispatched step cannot be spawned here. The ledger's last row is a boundary the next firing resumes from |
-| **Blocked** | A step failed at its cap — two return trips in `wdi-build`, a third failed fix — and is recorded as blocked. The next firing tries the next runnable row, not the same one |
+| **Blocked** | A step failed at its cap — two return trips in `wdi-build`, a third failed fix — and is recorded under **Blocked** in `## Resume`. The next firing takes the next **runnable** row, never this one again |
+
+**Runnable** means: not listed under Blocked in `## Resume`, and not parked by the mandate. A blocked row is
+retried only when the owner unblocks it or a later change removes the cause — and the ledger row that
+recorded the block says which. A run that re-picks a blocked step spends the whole mandate window on it, and
+that is the one stall this design has to prevent.
 
 The ledger is what makes the next firing continue rather than restart, so every step boundary lands there
 **before** the next step starts.
+
+### The work table — where the run picks up
+
+| The registry says | Do |
+|---|---|
+| `from_gate` is G1 and no brief | `wdi-problem`. Then **hold G1**: answer its ★ questions in the ledger, record `G1` in `gates_passed` |
+| G1 passed, no PRD for the scope | `wdi-product` intent `prd` — `wdi-ux` first where the interface is the promise. Hold G2 the same way |
+| G2 passed, no components | `wdi-init` intents `component` · `mode` · `risk`. Each `mode` and `risk_accepted` is a ledger row with its reason |
+| Components, no catalogue or spine | `wdi-blueprint` `catalog`, then `platform`. Hold G3 |
+| G3 passed, a component above `catalog` lacks depth | `wdi-component`. Hold G4 for that component; set `g4_passed` |
+| G4 clear for a candidate row | `wdi-report` intent `estimate`, pick the top candidate row, `wdi-build` for it — **unattended branch** |
+| A spec is open | Continue `wdi-build` from its next phase or ticket. The frontier is read from the tickets |
+| A spec just closed | `wdi-reconcile` over the gate scope; carry every drift finding to its owning skill in one edit pass |
+| Every `FR` in scope closed | § Finish |
+| Work remains but **nothing is runnable** — all of it parked or blocked | § Finish, with the run marked **incomplete** and each blocker named |
+| `expires` passed | § Finish, with the run marked lapsed |
+
+**Holding a gate here means answering its checklist, not skipping it.** Every ★ question is answered in the
+ledger, `yes` or `change`; a `change` is acted on in the same iteration. The ★ questions a validator answers
+are answered by the validator, never re-derived.
 
 ### Faster is allowed; unsafe is not
 
@@ -140,22 +165,6 @@ branch, one PR, nothing else on the remote.
 A second PR is a red flag. Where a change cannot ride the run branch — a hotfix `main` needs today — it is
 reported for the owner, not opened by the run.
 
-| The registry says | Do |
-|---|---|
-| `from_gate` is G1 and no brief | `wdi-problem`. Then **hold G1**: answer its ★ questions in the ledger, record `G1` in `gates_passed` |
-| G1 passed, no PRD for the scope | `wdi-product` intent `prd` — `wdi-ux` first where the interface is the promise. Hold G2 the same way |
-| G2 passed, no components | `wdi-init` intents `component` · `mode` · `risk`. Each `mode` and `risk_accepted` is a ledger row with its reason |
-| Components, no catalogue or spine | `wdi-blueprint` `catalog`, then `platform`. Hold G3 |
-| G3 passed, a component above `catalog` lacks depth | `wdi-component`. Hold G4 for that component; set `g4_passed` |
-| G4 clear for a candidate row | `wdi-report` intent `estimate`, pick the top candidate row, `wdi-build` for it — **unattended branch** |
-| A spec is open | Continue `wdi-build` from its next phase or ticket. The frontier is read from the tickets |
-| A spec just closed | `wdi-reconcile` over the gate scope; carry every drift finding to its owning skill in one edit pass |
-| Every `FR` in scope closed, or only parked rows remain | § Finish |
-| `expires` passed | § Finish, with the run marked lapsed |
-
-**Holding a gate here means answering its checklist, not skipping it.** Every ★ question is answered in the
-ledger, `yes` or `change`; a `change` is acted on in the same iteration. The ★ questions a validator answers
-are answered by the validator, never re-derived.
 
 ### What the agent decides, and what it does with the answer
 
@@ -181,9 +190,21 @@ was not, so **every decision this skill takes for them is a ledger row** — tha
 mandate. The `DEC-` threshold in `decision-guide.md` still decides which of them also become a `DEC-`; the
 ledger decides nothing and records everything.
 
+### How the owner stops it
+
+Stated on the preflight page, because a run nobody can stop is not a run anybody should start.
+
+| To | Do | Effect |
+|---|---|---|
+| Pause | Cancel the loop, or interrupt the session | The current iteration finishes its step and lands its ledger row. Nothing is left half-written |
+| Resume | `/wdi-autopilot` again, or start the loop again | The mandate is still active, so it comes in through the iteration door and continues from `## Resume` |
+| End it for good | Supersede the mandate through `wdi-decision`, or let `expires` pass | **Cancelling the loop does NOT revoke the mandate.** Until it is superseded or lapses, any later firing resumes the run |
+
 ## The ledger
 
-`.control/memlog/autopilot-<YYYY-MM-DD>.md`, one per mandate. A memlog is a run log — *which skill ran, and
+`.control/memlog/autopilot-<mandate-id>.md` — `autopilot-DEC-014.md` — one per mandate, **named for the
+mandate and not for the day**, because two mandates can share a date and appending the second run's
+decisions to the first run's ledger destroys both as a record. A memlog is a run log — *which skill ran, and
 what it decided while running* — and this is exactly one. `memlog-home` holds it where every memlog lives.
 
 Frontmatter `artifact:` names the mandate's `DEC-` file — `memlog-home` demands it of every memlog.
@@ -206,7 +227,7 @@ while the run is alive:
 Read it, and nothing below it:
 
 ```bash
-sed -n '1,/^## Decisions/p' .control/memlog/autopilot-<YYYY-MM-DD>.md
+sed -n '1,/^## Decisions/p' .control/memlog/autopilot-<mandate-id>.md
 ```
 
 Rewritten at the end of every iteration, and it holds **only what no registry answers**:
@@ -238,7 +259,7 @@ the copy that goes stale.
 
 **One line per cell is the rule, not a target.** What does not fit — a gate checklist answered question by
 question, a panel finding adjudicated at length — goes to a companion document at
-`.control/memlog/autopilot-<YYYY-MM-DD>/<NN>-<slug>.md`, and the row keeps a pointer to it. This is
+`.control/memlog/autopilot-<mandate-id>/<NN>-<slug>.md`, and the row keeps a pointer to it. This is
 `wdi-question`'s rule for a question that outgrows one line, borrowed whole rather than reinvented.
 
 A row MUST NOT carry the derivation that produced the decision — which files were read, which clause was
@@ -260,8 +281,11 @@ When the table above reaches § Finish:
 2. `validate.py --generate`, then `wdi-report` intent `progress`.
 3. Raise the mandate to `applied`, `touches` naming the ledger, and rewrite `## Resume` one last time so it
    reads as the run's end state rather than a step that never came.
-4. Push the run branch, wait for CI to conclude on that head SHA, and mark the one PR **ready for review**.
-   Red CI here is reported red; the run MUST NOT patch to turn it green at the door.
+4. **Leave the run branch in a state the owner can merge.** A ticket still in flight is either finished or
+   its merge reverted — the branch is never handed over half-applied. Then push, wait for CI to conclude on
+   that head SHA, and mark the one PR **ready for review** *only if it is green*. Red keeps the PR a
+   **draft** and is reported red: a PR marked ready is an invitation to merge, and the run MUST NOT extend
+   one over a red branch, nor patch to turn it green at the door.
 5. Cancel the loop: in Claude Code, the `loop` skill's cancel; elsewhere, tell the owner the loop has nothing
    left to do.
 6. Write the final report as the Output below. The owner merges; the run never does.
@@ -277,10 +301,13 @@ When the table above reaches § Finish:
 - A `## Resume` that restates a decision, or repeats what the registry already answers
 - A ledger cell longer than a line, instead of a pointer to a companion document
 - Restarting from the first row instead of reading `## Resume`
+- Re-picking a step `## Resume` lists as blocked, instead of taking the next runnable row
+- Spinning until `expires` on work that is not runnable, instead of finishing and naming the blockers
 - Returning after one step while work remains and none of the three stops applies
 - A second PR, any branch but the run branch pushed, a working branch left alive at Finish, or any merge
   into `main` by the run — working branches and worktrees during the run are fine; surviving ones are not
 - Merging a red ticket into the run branch, or patching the branch forward instead of reverting the merge
+- Marking the PR ready over red CI, or handing over a run branch with a ticket half-applied
 - Parallel builders sharing a worktree, or a registry written by anyone but the coordinator
 - Claiming a Skill-tool invocation of `to-spec`, `to-tickets`, or `implement` — the route is read-and-follow
   or a repo copy, and the ledger names which
