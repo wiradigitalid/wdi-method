@@ -19,8 +19,9 @@ for the owner to run, waits, then verifies the result and lands it. That is not 
 those engines need a human are the gates, and owner time is what a gate is for.
 
 **Under an active mandate the owner's part is `wdi-autopilot`'s.** A `DEC-` of `type: mandate` at
-`status: accepted`, unexpired, moves every "the owner runs" and "the owner decides" in this skill to the
-coordinator, with three consequences and no others: the engines run by **read-and-follow** — a builder brief
+`status: accepted`, unexpired, moves **every** "the owner runs" and "the owner decides" in this skill to the
+coordinator — G5's checklist and Step 2's *stop and reach the owner* included, which reach the coordinator and
+not a person. Three of them change **shape** as well as owner: the engines run by **read-and-follow** — a builder brief
 that names the engine's `SKILL.md` path and carries out its process — or from a copy in the repo, and the ledger
 names which; the seams, the `to-tickets` quiz, and § When the code turns out to be right are decided by the
 coordinator and written to the ledger, one row each; and whatever the mandate lists as `parked` still stops,

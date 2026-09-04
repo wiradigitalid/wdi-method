@@ -821,3 +821,37 @@ test("mandate-accept refuses an accepted mandate with no expiry — that is stan
   assert.match(out, /mandate-accept\s+DEC-002.*expires/,
     `a mandate with no end date was accepted as a mandate:\n${out}`);
 });
+
+// Two ways to satisfy a check and violate its intent, both found by an adversarial review of wdi-autopilot
+// before it was adopted. Each is a hole an unattended run walks through on its own.
+
+test("mandate-accept refuses an expiry it cannot read as a date — otherwise the lapse test silently never runs", (t) => {
+  if (requireUv(t)) return;
+  // `expires: in 7 days` passes a non-empty check, then `date.fromisoformat` rejects it, and every
+  // comparison against it is skipped — for every decision, forever. An unbounded mandate that looks bounded.
+  const out = afterMutation((dir) => editDecisions(dir, "expires: '2026-02-01'", 'expires: "in 7 days"'));
+  assert.match(out, /mandate-accept\s+DEC-002.*expires.*date/,
+    `an unparseable expiry was accepted, which disables the lapse check for everything under it:\n${out}`);
+});
+
+test("high-risk-named refuses a MANDATE as the acceptor — a run MUST NOT accept a sensitive risk for the owner", (t) => {
+  if (requireUv(t)) return;
+  // high-risk-named accepts any DEC- id that resolves. The mandate resolves. So an unattended run could raise
+  // `risk_accepted: high` on the component that touches money, name its own mandate as the acceptor, keep the
+  // validators green — and wdi-build Step 3's REQUIRED two-reviewer panel stops being required for that code.
+  const out = afterMutation((dir) => {
+    componentsWith(dir, [["risk_accepted: low", "risk_accepted: high\n    risk_accepted_by: DEC-002"]]);
+  });
+  assert.match(out, /high-risk-named\s+checkout.*DEC-002.*mandate/,
+    `a run accepted a money risk on the owner's behalf by pointing at its own mandate:\n${out}`);
+});
+
+test("mandate-accept demands the mandate's ledger exists — the record is the price of the delegation", (t) => {
+  if (requireUv(t)) return;
+  // Every claim wdi-autopilot makes about recording rests on one file. If it is absent, the run has the
+  // owner's authority and no account of what it did with it — and nothing anywhere would have noticed.
+  const out = afterMutation((dir) =>
+    fs.rmSync(path.join(dir, ".control", "memlog", "autopilot-DEC-002.md")));
+  assert.match(out, /mandate-accept\s+DEC-002.*ledger/,
+    `a mandate was accepted with no ledger and nothing said so:\n${out}`);
+});

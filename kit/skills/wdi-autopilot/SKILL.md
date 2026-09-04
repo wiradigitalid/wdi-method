@@ -10,13 +10,19 @@ before the work, one **review of the result** after it. Between them the agent d
 going. Nothing else in the method changes — the same skills write the same documents, the same validators
 hold, the same panel reviews the code. What changes is who answers when a skill would otherwise stop and ask.
 
-Two doors, and one fact in the registry picks the door: **is there a `DEC-` of `type: mandate` at
-`status: accepted` whose `expires` has not passed?**
+**Three doors**, and the mandate row in `decisions.yaml` picks which:
 
 | Door | When | Does | Asks |
 |---|---|---|---|
-| **Preflight** | No active mandate | Checks everything, prints one page, waits for the owner's confirmation, writes the mandate, starts the loop | Yes — this is the only place this skill MAY ask |
-| **Iteration** | Active mandate | Reads the registry and the ledger, works from where the last iteration stopped for as long as it safely can, records, returns only at one of three stops | **Never** |
+| **Preflight** | **No mandate row exists at all**, and the owner asked for one in this turn | Checks everything, prints one page, waits for the owner's confirmation, writes the mandate, starts the loop | Yes — this is the only place this skill MAY ask |
+| **Iteration** | A mandate at `accepted` whose `expires` has not passed | Reads the registry and the ledger's `## Resume`, works from where the last iteration stopped for as long as it safely can, records, returns only at one of three stops | **Never** |
+| **Finish, lapsed** | A mandate at `accepted` whose `expires` **has** passed | Goes straight to § Finish, marks the run lapsed, cancels the loop | **Never** |
+
+**A run MUST NOT write itself a mandate.** Preflight is reachable only when the owner asked for it in the
+turn that is running; a loop firing MUST NOT open it, whatever the mandate's state. Without that, an expired
+mandate would put the next firing back at preflight — where the defaults are already filled in and nobody is
+awake to refuse them — and the run would renew its own authority. The lapsed door exists precisely so the
+expiry ends the run instead of restarting it.
 
 Typing `/wdi-autopilot` while a mandate is active opens the iteration door, not the preflight. To change a
 setting, the owner supersedes the mandate with a new one — `wdi-decision` owns supersession.
@@ -35,11 +41,14 @@ NOT start the loop while any row in the first two groups is red.
 | | A route past `disable-model-invocation` — see below | Neither route is available |
 | | The tracker the engines publish to is configured — `docs/agents/issue-tracker.md`, written once by `/setup-matt-pocock-skills` | Missing. `to-tickets` would stop to ask for it, and this skill never asks; the owner runs the setup before confirming |
 | | Reviewers separate from the builder can be dispatched | The session cannot spawn a second agent and any touched component is `risk_accepted: low` — Step 3 of `wdi-build` would block |
+| | `.constitution/project/codebase-stack-guide.md` names build and test commands, **and the test command exits 0 here** | Absent or failing. Every ticket's "full suite green once" and the smoke test read it. Found at minute one, not at hour six |
+| | The remote accepts the run branch — `git push --dry-run` — and `main` is reachable as a PR base | Auth or remote failure. The first real push is at the first spec close, hours in |
+| | A CI workflow is configured | None. Step 5 would wait for checks that never arrive; say so and read Step 2's own runs as the evidence instead |
 | **Position** | `gates_passed` in `index.yaml`, `g4_passed` per component, validators green (`validate.py`) | A red validator. Name it; autopilot MUST NOT start on a corpus already red |
 | | An isolated worktree | A shared checkout. `wdi-build` refuses one, so this skill refuses earlier |
 | | `from_gate` — the first gate the run will hold itself | Below the last passed gate. Default: the gate after the last one passed |
 | **Settings** | `scope` — the `FR` ids to deliver, or `all` | — (default `all` open `FR`) |
-| | `parked` — what stops for the owner instead of being decided: any of `promise` · `ad-n` · `sensitive` | — (default **empty**: full authority) |
+| | `parked` — what stops for the owner instead of being decided: any of `promise` · `ad-n` · `sensitive` | — (default **`ad-n`**, and nothing else. `decision-guide.md` says narrowing an invariant MUST NOT be softened further, so removing it is the owner's to say out loud — not a default they never saw) |
 | | `smoke_test` — `agent` or `owner` | — (default `agent`, and **`owner` when `codebase-stack-guide.md` names no way to run the app** — an agent cannot smoke-test what it cannot launch) |
 | | `loop` — the interval between iterations | — (default `5m`) |
 | | `expires` — the date the mandate lapses | — (default 7 days from today; a `/loop` task expires then too) |
@@ -69,7 +78,9 @@ size table in `delivery-flow-guide.md`, edges from `depends_on` and `touches`. E
 On the owner's confirmation, and not before:
 
 1. Open a `DEC-` through `wdi-decision`, `type: mandate`, at `status: accepted`. `accepted_by` names the
-   owner — a person and a date, the way `risk_accepted_by` does. **The mandate is the one `DEC-` that MUST
+   owner — a person and a date, the way `risk_accepted_by` does. **Ask for that name here if the repo does
+   not already carry it**, because it is the one thing the run cannot invent later and every person-and-date
+   field it writes will need it. **The mandate is the one `DEC-` that MUST
    NOT be accepted by delegation** (`mandate-accept`). Its parameters — `from_gate` · `scope` · `parked` ·
    `smoke_test` · `loop` · `expires` — live **only** on its row in `decisions.yaml`; the file carries
    Decision, Why, and Cost, and points at the row. One fact, one home.
@@ -86,8 +97,18 @@ finishes first; the next firing waits.
 
 ## Door 2 — One iteration
 
-Read `.control/generated/status`, the mandate row, and **the ledger's `## Resume` section only** — see
-§ The ledger for why that is a section and not a file. Then work § The work table
+Open with three reads, in this order:
+
+1. `validate.py --generate`. `.control/generated/` is written by that flag and nothing else, so without it
+   every iteration reads a status file from before the run and re-holds gates that already passed. It sweeps
+   the validators for free at the same time.
+2. **Reconcile `## Resume` against git.** Compare the run branch HEAD with the commit Resume names. A
+   difference is work that landed before the last iteration died — rebuild Resume from what git shows
+   **before** starting anything new. Trusting a stale Resume is how a merged ticket gets implemented twice.
+3. `.control/generated/status`, the mandate row, and **the ledger's `## Resume` only** — see § The ledger
+   for why that is a section and not a file.
+
+Then work § The work table
 **from the top, for as long as the work can be done safely** — not one row and return. The loop is a safety
 net that restarts a run that died, not the pacer of one that is alive; an iteration that stops after one step
 while work remains turns a five-minute interval into five minutes of waiting per step.
@@ -97,7 +118,7 @@ An iteration returns at exactly **three stops**, and names which:
 | Stop | Means |
 |---|---|
 | **Done** | Every `FR` in scope is closed, or nothing left is **runnable** — every remaining row is parked or blocked. Go to § Finish |
-| **Capacity** | The session's context is near its limit, or a dispatched step cannot be spawned here. The ledger's last row is a boundary the next firing resumes from |
+| **Capacity** | The session's context is near its limit, or a dispatched step cannot be spawned here. The ledger's last row is a boundary the next firing resumes from. **The same capacity reason twice in a row is recorded under Blocked instead** — the next firing is the same session on the same machine, so a spawn that is unavailable now is unavailable then, and retrying it is the spin this design exists to prevent |
 | **Blocked** | A step failed at its cap — two return trips in `wdi-build`, a third failed fix — and is recorded under **Blocked** in `## Resume`. The next firing takes the next **runnable** row, never this one again |
 
 **Runnable** means: not listed under Blocked in `## Resume`, and not parked by the mandate. A blocked row is
@@ -142,7 +163,12 @@ the method's, and none of them relaxes here:
 - **Every step is judged from the artifact**, never from a builder's report — the same rule, whoever runs
   the step. A step whose reviewer is also its builder is a self-report and does not count.
 - **Nothing lands on the run branch red.** A ticket merges into it only with its tests green and the full
-  suite green once; a merge that turns the branch red is reverted, not patched forward.
+  suite green once; a merge that turns the branch red is reverted, not patched forward. **Reverting a merge
+  leaves the branch counted as merged**, so re-merging the same branch brings back nothing: the ticket
+  returns to `ready-for-agent` and its redo lands on a **new** branch cut from the revert.
+- **A spec MUST NOT close while the run branch's last pushed head is red.** That is a **Blocked** row, not a
+  follow-up. Closing over red carries the failure forward, and every later ticket's local "full suite green
+  once" hides it behind a suite that was never the branch's.
 
 ### One run, one branch, one PR
 
@@ -172,7 +198,7 @@ reported for the owner, not opened by the run.
 |---|---|
 | A gate checklist | Answered and recorded, as above |
 | Seams, testing decisions, the `to-tickets` quiz | Decided; one ledger row each |
-| An `owner` row in `wdi-question` | Answered with a default, filed in `assumptions.md` with its cost and `under: DEC-<mandate>`, closed in `answered.md` in the same pass |
+| An `owner` row in `wdi-question` | Answered with a default, filed in `assumptions.md` with its cost and `under: DEC-<mandate>`, closed in `answered.md` in the same pass. **A row whose owner is the client or a stakeholder is treated as parked** — `wdi-question` says it is never the agent's, mandate or not, and the mandate came from the owner so it cannot delegate what was never theirs |
 | Code right, document wrong (`wdi-build` § When the code turns out to be right) | Decided; the owning skill edits in the present tense; one ledger row naming the promise that moved |
 | A `DEC-` to accept | Accepted with `accepted_by: DEC-<mandate>`, then applied in the same pass |
 | Drift with a clear right side | Carried to the owning skill |
@@ -203,7 +229,7 @@ Stated on the preflight page, because a run nobody can stop is not a run anybody
 ## The ledger
 
 `.control/memlog/autopilot-<mandate-id>.md` — `autopilot-DEC-014.md` — one per mandate, **named for the
-mandate and not for the day**, because two mandates can share a date and appending the second run's
+mandate and not for the day** (`mandate-accept` looks for it there), because two mandates can share a date and appending the second run's
 decisions to the first run's ledger destroys both as a record. A memlog is a run log — *which skill ran, and
 what it decided while running* — and this is exactly one. `memlog-home` holds it where every memlog lives.
 
@@ -230,7 +256,10 @@ Read it, and nothing below it:
 sed -n '1,/^## Decisions/p' .control/memlog/autopilot-<mandate-id>.md
 ```
 
-Rewritten at the end of every iteration, and it holds **only what no registry answers**:
+Rewritten **in the same commit as the work it describes** — not at the end of the iteration, because an
+iteration that dies between the two leaves Resume pointing at work that already landed. The **coordinator is
+the ledger's only writer**; a dispatched step returns its rows rather than appending them, so two builders in
+two worktrees can never both rewrite this block. It holds **only what no registry answers**:
 
 | Line | Holds |
 |---|---|
@@ -272,7 +301,7 @@ applies it.
 
 ## Finish
 
-When the table above reaches § Finish:
+When § The work table reaches § Finish:
 
 1. **Smoke test.** At `smoke_test: agent`: run the application with the commands
    `.constitution/project/codebase-stack-guide.md` names, exercise every closed `FR`'s proof of done from
@@ -294,6 +323,10 @@ When the table above reaches § Finish:
 
 - Asking the owner anything through the iteration door
 - Starting the loop before the mandate is `accepted`, or on a red validator
+- **Opening preflight from a loop firing, or writing a mandate the owner did not confirm in this turn**
+- Treating an expired mandate as a reason to start over rather than to finish
+- Closing a spec, or marking the PR ready, while the last pushed head is red
+- Re-merging a branch whose merge was reverted, instead of cutting a new one
 - A mandate accepted by delegation, or with no `expires`
 - Deciding something the mandate parks, or parking something the mandate did not
 - A decision taken and not written to the ledger

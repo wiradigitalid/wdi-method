@@ -970,7 +970,8 @@ def high_risk_named(c: Corpus, r: Result) -> None:  # was V23
     to resolve: a repo pointing at a decision is making a checkable claim, and a pointer to a decision
     that does not exist is worse than no pointer.
     """
-    known = {str(x.get("id")) for x in c.decs}
+    by_id = {str(x.get("id")): x for x in c.decs}
+    known = set(by_id)
     for pc in c.pcs:
         pid = str(pc.get("id"))
         if str(pc.get("risk_accepted") or "").strip() != "high":
@@ -986,6 +987,13 @@ def high_risk_named(c: Corpus, r: Result) -> None:  # was V23
                    f"`risk_accepted_by` names nobody — a person and a date is enough")
         elif ref.startswith("DEC-") and ref not in known:
             r.fail("high-risk-named", pid, f"`risk_accepted_by: {ref}` does not exist in decisions.yaml")
+        elif str(by_id.get(ref, {}).get("type") or "") == "mandate":
+            # A mandate delegates the decisions the owner would have taken. Accepting a HIGH risk on a
+            # component that touches money or personal data is not one of them: the whole point of this
+            # check is that a PERSON is named, and pointing at the delegation names nobody. Left legal, an
+            # unattended run could raise the risk itself and switch off the code panel wdi-build requires.
+            r.fail("high-risk-named", pid, f"`risk_accepted_by: {ref}` is a `type: mandate` — a run MUST NOT "
+                                           f"accept a sensitive risk for the owner; name a person and a date")
 
 
 def _dec_date(c: Corpus, dec: dict) -> dt.date | None:
@@ -1037,9 +1045,22 @@ def mandate_accept(c: Corpus, r: Result) -> None:
                     r.fail("mandate-accept", did, "is an accepted mandate and `accepted_by` names nobody — "
                                                   "a person and a date is enough")
                 params = dec.get("mandate") if isinstance(dec.get("mandate"), dict) else {}
-                if not str(params.get("expires") or "").strip():
+                raw = str(params.get("expires") or "").strip()
+                if not raw:
                     r.fail("mandate-accept", did, "has no `mandate.expires` — a mandate with no end is standing "
                                                   "permission, and the loop it drives expires anyway")
+                ledger = c.root / ".control/memlog" / f"autopilot-{did}.md"
+                if not ledger.exists():
+                    # Every claim the mandate rests on — every decision recorded, nothing decided that was
+                    # parked — is checkable only against this file. Absent, the run holds the owner's
+                    # authority with no account of what it did with it.
+                    r.fail("mandate-accept", did, f"has no ledger at `.control/memlog/autopilot-{did}.md` — "
+                                                  f"the record is what the delegation was granted against")
+                if raw and _dec_date(c, {"date": params.get("expires")}) is None:
+                    # An unparseable expiry is WORSE than a missing one: it passes a presence check and then
+                    # silently disables the lapse comparison for every decision taken under this mandate.
+                    r.fail("mandate-accept", did, f"`mandate.expires: {raw}` is not a date — write `YYYY-MM-DD`. "
+                                                  f"An expiry nothing can read stops nothing")
             continue
         if not ref.startswith("DEC-"):
             continue
