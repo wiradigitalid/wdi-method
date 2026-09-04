@@ -114,6 +114,16 @@ renders, decide — advance or refine.
 | 6 | `wdi-report` intent `estimate` | `.control/generated/estimate.md` | which candidate row becomes the next spec |
 | 7 | `wdi-build` — for that row | nothing: tickets are machine contracts. You answer `to-tickets`' quiz on granularity and blocking edges | **G5** — is it done and proven? Once per spec |
 | 8 | `wdi-report` intent `progress` | the report it writes | what has moved, what is late, what is proven |
+| 9 | `wdi-autopilot` — when you would rather review the result than walk steps 6–8 yourself | its preflight page, then its final report and ledger | one **mandate**: scope, what stays parked for you, smoke test by the agent or by you, loop interval, expiry |
+
+**Unattended, on request.** `wdi-autopilot` moves owner time from the gates to two points: the mandate before,
+the review after. From the gate you name it runs the same skills, answers what they would have asked, records
+every answer in `.control/memlog/autopilot-<date>.md`, and stops only when every `FR` in scope is closed or the
+mandate expires. It needs three things from the session: permission prompts bypassed (one prompt halts the
+loop), a loop to fire it — `/loop 5m /wdi-autopilot` in Claude Code — and a way past the ticket engines'
+`disable-model-invocation`, which the preflight names: a builder that reads and follows the engine's `SKILL.md`,
+or a copy of the engines inside the repo. The validator `mandate-accept` keeps the one thing the method never
+gives up: a person, dated, at the root of every delegated acceptance.
 
 **Refine, do not advance.** When a page does not convince you, run the same skill again and say what is
 wrong — it updates the document it owns. Nothing downstream exists yet, so nothing breaks. Advancing past a
@@ -282,7 +292,7 @@ which review lenses run, and which review traces a validator will demand.
 
 ---
 
-## Five gates, seventeen skills
+## Five gates, eighteen skills
 
 | Gate | Decides | Skill |
 |---|---|---|
@@ -293,7 +303,7 @@ which review lenses run, and which review traces a validator will demand.
 | **G5 Release** | Whether it is done and proven | `wdi-build` |
 
 Around them: `wdi-init` (scaffold, component birth, depth and risk settings, structure maps),
-`wdi-decision`, `wdi-question`, `wdi-log`, `wdi-help`, `wdi-explain-to-me`, `wdi-reconcile`, `wdi-review`, `wdi-report`,
+`wdi-decision`, `wdi-question`, `wdi-log`, `wdi-help`, `wdi-explain-to-me`, `wdi-autopilot`, `wdi-reconcile`, `wdi-review`, `wdi-report`,
 `wdi-systematic-debugging`, and `wdi-upgrade` (moves a corpus written under an older kit into the current
 shape — content moves, nothing is invented).
 
@@ -382,9 +392,9 @@ English, whatever the settings say — it travels to every repo through this pac
 
 | | |
 |---|---|
-| Overwrites | everything in `.constitution/method/` · the seventeen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
+| Overwrites | everything in `.constitution/method/` · the eighteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
 | Renames | a file whose content needs no judgment to move — `waves.yaml` → `specs.yaml`, the pre-0.5 registry names. Content is never rewritten |
-| Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the seventeen. Each removal is printed |
+| Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the eighteen. Each removal is printed |
 | Reports | what is still in the OLD shape, as an `upgrade` line — and names `wdi-upgrade` as the next step. The installer does not move content; that is a decision, and the skill's |
 | Keeps | All of `.constitution/project/`, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
 | Never resurrects | A folder you retired. On update, absence is treated as a decision |

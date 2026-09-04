@@ -63,6 +63,7 @@ mis-route in this flow, because every other gate is the same for every component
 | G3 passed, the component is at `mode: catalog` | `wdi-build` — G4 is skipped by design |
 | Depth done and G4 passed for every component the work touches | `wdi-build` — it opens the spec, has the owner run `to-spec` and `to-tickets`, ships each ticket, closes the spec |
 | A small fix touching no `FR`, `UC`, `AD-N`, or domain model | Fast Path: the owner runs `/implement` directly. It stops and becomes a spec `S` the moment an `FR` is touched |
+| The owner wants every `FR` delivered without being asked in between | `wdi-autopilot` — a preflight first, then one mandate the owner accepts, then a loop that fires it. Route here only when the owner asks for it; it is never the default next step |
 | A planning assumption turned out void | `wdi-decision` intent `open` — it proposes, and changes nothing |
 | The owner has to decide something and wants the reading done first | `wdi-explain-to-me` — it briefs, and changes nothing; the decision then goes to `wdi-decision` or `wdi-question` |
 | An accepted `DEC-` has not reached its documents | `wdi-decision` intent `apply` |
@@ -86,7 +87,8 @@ it claims, or when one of its eight required sections is missing outright.
   as blocking a design gate; `assumptions.md` holds nothing.
 - You MUST NOT invent progress. If `.control/generated/status` is missing or stale, say so and name
   `validate.py --generate`.
-- You MUST NOT run other skills on the user's behalf. Name the skill; let them invoke it.
+- You MUST NOT run other skills on the user's behalf. Name the skill; let them invoke it. The one skill that
+  runs others is `wdi-autopilot`, and only under a mandate the owner accepted — that is what the mandate is.
 - When the next step is blocked by a decision rather than by work, route to `wdi-question` or
   `wdi-decision`, not to a producing skill.
 - When asked about BMad itself — what a BMad skill does, what it writes, which are deprecated — answer

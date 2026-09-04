@@ -101,6 +101,12 @@ superseded, its frozen rows become `owner` rows automatically — no re-triage.
 A row whose `Whose` is wrong is worse than a missing row, because it puts work in the wrong person's
 lap and it is invisible.
 
+**Under an active mandate, `owner` rows are `wdi-autopilot`'s.** It answers each with a default, files the
+line in `assumptions.md` with its cost and `under: DEC-<mandate>`, and closes it in `answered.md` in the same
+pass. Two things do not move: a row the mandate lists as `parked` stays `owner` and is reported, and a row
+whose owner is the client or a stakeholder — the first rule below — is never the agent's to answer, mandate or
+not. The mandate came from the owner; it cannot delegate what was never the owner's.
+
 ## Registering
 
 | Field | Rule |

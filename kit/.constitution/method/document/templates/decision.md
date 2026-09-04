@@ -22,7 +22,12 @@ created: '{YYYY-MM-DD}'
 
      Do not confuse this with AD-N in the architecture spine, which is a living rule edited in place.
 
-     Add `type:` to the frontmatter when it is useful — `risk-acceptance`, `course-correction`. -->
+     Add `type:` to the frontmatter when it is useful — `risk-acceptance`, `course-correction`. A `mandate`
+     is the one type with a fixed shape: `wdi-autopilot` opens it, its parameters live under `mandate:` on the
+     registry row only, and its `accepted_by` is a person and a date — never another DEC-.
+
+     `accepted_by:` — who raised this to `accepted`: a person and a date, or the `DEC-` of the mandate that
+     delegated it. Leave it out at `draft`. -->
 
 ## Decision
 

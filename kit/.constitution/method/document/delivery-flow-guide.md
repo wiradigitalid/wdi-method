@@ -110,7 +110,9 @@ the touched component at `mode: deep` and `risk_accepted: low` whatever the glob
 ## Five gates
 
 A gate is named for **what is decided there**, never for the work that precedes it. Owner time is spent at
-these five points only; between them the agents work alone.
+these five points only; between them the agents work alone. Under a mandate — `wdi-autopilot` — it is spent at
+two points instead, before and after, and the gates are held by the agent against the same checklists, with
+every answer written to a ledger.
 
 | Gate | Decides | How often | Budget | The session itself | Its checklist |
 |---|---|---|---|---|---|
@@ -404,6 +406,7 @@ puts its own `FR` and `UC` back in play and nothing else, so it costs a few minu
 | Agent at G4 | Writes one component's behaviour and mechanism | Write code |
 | Builder | One ticket through to a green PR | Change `.what/`, `.how/`, or an `applied` decision |
 | Review panel | Reviews the diff independently of the builder | Give a final verdict — findings are adjudicated by the coordinator |
+| Autopilot, under a mandate | Everything the Product Owner does between the mandate and the final review, and records each decision in the ledger | Accept the mandate itself, decide what it parks, or touch a guard, a test, or a ticket's `satisfies` |
 
 Panel composition and CLI/model selection are governed by the global Agent Rules and MUST NOT be restated
 here.

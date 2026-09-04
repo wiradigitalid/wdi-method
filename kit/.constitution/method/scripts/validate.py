@@ -55,6 +55,7 @@ CHECK_ORDER = (
     "entity-one-writer",
     "spec-after-g4",
     "high-risk-named",
+    "mandate-accept",
     "cites-resolve",
     "container-built",
     "custom-room-declared",
@@ -987,6 +988,84 @@ def high_risk_named(c: Corpus, r: Result) -> None:  # was V23
             r.fail("high-risk-named", pid, f"`risk_accepted_by: {ref}` does not exist in decisions.yaml")
 
 
+def _dec_date(c: Corpus, dec: dict) -> dt.date | None:
+    """The day a decision was taken: `date` on its row, else `date`/`created` in its file's frontmatter."""
+    def as_date(v: object) -> dt.date | None:
+        if isinstance(v, dt.datetime):
+            return v.date()
+        if isinstance(v, dt.date):
+            return v
+        try:
+            return dt.date.fromisoformat(str(v).strip()) if v else None
+        except ValueError:
+            return None
+    got = as_date(dec.get("date"))
+    if got:
+        return got
+    did = str(dec.get("id") or "")
+    for path in sorted(c.root.glob(f".control/decisions/{did}-*.md")):
+        fm = frontmatter(path) or {}
+        got = as_date(fm.get("date")) or as_date(fm.get("created"))
+        if got:
+            return got
+    return None
+
+
+def mandate_accept(c: Corpus, r: Result) -> None:
+    """A decision accepted BY DELEGATION points at a real mandate that had not lapsed when it was taken.
+
+    `wdi-autopilot` lets the agent accept decisions the owner would have accepted, and that is legal
+    only because the owner accepted the MANDATE in person. So three things hold: a mandate is never
+    itself accepted by another decision — the chain of authority has a person at its root; an accepted
+    mandate names the day it ends, or it is standing permission; and a decision whose `accepted_by` is
+    a `DEC-` names one that is `type: mandate`, accepted, and unexpired on the decision's own date.
+
+    It says nothing about WHAT was decided — that is the ledger's job and the owner's review.
+    """
+    by_id = {str(d.get("id")): d for d in c.decs}
+    for dec in c.decs:
+        did = str(dec.get("id"))
+        ref = str(dec.get("accepted_by") or "").strip()
+        status = str(dec.get("status") or "")
+        if str(dec.get("type") or "") == "mandate":
+            if ref.startswith("DEC-"):
+                r.fail("mandate-accept", did,
+                       f"is a mandate accepted by delegation (`accepted_by: {ref}`) — the mandate is the one "
+                       f"decision the owner accepts in person")
+            if status in ("accepted", "applied"):
+                if not ref:
+                    r.fail("mandate-accept", did, "is an accepted mandate and `accepted_by` names nobody — "
+                                                  "a person and a date is enough")
+                params = dec.get("mandate") if isinstance(dec.get("mandate"), dict) else {}
+                if not str(params.get("expires") or "").strip():
+                    r.fail("mandate-accept", did, "has no `mandate.expires` — a mandate with no end is standing "
+                                                  "permission, and the loop it drives expires anyway")
+            continue
+        if not ref.startswith("DEC-"):
+            continue
+        target = by_id.get(ref)
+        if target is None:
+            r.fail("mandate-accept", did, f"`accepted_by: {ref}` does not exist in decisions.yaml")
+            continue
+        if str(target.get("type") or "") != "mandate":
+            r.fail("mandate-accept", did, f"`accepted_by: {ref}` is not a `type: mandate` decision — only a mandate "
+                                          f"delegates acceptance")
+            continue
+        if str(target.get("status") or "") not in ("accepted", "applied"):
+            r.fail("mandate-accept", did, f"`accepted_by: {ref}` is `{target.get('status')}`, not accepted — "
+                                          f"nothing was delegated yet")
+            continue
+        params = target.get("mandate") if isinstance(target.get("mandate"), dict) else {}
+        expires = _dec_date(c, {"date": params.get("expires")})
+        when = _dec_date(c, dec)
+        if when is None:
+            r.fail("mandate-accept", did, f"is accepted under `{ref}` but no date says when — `date:` in its "
+                                          f"frontmatter is what the expiry is checked against")
+        elif expires and when > expires:
+            r.fail("mandate-accept", did, f"was taken on {when.isoformat()}, after `{ref}` expired on "
+                                          f"{expires.isoformat()} — the delegation had lapsed")
+
+
 def defect_root_cause(c: Corpus, r: Result) -> None:  # was V20
     needs_link = {"requirement", "architecture"}
     for defect in c.defect_list:
@@ -1357,7 +1436,7 @@ def run_checks(c: Corpus, asof: dt.date) -> Result:
     # no two copies left to compare.
     # V19 is REPEALED. It checked one line item — an `RTR-` file in .control/reports/ — and the
     # retrospective it archived was the only thing spec size `L` ever decided. Both went together.
-    for fn in (goal_has_fr, fr_has_uc, uc_scheduled, ticket_has_test, nfr_has_enforcer, refs_resolve, no_cycles, applied_dec_touches, locked_gate_passed, parallel_tickets_blocked, lc_registered, review_trace, chain_links, memlog_home, spec_names_release_prd, ticket_status_one_home, defect_root_cause, entity_one_writer, spec_after_g4, high_risk_named, cites_resolve, container_built, custom_room_declared, id_allocated_once):
+    for fn in (goal_has_fr, fr_has_uc, uc_scheduled, ticket_has_test, nfr_has_enforcer, refs_resolve, no_cycles, applied_dec_touches, locked_gate_passed, parallel_tickets_blocked, lc_registered, review_trace, chain_links, memlog_home, spec_names_release_prd, ticket_status_one_home, defect_root_cause, entity_one_writer, spec_after_g4, high_risk_named, mandate_accept, cites_resolve, container_built, custom_room_declared, id_allocated_once):
         fn(c, r)
     plan_dates(c, r, asof)
     return r

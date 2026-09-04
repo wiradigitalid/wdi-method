@@ -112,7 +112,7 @@ derived from the other: one component MAY be thin on purpose and reviewed the ha
 `.constitution/method/document/delivery-flow-guide.md` owns both;
 `.constitution/method/why/rationale.md` says why they are separate.
 
-## The five gates and the seventeen skills
+## The five gates and the eighteen skills
 
 | Gate | Decides | Skill |
 |---|---|---|
@@ -127,6 +127,9 @@ Before G1 and at the tail of G2: `wdi-init`, five intents — `setup` · `compon
 
 Any time: `wdi-decision` · `wdi-question` · `wdi-log` · `wdi-help` · `wdi-explain-to-me` · `wdi-reconcile` · `wdi-review` ·
 `wdi-report` · `wdi-systematic-debugging`.
+
+When the owner asks for it: `wdi-autopilot` — one mandate the owner accepts, then every skill above runs
+unattended and every decision lands in one ledger. It is never the default next step.
 
 **No BMad skill is invoked directly.** Each has a wrapper, and the wrapper is what checks position,
 verifies the result, and lands the memlog.
@@ -167,6 +170,7 @@ verifies the result, and lands the memlog.
 | Naming anything — a code identifier, a file, a database column | `.constitution/method/language-guide.md` |
 | Asking "which gate now, what next" | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-help` |
 | Having to decide something, and wanting the reading done first | skill `wdi-explain-to-me` — it briefs, and changes nothing |
+| Wanting every `FR` delivered without being asked in between | skill `wdi-autopilot` — preflight, one mandate, then the loop |
 | Setting or changing `mode` or `risk_accepted` | `.constitution/method/document/delivery-flow-guide.md` · skill `wdi-init` |
 | Invoking a BMad skill | `.constitution/method/document/bmad-guide.md` · `.constitution/method/document/bmad-skill-register.md` |
 | Writing or reviewing a product brief | `.constitution/method/document/brief-guide.md` |
@@ -206,7 +210,9 @@ MUST anything in `.constitution/method/why/`; `status: Reference` forbids it. A 
 
 - A skill MUST NOT be invoked automatically. Name the one that fits and wait for the owner's
   go-ahead — this holds even when the skill's own description says it must be used. Reading a
-  skill as reference is fine.
+  skill as reference is fine. The one exception is `wdi-autopilot` under a `DEC-` of `type: mandate`
+  at `status: accepted` that has not expired: the mandate **is** the go-ahead, for every skill it
+  needs, until it lapses.
 - `.work/` is not production code. It MUST NOT be imported by the application, and MUST be
   excluded when searching for code.
 <!-- END:wdi-method -->

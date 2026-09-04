@@ -75,6 +75,7 @@ there is only Product Component.
 | **SPEC** | The document of **one spec**: a projection of `.what/` + `.how/` that MUST NOT contain anything new. Not read by humans, and **not written at size `S`** — there the tickets are the contract |
 | **Ticket** | One unit of build: a tracer-bullet vertical slice, complete through every layer, verifiable on its own, sized to one fresh context window. Carries the tickets that **block** it. Status is read from the ticket itself, never copied elsewhere |
 | **Structure map** | `.control/structure-codebase.md` and `structure-document.md` — where things actually are today |
+| **Mandate** | A `DEC-` of `type: mandate`: the owner's one dated, expiring delegation that lets `wdi-autopilot` decide what the skills would otherwise have asked. Its parameters live on its registry row only; every decision taken under it is a row in the ledger, `.control/memlog/autopilot-<date>.md` |
 | **Memlog** | The record of *why* while an artifact was written. Never copied into a document; a source when writing a `DEC-`. It is a **run log**, and it MUST NOT be searched as an index of decisions — `.control/generated/decisions.md` is that |
 
 ## Identifiers
@@ -137,7 +138,7 @@ where BMad's own meaning is wider, the narrower one here wins.
 | `epics.md` · `sprint-status.yaml` · `bmad-sprint-planning` · `bmad-create-epics-and-stories` · `stories.yaml` | Tickets, each carrying its own status and its blocking edges |
 | Validator `V10` | Nothing. Its number is not reused |
 | `bmad-help` as the answer to "where am I" | `wdi-help` |
-| The skills `wdi-analysis` · `wdi-architecture` · `wdi-design` · `wdi-glossary` · `wdi-structure` · `wdi-apply` · `wdi-correct-course` · `wdi-wave` · `wdi-ship-story` · `wdi-product-brief` · `wdi-meeting` · `wdi-project-log` | The seventeen in `why/README.md`. `why/rationale.md` says which absorbed which, and why |
+| The skills `wdi-analysis` · `wdi-architecture` · `wdi-design` · `wdi-glossary` · `wdi-structure` · `wdi-apply` · `wdi-correct-course` · `wdi-wave` · `wdi-ship-story` · `wdi-product-brief` · `wdi-meeting` · `wdi-project-log` | The eighteen in `why/README.md`. `why/rationale.md` says which absorbed which, and why |
 | An Indonesian synonym for a `mode` value — *ringkas*, *terjaga*, *katalog* as prose | The English value, used as written: `catalog` · `outline` · `guarded` · `deep` |
 
 ## Synonyms that MUST NOT be coined

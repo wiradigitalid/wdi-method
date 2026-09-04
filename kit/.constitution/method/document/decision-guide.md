@@ -123,7 +123,8 @@ where the section table above says so.
 | `id` | `DEC-NNN`, allocated from `.control/registry/decisions.yaml`, globally. MUST NOT restart per component or per release |
 | `status` | `draft` · `accepted` · `applied` · `superseded` · `rejected` |
 | `touches` | Empty at `draft`. Filled **when the decision is applied**, with the files it actually changed |
-| `type` | Free text, and optional. Written when it is useful — `risk-acceptance`, `course-correction` |
+| `type` | Free text, and optional. Written when it is useful — `risk-acceptance`, `course-correction`. One value has a fixed shape: `mandate`, opened by `wdi-autopilot`, whose parameters live under `mandate:` on the registry row and nowhere else |
+| `accepted_by` | Who raised it to `accepted`. A person and a date, the way `risk_accepted_by` is written — or the `DEC-` of a `type: mandate` that delegated the acceptance. `mandate-accept` checks the second form |
 | `supersedes` · `superseded_by` | Both sides of a supersession MUST exist |
 
 **There is no `layer:` and no `component:`.** Both were classifications demanded before anything was
@@ -158,6 +159,13 @@ piece of document history that would save nobody.
 An agent MUST NOT accept its own `DEC-`. When work is blocked waiting on one, the block is reported,
 never resolved by self-approval.
 
+**The one exception is a delegation the owner made in person.** A `DEC-` of `type: mandate`, accepted by
+the owner with a name and a date and carrying an `expires`, lets `wdi-autopilot` accept decisions taken
+under it — `accepted_by: DEC-<mandate>`. What each of the three guards above protected — *a human made
+the call* — still holds: the human made one call, and it is on the record, dated, and ending. The mandate
+itself MUST NOT be accepted by delegation, and `mandate-accept` refuses one that is, one with no
+`expires`, and any decision dated after its mandate lapsed.
+
 ## Finding a decision
 
 `.control/generated/decisions.md` carries a flat table of every `DEC-` with its status and what it
@@ -176,6 +184,7 @@ while an artifact was written, and a source when writing a `DEC-`, never an inde
 | A planning assumption turned out to be void | `wdi-decision`, which wraps `bmad-correct-course`. The result is a `DEC-` of `type: course-correction` |
 | A ticket contradicts an `AD-N` | The ticket stops. This is the one mandatory case |
 | `wdi-reconcile` found two documents disagreeing with no clear winner | That is a decision, not drift |
+| `wdi-autopilot` took a decision with no home in any design document | A `DEC-`, accepted under the mandate. The ledger records every decision it took; only the homeless ones become a `DEC-` |
 
 Minutes MUST NOT be treated as a decision record. They say what was discussed; a `DEC-` says what was
 chosen and what it cost.

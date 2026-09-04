@@ -14,7 +14,7 @@ them means documents change before anyone approved the change.
 | Intent | Does | Who |
 |---|---|---|
 | `open` | Writes a `DEC-` at `status: draft`. Also the entry point for a void planning assumption, which is where `bmad-correct-course` is dispatched | anyone |
-| `accept` | Raises `draft` → `accepted` | **the Product Owner only** |
+| `accept` | Raises `draft` → `accepted` | **the Product Owner** — or `wdi-autopilot` under an active mandate, with `accepted_by` naming the mandate |
 | `apply` | Dispatches the owner of every document the decision reaches, checks what came back, fills `touches`, raises `applied` | anyone |
 
 Applying is what **freezes** a decision, not accepting. `decision-guide.md` owns the full ladder and this skill
@@ -51,6 +51,10 @@ Component whose `risk_accepted` is `low`; elsewhere an empty one MUST be dropped
 
 Frontmatter carries `touches: []` — empty until applied — and `type:` when it is useful. There is no `layer:`
 and no `component:`; both were classifications demanded before anything was known.
+
+One `type` has a fixed shape: **`mandate`**, the decision `wdi-autopilot` opens at its preflight. Its
+parameters — `from_gate` · `scope` · `parked` · `smoke_test` · `loop` · `expires` — live **only** on its row
+in `decisions.yaml`, under `mandate:`; the file carries Decision, Why, and Cost and points at the row.
 
 A `DEC-` MUST NOT hold an open question. Those go to `wdi-question`.
 
@@ -100,6 +104,12 @@ returning it to `ready-for-agent` is the coordinator's act.
 
 Only the Product Owner MAY raise a `DEC-` to `accepted`. **An agent MUST NOT accept its own.** When work is
 blocked waiting on one, the block is reported, never resolved by self-approval.
+
+**One delegation, and it is checkable.** Under a `DEC-` of `type: mandate` at `status: accepted` whose
+`expires` has not passed, `wdi-autopilot` MAY accept a decision on the owner's behalf, writing
+`accepted_by: DEC-<mandate>` on the row and `date:` in the file. `mandate-accept` holds the chain: the target is a
+real mandate, accepted, unexpired on that date — and the mandate itself is **never** accepted by delegation.
+That is the one decision whose `accepted_by` is a person and a date, the way `risk_accepted_by` is.
 
 An `accepted` `DEC-` that is still unapplied MAY be corrected in place, with the correction recorded in the
 memlog. Nothing has been built on it, so there is no divergent record to preserve.

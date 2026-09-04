@@ -5,3 +5,24 @@ decisions:
     type: technical
     touches:
       - .how/checkout/SDD-checkout.md
+  # A mandate and one decision accepted under it. The mandate is accepted by a PERSON — the one
+  # decision autopilot may never take for the owner — and everything it delegates points back at it.
+  - id: DEC-002
+    title: "Autopilot mandate — checkout, from G5"
+    status: accepted
+    type: mandate
+    accepted_by: "Wira, 2026-01-20"
+    mandate:
+      from_gate: G5
+      scope: all
+      parked: []
+      smoke_test: agent
+      loop: 5m
+      expires: '2026-02-01'
+    touches: []
+  - id: DEC-003
+    title: "The order list is sorted newest first"
+    status: accepted
+    type: technical
+    accepted_by: DEC-002
+    touches: []

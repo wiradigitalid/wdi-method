@@ -18,6 +18,15 @@ contract, the tickets, and the code; `tdd` and `code-review` do the work inside 
 for the owner to run, waits, then verifies the result and lands it. That is not a workaround: the points where
 those engines need a human are the gates, and owner time is what a gate is for.
 
+**Under an active mandate the owner's part is `wdi-autopilot`'s.** A `DEC-` of `type: mandate` at
+`status: accepted`, unexpired, moves every "the owner runs" and "the owner decides" in this skill to the
+coordinator, with three consequences and no others: the engines run by **read-and-follow** — a builder brief
+that names the engine's `SKILL.md` path and carries out its process — or from a copy in the repo, and the ledger
+names which; the seams, the `to-tickets` quiz, and § When the code turns out to be right are decided by the
+coordinator and written to the ledger, one row each; and whatever the mandate lists as `parked` still stops,
+reported for the owner rather than decided. Nothing else in this skill relaxes. `wdi-autopilot` owns the
+mandate, the ledger, and the loop; this skill MUST NOT restate them.
+
 **No orchestration tool is required, and this skill MUST NOT name one.** How the work is carried out is the
 session's own arrangement: an orchestration skill, this CLI's native subagent tooling, or the coordinator doing
 a step itself. Which CLI, which model, and which effort staff a step come from the local Agent Rules, and MUST
@@ -332,7 +341,8 @@ only thing `V19` checked.
 - Amending what a ticket `satisfies` to make a must-fix go away
 - A ticket that slices one layer instead of cutting through all of them, outside a wide refactor
 - Running a wide refactor's batches in parallel
-- Claiming this skill invoked `to-spec`, `to-tickets`, or `implement` — it cannot; the owner runs them
+- Claiming this skill invoked `to-spec`, `to-tickets`, or `implement` — it cannot; the owner runs them, or under
+  a mandate a builder reads and follows them, and the ledger says so
 - A builder editing `.what/`, `.how/`, or an `applied` `DEC-` to make its code fit
 - Fixing a failing test without knowing why it failed
 - Opening a PR with an unresolved must-fix, or before the ticket-closing checklist is answered

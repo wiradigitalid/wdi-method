@@ -785,3 +785,39 @@ test("a row labelled with `text:` renders that label as its heading, and its `st
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// mandate-accept — the one guard autopilot adds. Under a mandate the agent accepts decisions the owner would
+// have accepted, and that is legal ONLY because the owner accepted the mandate in person. So: a mandate is
+// never itself accepted by delegation, a mandate always ends, and a decision pointing at a mandate points
+// at a real, accepted one that had not yet expired on the day the decision was taken.
+const DECISIONS = (dir) => path.join(dir, ".control", "registry", "decisions.yaml");
+const editDecisions = (dir, from, to) =>
+  fs.writeFileSync(DECISIONS(dir), fs.readFileSync(DECISIONS(dir), "utf8").replace(from, to));
+
+test("mandate-accept refuses a decision delegated to something that is not a mandate", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => editDecisions(dir, "accepted_by: DEC-002", "accepted_by: DEC-001"));
+  assert.match(out, /mandate-accept\s+DEC-003.*DEC-001.*mandate/,
+    `DEC-003 was accepted "by" a technical decision and nothing said so:\n${out}`);
+});
+
+test("mandate-accept refuses a decision taken after its mandate expired", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => editDecisions(dir, "expires: '2026-02-01'", "expires: '2026-01-01'"));
+  assert.match(out, /mandate-accept\s+DEC-003.*2026-01-21.*expired.*2026-01-01/,
+    `a decision dated 2026-01-21 was accepted under a mandate that lapsed on 2026-01-01:\n${out}`);
+});
+
+test("mandate-accept refuses a mandate accepted by delegation — the owner accepts that one in person", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => editDecisions(dir, 'accepted_by: "Wira, 2026-01-20"', "accepted_by: DEC-001"));
+  assert.match(out, /mandate-accept\s+DEC-002.*delegation/,
+    `a mandate pointed at another decision for its acceptance, and the chain of authority had no person in it:\n${out}`);
+});
+
+test("mandate-accept refuses an accepted mandate with no expiry — that is standing permission", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => editDecisions(dir, /^[ \t]*expires:.*\r?\n/m, ""));
+  assert.match(out, /mandate-accept\s+DEC-002.*expires/,
+    `a mandate with no end date was accepted as a mandate:\n${out}`);
+});
