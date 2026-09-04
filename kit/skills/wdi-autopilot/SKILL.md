@@ -33,6 +33,7 @@ NOT start the loop while any row in the first two groups is red.
 | **Engines** | BMad installed; every `wdi-*` skill the run will call present | A wrapper is missing — name it and `npx wdi-method update` |
 | | `to-spec` · `to-tickets` · `implement` found, with the **path** of each `SKILL.md` | Not found. Name the two install paths `wdi-build` names |
 | | A route past `disable-model-invocation` — see below | Neither route is available |
+| | The tracker the engines publish to is configured — `docs/agents/issue-tracker.md`, written once by `/setup-matt-pocock-skills` | Missing. `to-tickets` would stop to ask for it, and this skill never asks; the owner runs the setup before confirming |
 | | Reviewers separate from the builder can be dispatched | The session cannot spawn a second agent and any touched component is `risk_accepted: low` — Step 3 of `wdi-build` would block |
 | **Position** | `gates_passed` in `index.yaml`, `g4_passed` per component, validators green (`validate.py`) | A red validator. Name it; autopilot MUST NOT start on a corpus already red |
 | | An isolated worktree | A shared checkout. `wdi-build` refuses one, so this skill refuses earlier |
