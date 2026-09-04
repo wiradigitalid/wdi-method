@@ -86,7 +86,8 @@ finishes first; the next firing waits.
 
 ## Door 2 — One iteration
 
-Read `.control/generated/status`, the mandate row, and the ledger's last entry. Then work the table below
+Read `.control/generated/status`, the mandate row, and **the ledger's `## Resume` section only** — see
+§ The ledger for why that is a section and not a file. Then work the table below
 **from the top, for as long as the work can be done safely** — not one row and return. The loop is a safety
 net that restarts a run that died, not the pacer of one that is alive; an iteration that stops after one step
 while work remains turns a five-minute interval into five minutes of waiting per step.
@@ -185,9 +186,46 @@ ledger decides nothing and records everything.
 `.control/memlog/autopilot-<YYYY-MM-DD>.md`, one per mandate. A memlog is a run log — *which skill ran, and
 what it decided while running* — and this is exactly one. `memlog-home` holds it where every memlog lives.
 
-Frontmatter `artifact:` names the mandate's `DEC-` file — `memlog-home` demands it of every memlog. Header: the
-mandate id, its parameters as a pointer to the row, the run branch, the start commit. Then one row per
-decision, appended, never rewritten:
+Frontmatter `artifact:` names the mandate's `DEC-` file — `memlog-home` demands it of every memlog.
+
+**It has two readers who want opposite things, and that is what shapes it.** The next iteration needs a
+resume point: where the last one stopped and what to do now. The owner needs every decision, with what it
+cost. Serving both from one flat table is what made a real ledger reach 41 KB by its twenty-second
+iteration — and every iteration after that paid to re-read decisions that were spent.
+
+So the file has a head that is **overwritten** and a body that is **appended**, and only the head is read
+while the run is alive:
+
+```
+## Resume        <- rewritten every iteration. THIS is what an iteration loads.
+## Decisions     <- appended, never rewritten. The owner's, and grepped by id when a past decision is needed.
+```
+
+### `## Resume` — the only part an iteration reads
+
+Read it, and nothing below it:
+
+```bash
+sed -n '1,/^## Decisions/p' .control/memlog/autopilot-<YYYY-MM-DD>.md
+```
+
+Rewritten at the end of every iteration, and it holds **only what no registry answers**:
+
+| Line | Holds |
+|---|---|
+| Iteration | The number, and the commit that is its boundary |
+| Run branch | The branch, and whether the one PR is open yet |
+| Stopped at | Which of the three stops ended the last iteration, in a clause |
+| Blocked | Each blocked step and what it hit its cap on, one line each, or `—` |
+| Parked | Each mandate-parked row and the `FR` it holds, one line each, or `—` |
+| Next | The next runnable step, one line |
+
+**It MUST NOT restate a decision**, and it MUST NOT repeat what `specs.yaml`, a ticket's own status, or
+`.control/generated/status` already answers. Position and intent live here; everything else is read from the
+registry that owns it. A Resume block that starts summarising decisions is a second home for them, and it is
+the copy that goes stale.
+
+### `## Decisions` — one line per cell
 
 | Column | Holds |
 |---|---|
@@ -198,8 +236,18 @@ decision, appended, never rewritten:
 | Cost if wrong | One line. `one setting changes` is a valid answer and a short one |
 | Landed in | The files edited, or the `DEC-` / `OQ-` id |
 
-The owner MAY read it at any time while the loop runs. **Reading it never pauses the run**; disagreeing with
-a row is a new `DEC-` that supersedes, opened through `wdi-decision`, and the next iteration applies it.
+**One line per cell is the rule, not a target.** What does not fit — a gate checklist answered question by
+question, a panel finding adjudicated at length — goes to a companion document at
+`.control/memlog/autopilot-<YYYY-MM-DD>/<NN>-<slug>.md`, and the row keeps a pointer to it. This is
+`wdi-question`'s rule for a question that outgrows one line, borrowed whole rather than reinvented.
+
+A row MUST NOT carry the derivation that produced the decision — which files were read, which clause was
+weighed. `decision-guide.md` forbids exactly that in a `DEC-`, and a ledger row is the shorter form of the
+same thing.
+
+The owner MAY read the whole file at any time while the loop runs. **Reading it never pauses the run**;
+disagreeing with a row is a new `DEC-` that supersedes, opened through `wdi-decision`, and the next iteration
+applies it.
 
 ## Finish
 
@@ -210,7 +258,8 @@ When the table above reaches § Finish:
    the PRD, record pass or fail per `FR` in the ledger. At `owner`: run nothing; the test script below is
    the whole deliverable.
 2. `validate.py --generate`, then `wdi-report` intent `progress`.
-3. Raise the mandate to `applied`, `touches` naming the ledger.
+3. Raise the mandate to `applied`, `touches` naming the ledger, and rewrite `## Resume` one last time so it
+   reads as the run's end state rather than a step that never came.
 4. Push the run branch, wait for CI to conclude on that head SHA, and mark the one PR **ready for review**.
    Red CI here is reported red; the run MUST NOT patch to turn it green at the door.
 5. Cancel the loop: in Claude Code, the `loop` skill's cancel; elsewhere, tell the owner the loop has nothing
@@ -224,7 +273,10 @@ When the table above reaches § Finish:
 - A mandate accepted by delegation, or with no `expires`
 - Deciding something the mandate parks, or parking something the mandate did not
 - A decision taken and not written to the ledger
-- Restarting from the first row instead of reading the ledger's last entry
+- Reading the whole ledger when the run is alive — `## Resume` is what an iteration loads
+- A `## Resume` that restates a decision, or repeats what the registry already answers
+- A ledger cell longer than a line, instead of a pointer to a companion document
+- Restarting from the first row instead of reading `## Resume`
 - Returning after one step while work remains and none of the three stops applies
 - A second PR, any branch but the run branch pushed, a working branch left alive at Finish, or any merge
   into `main` by the run — working branches and worktrees during the run are fine; surviving ones are not
