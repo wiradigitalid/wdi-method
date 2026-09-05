@@ -108,6 +108,36 @@ answers with the gate you are at, not with a menu.
 
 ---
 
+## What to do right after install, and right after update
+
+Two questions, and the honest answer to most of them is *nothing*. `wdi-help` answers them from the
+registry at any time; this table is the same answer written down.
+
+### After `install`
+
+| | |
+|---|---|
+| Engines missing | You never get here — `install` refuses, and names both install paths. Install them, run it again |
+| `/setup-matt-pocock-skills`? | **No.** The installer seeded `docs/agents/` already answered for this method. Run that interview only to *change* tracker |
+| So what is first? | **`wdi-init` intent `setup`** — it sets the global `mode`, and nothing has started until it is |
+| Then? | `wdi-problem` for G1. Or ask `wdi-help`, which reads the registry rather than this table |
+
+### After `update`
+
+| The summary said | Do |
+|---|---|
+| an **`upgrade`** line, naming content still in the old shape | **`wdi-upgrade`, before any other skill.** It moves every sentence into its new home, invents nothing, reports what it could not place, and ends in one commit. `wdi-help` and the validators read the new shape; a corpus half in the old one answers them wrongly |
+| **no** `upgrade` line | Nothing. The update was mechanical and complete — carry on from wherever the gates say you are |
+| `seeded docs/agents/` | Nothing. An older repo just received the engines' config, pre-answered. Read it if you like; do not run the setup interview to redo it |
+| a warning that `domain.md` still points at a root `CONTEXT.md` | Add the correction that warning names to the top of that file. It was written by the setup interview before this package was installed, and it sends every engineering skill at two paths Article 3 forbids |
+| a warning naming a **mandate** and `ad-n` | Only if you run `wdi-autopilot`. Decide whether that mandate should now park `AD-N` contradictions, and edit its `parked` list yourself — `update` never edits an authority you granted |
+
+**`wdi-upgrade` is only ever about corpus content** — a brief, a PRD, an SRS, registry rows in the old
+shape. It is not the answer to a missing engine, a missing tracker config, or anything under
+`.control/memlog/`; each of those is handled by the installer itself or by the skill that owns it.
+
+---
+
 ## How to use it — the walk
 
 A gate is a moment where a human reads **one page** and decides. Between gates the AI works in a

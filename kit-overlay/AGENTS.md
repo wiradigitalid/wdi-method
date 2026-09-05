@@ -154,6 +154,9 @@ verifies the result, and lands the memlog.
   not diligence.
 - `.claude/skills/bmad-*/customize.toml` MUST NOT be edited — it is overwritten on every BMad update;
   customise through `_bmad/custom/`.
+- `CONTEXT.md`, `CONTEXT-MAP.md`, and `docs/adr/` MUST NOT be created. `docs/agents/domain.md` is the
+  engines' config and says so too: the vocabulary is `.control/product-glossary.md`, domain knowledge is
+  `.what/`, design is `.how/`, and a decision is a `DEC-` — never an ADR. Article 3 owns the rule.
 
 ## Routing — load a guide when the task matches
 
@@ -184,6 +187,7 @@ verifies the result, and lands the memlog.
 | Looking for where code lives, or placing new code | `.control/structure-codebase.md` |
 | Looking for where a document lives | `.control/structure-document.md` |
 | Writing or reviewing code | `.constitution/project/codebase-stack-guide.md` · `.constitution/project/codebase-conventions-guide.md` · `.constitution/project/codebase-brownfield-guide.md` |
+| Running `to-spec`, `to-tickets`, `implement`, or `triage` | `docs/agents/issue-tracker.md` · `docs/agents/domain.md` — the engines' own config, seeded by `wdi-method` already answered for this method |
 
 All three `.constitution/project/codebase-*-guide.md` start as `status: Draft`. While they are, their contents MAY be read
 as guidance but MUST NOT be used to reject a change.

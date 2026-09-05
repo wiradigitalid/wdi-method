@@ -49,6 +49,10 @@ mis-route in this flow, because every other gate is the same for every component
 | State | Next |
 |---|---|
 | `wdi-method update` just ran and its summary printed an `upgrade` line | `wdi-upgrade` — **before anything else**. Content is still in the old shape, and every skill below reads the new one |
+| `wdi-method update` just ran and printed **no** `upgrade` line | Nothing. The update was mechanical and complete; carry on from wherever the gates say you are |
+| `wdi-method install` just ran, first time in this repo | `wdi-init` intent `setup` — the global `mode`, and nothing has started until it is set |
+| Someone asks whether to run `/setup-matt-pocock-skills` | **No**, unless they are changing tracker. `install` and `update` seed `docs/agents/` already answered for this method; re-running the interview restores defaults that contradict Article 3 |
+| The installer refused, naming the ticket engines | Not a skill. Install them — `/plugin install mattpocock-skills`, or `npx skills@latest add mattpocock/skills` — then run the installer again |
 | No registry, or no global `mode` set | `wdi-init` intent `setup` — nothing has started |
 | No `.what/_product-brief/brief.md` | `wdi-problem` — G1 has not started |
 | A brief exists, and no PRD covers the area in play | `wdi-product` intent `prd` |
@@ -87,6 +91,10 @@ it claims, or when one of its eight required sections is missing outright.
   as blocking a design gate; `assumptions.md` holds nothing.
 - You MUST NOT invent progress. If `.control/generated/status` is missing or stale, say so and name
   `validate.py --generate`.
+- You MUST NOT route anyone to `/setup-matt-pocock-skills` to *finish an install*. The installer seeds
+  `docs/agents/` pre-answered, and that interview's own defaults send every engineering skill looking for a
+  root `CONTEXT.md` and `docs/adr/` — which Article 3 forbids and `wdi-reconcile` reports. It is for
+  changing tracker, and nothing else.
 - You MUST NOT run other skills on the user's behalf. Name the skill; let them invoke it. The one skill that
   runs others is `wdi-autopilot`, and only under a mandate the owner accepted — that is what the mandate is.
 - When the next step is blocked by a decision rather than by work, route to `wdi-question` or
