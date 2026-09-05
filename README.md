@@ -25,7 +25,10 @@ page it is on.
 ## Install
 
 Three steps, in this order. The first is required before step 3 will run; the second can wait until
-you reach G5, but doing it now means nothing stops you later.
+**Both are required, and the installer refuses without either.** BMad has always been checked; the ticket
+engines are checked too, because every repo that learned they were missing learned it inside `wdi-build`
+with a spec already open. `--skip-engines-check` is the escape for the two cases that earn it: CI, and a
+repo that will never reach G5.
 
 **1. BMad Method** — in the product repo, picking the same agents you will give this installer:
 
@@ -44,8 +47,16 @@ claude plugins install mattpocock-skills      # or, inside a session:  /plugin i
 npx skills@latest add mattpocock/skills
 ```
 
-Then, once, inside your agent, run `/setup-matt-pocock-skills`: it asks which issue tracker `to-tickets`
-should publish to (local files, GitHub, Linear, …).
+**You do not need to run `/setup-matt-pocock-skills` to get started.** Step 3 seeds `docs/agents/` with
+the two answers WDI Method actually has a requirement on, so the engines are aligned from the first
+install. Run the setup skill only to *change* something — to point at GitHub or Jira instead of local
+markdown — and keep the three invariants the seeded `issue-tracker.md` names.
+
+The seeding exists because the interview's own defaults are wrong here in one specific way: they send every
+engineering skill looking for a root `CONTEXT.md` and `docs/adr/`, and Article 3 says this method has no
+`docs/` layer for corpus or rules — `wdi-reconcile` reports both as findings. A repo that ran the setup
+before installing this package keeps its own file, and the installer names the contradiction rather than
+overwriting it.
 
 **3. WDI Method:**
 

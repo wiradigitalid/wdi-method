@@ -123,6 +123,7 @@ function usage() {
   --doc-language <text>            prose of working documents; free text, default English
   --doc-filename-language <text>   slug part of document filenames; free text, default English
   --skip-bmad-check
+  --skip-engines-check      install without to-spec / to-tickets / implement
 
 BMad first, then this package. ${WDI_REPO}
 `);
@@ -166,6 +167,7 @@ function parseArgs(argv) {
   while (rest.length) {
     const t = rest.shift();
     if (t === "--skip-bmad-check") args.skipBmad = true;
+    else if (t === "--skip-engines-check") args.skipEngines = true;
     else if (t === "--rescue") args.rescue = true;
     else if (t === "--yes" || t === "-y") args.yes = true;
     else if (t === "--agents") {
@@ -318,6 +320,28 @@ function bmadMissingMessage() {
   ].join("\n");
 }
 
+// The engines used to WARN and let the install through, on the reasoning that G1-G4 run without them and
+// a first install has no G5 yet. Both halves are still true, and the reasoning stopped being enough:
+// `wdi-autopilot` needs all three from its first iteration, and a warning inside a forty-line summary is
+// read exactly as often as it is skipped. The failure it was meant to prevent — learning they are missing
+// inside `wdi-build`, with a spec already open — kept happening anyway.
+//
+// So it blocks, and `--skip-engines-check` is the escape, exactly as `--skip-bmad-check` is for BMad. The
+// escape matters: CI installs into a bare checkout, and a repo that will never reach G5 is a real case.
+function enginesMissingMessage() {
+  return [
+    "The ticket engines are not installed. G5 (wdi-build) and wdi-autopilot need all three.",
+    "",
+    `  Claude Code:  ${ENGINES_INSTALL}`,
+    `  Other agents: ${ENGINES_INSTALL_ANY}`,
+    "",
+    `Then, once, inside your agent:  ${ENGINES_SETUP}`,
+    `Source: ${ENGINES_REPO}`,
+    "",
+    "G1-G4 run without them. To install anyway and add them later:  --skip-engines-check",
+  ].join("\n");
+}
+
 // The product's custom room. Three properties, and all three MUST hold together:
 //   install/update  seeds its content ONLY when absent — never written again after that
 //   promote         SKIPS it entirely, so a product's own rules can never reach the public repo
@@ -434,6 +458,55 @@ function splitProductConstitution(file) {
 // CONTENT into the `## Resume` / `## Decisions` split is not — that has to read git and the registry to
 // know where the run actually stands, so it is the skill's own job on the next iteration it runs, not
 // this installer's.
+// `/setup-matt-pocock-skills` interviews the owner and writes `docs/agents/`. Two of its answers are
+// wrong for a WDI repo, and BOTH repos that ran it had to hand-correct the SAME file afterwards:
+//
+//   - `domain.md` tells agents to read and lazily create a root `CONTEXT.md` and `docs/adr/`. Article 3
+//     says this method has no `docs/` layer for corpus or rules, and `wdi-reconcile` reports both as
+//     findings. The homes already exist: `.control/product-glossary.md`, `.what/`, `.how/`, `DEC-`.
+//   - `issue-tracker.md`'s local-markdown default puts every ticket under `.scratch/<feature>/`, while
+//     `wdi-build` owns tickets at `{spec_folder}/issues/`. Two homes for one ticket set.
+//
+// Seeding them removes the interview for the answers WDI Method actually has a requirement on. Seeded
+// ONCE and never overwritten — after the first install they are the product's, like every other file
+// under a path the product owns. An owner who wants a different tracker re-runs the setup skill; the
+// seeded file says which three invariants have to survive that.
+function seedAgentDocs(target) {
+  const dir = path.join(target, "docs", "agents");
+  let wrote = 0;
+  for (const name of ["domain.md", "issue-tracker.md"]) {
+    const to = path.join(dir, name);
+    if (fs.existsSync(to)) continue;
+    const seed = path.join(ROOT, "scaffold", "docs", "agents", name);
+    if (!fs.existsSync(seed)) continue;
+    copyFile(seed, to);
+    wrote += 1;
+  }
+  if (wrote) {
+    note(`seeded docs/agents/ (${wrote} file${wrote === 1 ? "" : "s"}) — the engines' config, pre-answered`);
+    note("  do NOT run /setup-matt-pocock-skills to redo these; re-run it only to change tracker");
+  }
+  return wrote > 0;
+}
+
+// A repo that ran the setup skill BEFORE installing this package still carries the default `domain.md`,
+// and it is actively misleading: it sends every engineering skill looking for a root `CONTEXT.md` and
+// `docs/adr/`, and tells them to create both lazily. Seeding cannot fix it, because the file already
+// exists and a file under a product-owned path is never overwritten. So it is named instead.
+function warnStaleAgentDocs(target) {
+  const file = path.join(target, "docs", "agents", "domain.md");
+  if (!fs.existsSync(file)) return;
+  const text = fs.readFileSync(file, "utf8");
+  if (!/CONTEXT\.md|docs\/adr/.test(text)) return;
+  // An override note is what both real repos added by hand. Recognising it is what stops this warning
+  // from firing forever on a file somebody already fixed.
+  if (/does not use|MUST NOT be created|no `docs\/` layer/i.test(text)) return;
+  note("docs/agents/domain.md still points agents at a root CONTEXT.md and docs/adr/");
+  note("  Article 3: this method has no `docs/` layer for corpus or rules, and wdi-reconcile");
+  note("  reports both as findings. Say so at the top of that file — the glossary is at");
+  note("  .control/product-glossary.md and a decision is a DEC-, never an ADR");
+}
+
 function migrateAutopilotLedgers(target) {
   const dir = path.join(target, ".control", "memlog");
   if (!fs.existsSync(dir)) return;
@@ -1091,6 +1164,8 @@ function apply(target, agents,
   migrateRegistryNames(target);
   migrateAutopilotLedgers(target);
   warnStaleMandates(target);
+  seedAgentDocs(target);
+  warnStaleAgentDocs(target);
   seedRequirementSplit(target);
   // The split MUST also be reachable without a migration. 0.5.2 only ran it from inside
   // migrateToTwoFolders, which returns early when the old layout is absent — so a repo that took
@@ -1499,6 +1574,9 @@ function runNonInteractive(args) {
   }
   if (!args.skipBmad && !bmadPresent(target)) {
     die(bmadMissingMessage());
+  }
+  if (!args.skipEngines && !enginesPresent(target)) {
+    die(enginesMissingMessage());
   }
   const existing = readIndexIdentity(target);
   const product = args.product || existing.name;
