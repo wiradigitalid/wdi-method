@@ -48,6 +48,11 @@ drafts, exploratory output, a working paper for a change spanning several sessio
 It is **committed**, so that a session picked up on another machine finds it, and so a reviewer can
 see what a change was actually reasoning about.
 
+`.work/` MUST NOT be excluded from git, and neither MUST `_bmad-output/` or any corpus layer.
+`corpus-in-git` reports it and names the file and line. A pattern that excludes one noisy artifact
+INSIDE `.work/` — a vendored checkout, a tool's raw dumps, logs — is allowed and stays green; a
+pattern that drops the folder is not, because it leaves the material on one machine and in no clone.
+
 It is **ephemeral**, and the two together are what make its rules matter:
 
 - Any durable outcome MUST be moved out before the task closes — to the corpus if it is truth, to

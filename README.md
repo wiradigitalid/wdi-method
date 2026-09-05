@@ -370,7 +370,7 @@ A `DEC-` freezes when it is applied. A change of mind produces a new one; it nev
 
 ## The mechanical half
 
-`validate.py` runs twenty-six named validators — `goal-has-fr`, `cites-resolve`, `no-cycles`,
+`validate.py` runs twenty-seven named validators — `goal-has-fr`, `cites-resolve`, `no-cycles`,
 `id-allocated-once`, and the rest, each named for the thing it checks — over the registries and the
 corpus, and `inventory.py` derives the three inventories from code and reports the difference against the
 plan without patching either side. There is no validator that compares two copies of one fact, because
