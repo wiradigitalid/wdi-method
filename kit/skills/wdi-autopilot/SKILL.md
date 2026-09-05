@@ -105,6 +105,14 @@ Open with three reads, in this order:
 2. **Reconcile `## Resume` against git.** Compare the run branch HEAD with the commit Resume names. A
    difference is work that landed before the last iteration died — rebuild Resume from what git shows
    **before** starting anything new. Trusting a stale Resume is how a merged ticket gets implemented twice.
+
+   **A ledger with no `## Resume` heading at all is the same case, one step further back.** It is a
+   pre-0.6.2 ledger — a flat table with nothing else — and `update` only ever renames the file, never
+   restructures its content, because that restructuring needs exactly this read. Heal it once, here,
+   before touching anything else: wrap the existing table under a `## Decisions` heading if it is not
+   already, then **build a fresh `## Resume`** the same way as a stale one above — from the mandate row,
+   `.control/generated/status`, and the run branch's actual HEAD, never from the table's last row read as
+   prose. The table's own rows are untouched; only the missing head is added.
 3. `.control/generated/status`, the mandate row, and **the ledger's `## Resume` only** — see § The ledger
    for why that is a section and not a file.
 
@@ -330,6 +338,7 @@ When § The work table reaches § Finish:
 - A mandate accepted by delegation, or with no `expires`
 - Deciding something the mandate parks, or parking something the mandate did not
 - A decision taken and not written to the ledger
+- A pre-0.6.2 ledger left un-healed — no `## Resume` wrapped and rebuilt on first touch
 - Reading the whole ledger when the run is alive — `## Resume` is what an iteration loads
 - A `## Resume` that restates a decision, or repeats what the registry already answers
 - A ledger cell longer than a line, instead of a pointer to a companion document

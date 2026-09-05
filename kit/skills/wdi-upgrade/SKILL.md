@@ -10,6 +10,14 @@ content needs no judgment, seeds what is new, prunes what is retired. It stops e
 about **content** begins — which PRD an `FR` belongs to, whether a sentence in the old brief was an
 assumption or a constraint. Those are this skill's half.
 
+**This skill's content is `.what/` and `.how/`** — the corpus a human reads. It does NOT cover
+`.control/memlog/` or a registry row: an autopilot ledger's filename is `update`'s own mechanical rename
+(the same way `waves.yaml` became `specs.yaml`), a stale mandate setting is a printed warning at `update`
+time because overwriting it would be overwriting a value the owner already chose, and a ledger's internal
+shape is healed by `wdi-autopilot` itself on its next run, because only it can read git and the registry to
+know where that run actually stands. Route those three there; this skill's report would have nothing to say
+about any of them.
+
 **This is the one skill allowed to edit `brief.md`, `prd.md`, an SRS, an SDD, or a C4 file directly.**
 Every other skill is forbidden, because a hand edit makes the memlog lie about how the document was
 produced. An upgrade produces nothing: it moves sentences that already exist into the home the new

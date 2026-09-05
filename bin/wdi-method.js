@@ -425,6 +425,68 @@ function splitProductConstitution(file) {
 // Two refusals matter more than the move. It never writes over an existing `specs.yaml`, and it
 // never deletes a `waves.yaml` whose content has nowhere to go: a half-finished hand migration
 // leaves BOTH files present, and which one is real is not something an installer can know.
+// `wdi-autopilot` named its ledger for the DAY before 0.6.2 — `autopilot-<YYYY-MM-DD>.md`. The mandate
+// it belongs to is named for the MANDATE now — `autopilot-<DEC-id>.md` — because two mandates opened
+// on the same day would otherwise append to one file and destroy both as a record, and because
+// `mandate-accept` (the validator introduced alongside the rename) looks for the file at that path and
+// nowhere else. This is a pure rename, like `waves.yaml` → `specs.yaml`: the ledger's own content is
+// never touched, only found and moved. Renaming it is what a script can safely do; restructuring its
+// CONTENT into the `## Resume` / `## Decisions` split is not — that has to read git and the registry to
+// know where the run actually stands, so it is the skill's own job on the next iteration it runs, not
+// this installer's.
+function migrateAutopilotLedgers(target) {
+  const dir = path.join(target, ".control", "memlog");
+  if (!fs.existsSync(dir)) return;
+  const OLD = /^autopilot-(\d{4}-\d{2}-\d{2})\.md$/;
+  for (const name of fs.readdirSync(dir)) {
+    const m = OLD.exec(name);
+    if (!m) continue;
+    const from = path.join(dir, name);
+    const text = fs.readFileSync(from, "utf8");
+    const artifact = /^artifact:\s*(\S.*)$/m.exec(text)?.[1]?.trim();
+    const id = artifact && /(DEC-\d+)/.exec(artifact)?.[1];
+    if (!id) {
+      note(`.control/memlog/${name} looks like a pre-0.6.2 autopilot ledger, but its \`artifact:\` does`);
+      note(`  not resolve to a DEC- id — rename it to autopilot-<the mandate's DEC- id>.md yourself`);
+      continue;
+    }
+    const to = path.join(dir, `autopilot-${id}.md`);
+    if (fs.existsSync(to)) {
+      note(`BOTH .control/memlog/${name} and autopilot-${id}.md exist — neither was touched`);
+      note(`  the run's ledger is in one of them and I cannot tell which. Merge them, then delete the other`);
+      continue;
+    }
+    mv(from, to);
+    note(`renamed .control/memlog/${name} → autopilot-${id}.md (content unchanged)`);
+    note(`  \`mandate-accept\` looks for a mandate's ledger at this exact path`);
+  }
+}
+
+// A mandate opened before 0.6.2 recorded `parked: []` under the OLD default — full authority, AD-N
+// contradictions included. 0.6.2 changed the DEFAULT for a NEW mandate to park `ad-n`, because
+// decision-guide.md says narrowing an invariant MUST NOT be softened further. A default only applies
+// at the moment a mandate is written, so an EXISTING accepted mandate keeps whatever it already says —
+// silently adding `ad-n` to it would be overwriting a value the owner already chose, which `update`
+// MUST NOT do to anything in the product's own registry. So this only ever WARNS, naming the mandate
+// and the one line that would close the gap, and leaves the decision to whoever reads the summary.
+function warnStaleMandates(target) {
+  const file = path.join(target, ".control", "registry", "decisions.yaml");
+  if (!fs.existsSync(file)) return;
+  const text = fs.readFileSync(file, "utf8");
+  const blocks = text.split(/\n(?=\s*-\s*id:\s*DEC-)/);
+  for (const block of blocks) {
+    if (!/type:\s*mandate/.test(block)) continue;
+    if (!/status:\s*accepted/.test(block)) continue;
+    const id = /id:\s*(DEC-\d+)/.exec(block)?.[1];
+    const parkedLine = /parked:\s*(\[[^\]]*\]|.*)$/m.exec(block)?.[0] || "";
+    const parkedBlockList = /parked:\s*\n((?:\s+-\s*\S.*\n?)*)/.exec(block)?.[1] || "";
+    if (/ad-n/.test(parkedLine) || /ad-n/.test(parkedBlockList)) continue;
+    note(`${id || "a mandate"} predates the \`ad-n\`-parked-by-default protection (0.6.2) — its \`parked\``);
+    note(`  list does not name it, so it still decides an AD-N contradiction on its own`);
+    note(`  add \`ad-n\` to its \`parked\` list in decisions.yaml yourself if you want the new default`);
+  }
+}
+
 function migrateRegistryNames(target) {
   const reg = path.join(target, ".control", "registry");
   const from = path.join(reg, "waves.yaml");
@@ -1027,6 +1089,8 @@ function apply(target, agents,
   // is about to occupy. Running it after would leave two copies of most guides.
   const migrated = migrateToTwoFolders(target);
   migrateRegistryNames(target);
+  migrateAutopilotLedgers(target);
+  warnStaleMandates(target);
   seedRequirementSplit(target);
   // The split MUST also be reachable without a migration. 0.5.2 only ran it from inside
   // migrateToTwoFolders, which returns early when the old layout is absent — so a repo that took

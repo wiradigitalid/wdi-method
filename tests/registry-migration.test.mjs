@@ -390,3 +390,153 @@ test("update detects the OLD PRD shape under 0.5.12 numbering, and ignores a sta
     fs.rmSync(target, { recursive: true, force: true });
   }
 });
+
+// wdi-autopilot named its ledger for the DAY before 0.6.2 — `autopilot-<YYYY-MM-DD>.md` — and for the
+// MANDATE from 0.6.2 on, because `mandate-accept` looks for the ledger at that exact path and two mandates
+// opened on the same day would otherwise share one file. This is the mechanical half of that migration —
+// find the old name, resolve the mandate it belongs to from its own `artifact:` frontmatter, rename it —
+// the same shape as waves.yaml -> specs.yaml above. Restructuring the ledger's CONTENT into `## Resume` /
+// `## Decisions` is NOT mechanical (it has to read git and the registry to know where a run stands), so
+// that step is the skill's own job on its next iteration, not this installer's.
+
+const OLD_LEDGER = [
+  "---",
+  "topic: wdi-autopilot — mandat DEC-002",
+  "artifact: .control/decisions/DEC-002-mandate-autopilot.md",
+  "updated: 2026-09-04T00:05",
+  "---",
+  "",
+  "# Ledger — mandat DEC-002",
+  "",
+  "| When | Where | Decided | Instead of | Cost if wrong | Landed in |",
+  "|---|---|---|---|---|---|",
+  "| Iterasi 1 | G3 | Ditahan | - | - | index.yaml |",
+  "",
+].join("\n");
+
+function repoWithAnOldLedger() {
+  const t = tmp("ledger");
+  fs.mkdirSync(path.join(t, ".control", "registry"), { recursive: true });
+  fs.mkdirSync(path.join(t, ".control", "memlog"), { recursive: true });
+  fs.mkdirSync(path.join(t, ".control", "decisions"), { recursive: true });
+  fs.writeFileSync(path.join(t, ".control", "registry", "index.yaml"), "product:\n  name: A Product\n");
+  fs.writeFileSync(path.join(t, ".control", "memlog", "autopilot-2026-09-04.md"), OLD_LEDGER);
+  fs.writeFileSync(path.join(t, ".control", "decisions", "DEC-002-mandate-autopilot.md"), "---\nid: DEC-002\n---\n");
+  return t;
+}
+
+test("update RENAMES a pre-0.6.2 autopilot ledger to its mandate's id, content untouched", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithAnOldLedger();
+  const memlog = (n) => path.join(target, ".control", "memlog", n);
+  try {
+    update(pkg, target);
+    assert.ok(fs.existsSync(memlog("autopilot-DEC-002.md")),
+      "the ledger was not renamed to its mandate's id — mandate-accept looks for it at exactly this path");
+    assert.equal(fs.readFileSync(memlog("autopilot-DEC-002.md"), "utf8"), OLD_LEDGER,
+      "the ledger's content changed in the move. The installer only renames the FILE; restructuring its "
+      + "content into ## Resume / ## Decisions needs git and the registry, so it is the skill's own job");
+    assert.ok(!fs.existsSync(memlog("autopilot-2026-09-04.md")),
+      "the day-named file is still there beside the mandate-named one — two homes for one ledger");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("a second update does not re-touch a renamed autopilot ledger", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithAnOldLedger();
+  const memlog = (n) => path.join(target, ".control", "memlog", n);
+  try {
+    update(pkg, target);
+    const before = fs.readFileSync(memlog("autopilot-DEC-002.md"), "utf8");
+    update(pkg, target);
+    assert.equal(fs.readFileSync(memlog("autopilot-DEC-002.md"), "utf8"), before,
+      "a second update changed an already-migrated ledger");
+    assert.ok(!fs.existsSync(memlog("autopilot-2026-09-04.md")),
+      "a second update resurrected the old day-named ledger");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("with BOTH ledger names present, the migration refuses: the mandate-named file is never written over", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithAnOldLedger();
+  const memlog = (n) => path.join(target, ".control", "memlog", n);
+  fs.writeFileSync(memlog("autopilot-DEC-002.md"), "already the new shape\n");
+  try {
+    update(pkg, target);
+    assert.equal(fs.readFileSync(memlog("autopilot-DEC-002.md"), "utf8"), "already the new shape\n",
+      "the existing mandate-named ledger was overwritten by the old day-named one");
+    assert.ok(fs.existsSync(memlog("autopilot-2026-09-04.md")),
+      "the old ledger was deleted despite neither file being provably the real one");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+// A mandate accepted before 0.6.2 recorded `parked: []` under the OLD default. 0.6.2 changed the DEFAULT
+// for a NEW mandate to park `ad-n`, because decision-guide.md says narrowing an invariant MUST NOT be
+// softened further — but a default only applies at the moment a mandate is WRITTEN, and silently rewriting
+// an existing accepted mandate's `parked` list would be overwriting a value the owner already chose, which
+// `update` MUST NOT do to anything in the product's own registry. So the only right behaviour is a printed
+// warning, naming the mandate, never a silent edit.
+
+function repoWithAStaleMandate() {
+  const t = tmp("mandate");
+  const reg = path.join(t, ".control", "registry");
+  fs.mkdirSync(reg, { recursive: true });
+  fs.writeFileSync(path.join(reg, "index.yaml"), "product:\n  name: A Product\n");
+  fs.writeFileSync(path.join(reg, "decisions.yaml"), [
+    "decisions:",
+    "  - id: DEC-002",
+    "    status: accepted",
+    "    type: mandate",
+    "    accepted_by: \"Owner, 2026-08-01\"",
+    "    mandate:",
+    "      from_gate: G3",
+    "      scope: all",
+    "      parked: []",
+    "      expires: '2026-09-11'",
+    "",
+  ].join("\n"));
+  return t;
+}
+
+test("update WARNS about a mandate accepted before ad-n was parked by default, and never edits it", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithAStaleMandate();
+  const decisionsFile = path.join(target, ".control", "registry", "decisions.yaml");
+  const before = fs.readFileSync(decisionsFile, "utf8");
+  try {
+    const out = update(pkg, target);
+    assert.match(out, /DEC-002.*ad-n.*parked/is,
+      `no warning named the stale mandate and what it is missing:\n${out}`);
+    assert.equal(fs.readFileSync(decisionsFile, "utf8"), before,
+      "decisions.yaml was edited — a mandate the owner already accepted MUST NOT be rewritten silently, "
+      + "only warned about, the same rule that already protects every other value the product chose");
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("update does NOT warn about a mandate that already parks ad-n", () => {
+  const pkg = isolatedPackage();
+  const target = repoWithAStaleMandate();
+  fs.writeFileSync(path.join(target, ".control", "registry", "decisions.yaml"),
+    fs.readFileSync(path.join(target, ".control", "registry", "decisions.yaml"), "utf8")
+      .replace("parked: []", "parked: [ad-n]"));
+  try {
+    const out = update(pkg, target);
+    assert.doesNotMatch(out, /DEC-002.*ad-n/is,
+      `a mandate that already parks ad-n was warned about anyway:\n${out}`);
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
