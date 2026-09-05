@@ -197,3 +197,31 @@ test("a domain.md somebody already corrected is NOT warned about again", () => {
     fs.rmSync(cfg, { recursive: true, force: true });
   }
 });
+
+// This suite went green locally and red in CI, and the gap was the developer's own machine: the
+// mattpocock plugin is installed here, so `enginesPresent()` said yes for every test that ran an install
+// without the escape. On a runner it says no, and twenty-eight tests died at once — after the tag was
+// already pushed.
+//
+// The structural fix is that every non-gate test passes `--skip-engines-check`. This test is what stops
+// the next one being written without it: it reads the test files themselves, the same way project-room
+// asserts against bin/wdi-method.js's source.
+test("every test that installs or updates carries BOTH escapes — or it only passes on a machine like the author's", () => {
+  const dir = import.meta.dirname;
+  const offenders = [];
+  for (const name of fs.readdirSync(dir)) {
+    if (!name.endsWith(".test.mjs")) continue;
+    // This file owns the gate: it MUST be able to run an install with no escape at all.
+    if (name === "engines-precheck.test.mjs") continue;
+    const lines = fs.readFileSync(path.join(dir, name), "utf8").split(/\r?\n/);
+    lines.forEach((line, i) => {
+      if (!line.includes('"--skip-bmad-check"')) return;
+      if (line.includes('"--skip-engines-check"')) return;
+      offenders.push(`${name}:${i + 1}  ${line.trim()}`);
+    });
+  }
+  assert.deepEqual(offenders, [],
+    "an install/update in a test carries --skip-bmad-check but not --skip-engines-check. It will pass on "
+    + "a machine with the mattpocock plugin installed and fail on every machine without it:\n  "
+    + offenders.join("\n  "));
+});

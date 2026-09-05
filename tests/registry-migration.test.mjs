@@ -72,7 +72,7 @@ function repoWithAPlan() {
 
 function update(pkg, target) {
   return execFileSync(process.execPath,
-    [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+    [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
      "--agents", "claude"],
     { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
@@ -341,7 +341,7 @@ test("a FRESH install validates GREEN — the scaffold cites nothing that the ki
   const target = tmp("fresh");
   try {
     execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "install", target, "--yes", "--skip-bmad-check",
+      [path.join(pkg, "bin", "wdi-method.js"), "install", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
        "--agents", "claude", "--product", "Shopfront"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     let out = "";

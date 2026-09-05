@@ -28,7 +28,7 @@ function repoWithIndex(policy) {
 
 function run(args, dir) {
   return execFileSync(process.execPath,
-    [CLI, "update", dir, "--yes", "--skip-bmad-check", "--agents", "claude", ...args],
+    [CLI, "update", dir, "--yes", "--skip-bmad-check", "--skip-engines-check", "--agents", "claude", ...args],
     { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
 

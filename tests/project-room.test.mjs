@@ -129,7 +129,7 @@ test("update keeps a codebase guide that is still Draft — that is when it is b
   fs.writeFileSync(mine, written);
   try {
     const out = execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
        "--agents", "claude"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.equal(fs.readFileSync(mine, "utf8"), written,
@@ -150,7 +150,7 @@ test("update SEEDS the room once and never overwrites it again", () => {
   fs.writeFileSync(path.join(target, ".constitution", "project", "README.md"), "EDITED\n");
   try {
     execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check"],
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.equal(fs.readFileSync(mine, "utf8"), "belongs to the product\n",
       "update overwrote a product rule in its own room — that is exactly what this room exists to prevent");
@@ -173,7 +173,7 @@ test("inventory-readers.py is seeded once, then belongs to the product forever",
   const target = tmp("target");
   const readers = path.join(target, ".constitution", "project", "inventory-readers.py");
   const update = () => execFileSync(process.execPath,
-    [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check"],
+    [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check"],
     { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   try {
     update();
@@ -213,7 +213,7 @@ test("update REMOVES a retired wrapper, and leaves alone what is not ours", () =
   fs.writeFileSync(path.join(skills, "wdi-my-own", "notes.md"), "belongs to the user");
   try {
     execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
        "--agents", "claude"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.ok(!fs.existsSync(path.join(skills, "wdi-apply")),
@@ -257,7 +257,7 @@ test("update keeps the product's initiative slug — promote scrubs it, update M
 
   try {
     const out = execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
        "--agents", "claude"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     const after = fs.readFileSync(mine, "utf8");
@@ -328,7 +328,7 @@ test("update migrates a pre-0.5.0 repo: nothing of the product's is lost, nothin
   const c = (...p) => path.join(target, ".constitution", ...p);
   try {
     const out = execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
        "--agents", "claude"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
@@ -400,7 +400,7 @@ test("update splits project/constitution.md even with NO migration — the 0.5.0
   ].join("\n"));
   try {
     const out = execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
        "--agents", "claude"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     const mine = fs.readFileSync(path.join(room, "constitution.md"), "utf8");
@@ -430,7 +430,7 @@ test("update refreshes the room's README — it is the package's, and a stale co
   fs.writeFileSync(path.join(room, "mine.md"), "---\nscope: project\n---\nMINE\n");
   try {
     execFileSync(process.execPath,
-      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check",
+      [path.join(pkg, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
        "--agents", "claude"],
       { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     assert.doesNotMatch(fs.readFileSync(path.join(room, "README.md"), "utf8"), /STALE/,
