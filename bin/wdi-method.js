@@ -869,6 +869,11 @@ function seedEmptyLayers(target, { first }) {
     const dest = path.join(target, rel);
     if (!fs.existsSync(dest)) {
       fs.mkdirSync(dest, { recursive: true });
+      // Git tracks files, not directories: an empty folder does not reach the next clone. The
+      // scaffold already puts a `.gitkeep` in each of its empty rooms, and these four were the
+      // exception — `.work/` invisible from birth is half the reason a bootstrap read it as
+      // ignorable and wrote it into `.gitignore`, which corpus-in-git now reports.
+      fs.writeFileSync(path.join(dest, ".gitkeep"), "");
       note(`created ${rel.replaceAll(path.sep, "/")}/`);
     }
   }

@@ -540,3 +540,26 @@ test("update does NOT warn about a mandate that already parks ad-n", () => {
     fs.rmSync(target, { recursive: true, force: true });
   }
 });
+
+// Git does not track a directory, only files in it. So every folder the installer creates EMPTY is
+// a folder that does not exist for the next clone — and `.work/` being invisible from birth is half
+// the reason a bootstrap agent read it as ignorable and put it in `.gitignore`. The scaffold already
+// answers this with a `.gitkeep` in each of its empty rooms; the four seeded here were the exception.
+test("the folders a first install seeds EMPTY carry a .gitkeep — a folder git cannot see is a folder the clone lacks", () => {
+  const pkg = isolatedPackage();
+  const target = tmp("keep");
+  try {
+    execFileSync(process.execPath,
+      [path.join(pkg, "bin", "wdi-method.js"), "install", target, "--yes", "--skip-bmad-check", "--skip-engines-check",
+       "--agents", "claude", "--product", "Shopfront"],
+      { cwd: pkg, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    for (const rel of [".what", path.join(".how", "_platform"), ".work",
+                       path.join("_bmad-output", "prior-knowledge")]) {
+      assert.ok(fs.existsSync(path.join(target, rel, ".gitkeep")),
+        `${rel} was seeded with nothing in it, so git will not carry it to the next clone`);
+    }
+  } finally {
+    fs.rmSync(pkg, { recursive: true, force: true });
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});

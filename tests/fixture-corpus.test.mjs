@@ -855,3 +855,65 @@ test("mandate-accept demands the mandate's ledger exists — the record is the p
   assert.match(out, /mandate-accept\s+DEC-002.*ledger/,
     `a mandate was accepted with no ledger and nothing said so:\n${out}`);
 });
+
+// ---------------------------------------------------------------------------------------------
+// corpus-in-git. The defect that earned it: a repo was bootstrapped with a hand-written
+// `.gitignore` carrying `# Scratch & temporary` over `.work/` and `# transient output` over
+// `_bmad-output/`. Nothing in the method said to do that — and nothing forbade it either, so ten
+// files of scratch, one of them a reverse-engineering working paper, existed on one machine and in
+// no clone. Article 3 says both folders are committed; three words in a table cell lost to a habit,
+// which is the whole argument for a mechanical guard over a better-worded rule.
+//
+// The fixture is not a git repo of its own, so these tests build one. That `git init` is what makes
+// the guard answerable at all — and its ABSENCE is what MUST leave the guard skipped rather than
+// falsely green, which is the last test here.
+
+/** validate.py over a copy of the fixture that IS a git repo, with `.gitignore` set to `body`. */
+function afterGitignore(body) {
+  return afterMutation((dir) => {
+    execFileSync("git", ["init", "-q"], { cwd: dir, stdio: "ignore" });
+    fs.writeFileSync(path.join(dir, ".gitignore"), body);
+  });
+}
+
+test("corpus-in-git fails when `.work/` is excluded wholesale — the exact line the bootstrap wrote", (t) => {
+  if (requireUv(t)) return;
+  const out = afterGitignore("# Scratch & temporary\n.work/\n.scratch/\n");
+  assert.match(out, /corpus-in-git\s+\.work\/.*excluded from git/,
+    `.work/ was excluded from every clone and the validator said nothing:\n${out}`);
+});
+
+test("corpus-in-git fails on `_bmad-output/` too — it is cited BY PATH, so a clone that lacks it cannot resolve the cite", (t) => {
+  if (requireUv(t)) return;
+  const out = afterGitignore("# WDI Method generated & transient output\n_bmad-output/\n");
+  assert.match(out, /corpus-in-git\s+_bmad-output\/.*excluded from git/,
+    `the run workspace was excluded from every clone and the validator said nothing:\n${out}`);
+});
+
+test("corpus-in-git names the rule that did it — a finding you cannot act on is a finding you delete", (t) => {
+  if (requireUv(t)) return;
+  const out = afterGitignore("# one\n# two\n.work/\n");
+  assert.match(out, /corpus-in-git\s+\.work\/.*\.gitignore:3/,
+    `the finding did not name the file and line to fix:\n${out}`);
+});
+
+test("corpus-in-git stays GREEN on a narrow exclusion — one noisy artifact inside `.work/` is the product's own call", (t) => {
+  if (requireUv(t)) return;
+  // Three real ones, from three real repos: a vendored upstream checkout, accessibility-tree dumps
+  // from UI audit workers, and logs. Each names an artifact and leaves the folder in git. If this
+  // test ever goes red the guard has become a rule against `.gitignore` itself, and it will be
+  // switched off — which is worse than not having it.
+  const out = afterGitignore(".work/upstream/\n.work/scratch/\n.work/**/tree-*.txt\n.work/*.log\n");
+  assert.doesNotMatch(out, /corpus-in-git/,
+    `a narrow exclusion inside .work/ was reported as if the folder had been dropped:\n${out}`);
+});
+
+test("corpus-in-git SKIPS where git cannot answer — a guard that goes green outside a repo is a lie", (t) => {
+  if (requireUv(t)) return;
+  // No `git init`: the copy is a plain directory. Every other test in this file runs in one, so if
+  // this check ever failed CLOSED it would paint the whole suite red; if it failed OPEN — green,
+  // silently — the guard would report nothing on a machine where git is missing and nobody would know.
+  const out = afterMutation(() => {});
+  assert.match(out, /Skipped:[\s\S]*corpus-in-git/,
+    `outside a git repo the guard MUST say it could not answer:\n${out}`);
+});
