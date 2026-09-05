@@ -9,12 +9,17 @@
 
 ---
 
-## Prerequisites — two engines, and which gates need them
+## Prerequisites — two engines, and both are required
 
-| Engine | What it does here | Needed from | Source |
-|---|---|---|---|
-| **BMad Method** | Writes the documents behind G1–G4 — brief, PRD, architecture, UX | the first skill | [github.com/bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) |
-| **mattpocock/skills** | Cuts the work at G5 — `to-spec`, `to-tickets`; runs the Fast Path — `implement` | `wdi-build` | [github.com/mattpocock/skills](https://github.com/mattpocock/skills) |
+| Engine | What it does here | Source |
+|---|---|---|
+| **BMad Method** | Writes the documents behind G1–G4 — brief, PRD, architecture, UX | [github.com/bmad-code-org/BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) |
+| **mattpocock/skills** | Cuts the work at G5 — `to-spec`, `to-tickets`; runs the Fast Path and every `wdi-autopilot` iteration — `implement` | [github.com/mattpocock/skills](https://github.com/mattpocock/skills) |
+
+**The installer refuses without either.** BMad has always been checked. The ticket engines are checked
+too, since 0.6.4: G1–G4 genuinely run without them, and every repo that relied on that learned they were
+missing inside `wdi-build` with a spec already open. `--skip-engines-check` is the escape for the two
+cases that earn it — CI, and a repo that will never reach G5.
 
 No engine skill is invoked on its own. Each has a wrapper (`wdi-*`) that checks where the project is,
 runs the engine, verifies what came back, and records it. The engine is the pen; the wrapper knows what
@@ -159,8 +164,9 @@ renders, decide — advance or refine.
 
 **Unattended, on request.** `wdi-autopilot` moves owner time from the gates to two points: the mandate before,
 the review after. From the gate you name it runs the same skills, answers what they would have asked, records
-every answer in `.control/memlog/autopilot-<date>.md`, and stops only when every `FR` in scope is closed or the
-mandate expires. It needs three things from the session: permission prompts bypassed (one prompt halts the
+every answer in `.control/memlog/autopilot-<mandate-id>.md`, and returns at one of three stops — done,
+at capacity, or blocked. It finishes when every `FR` in scope is closed, when nothing left is runnable, or
+when the mandate expires. It needs three things from the session: permission prompts bypassed (one prompt halts the
 loop), a loop to fire it — `/loop 5m /wdi-autopilot` in Claude Code — and a way past the ticket engines'
 `disable-model-invocation`, which the preflight names: a builder that reads and follows the engine's `SKILL.md`,
 or a copy of the engines inside the repo. The validator `mandate-accept` keeps the one thing the method never
@@ -434,11 +440,13 @@ English, whatever the settings say — it travels to every repo through this pac
 | | |
 |---|---|
 | Overwrites | everything in `.constitution/method/` · the eighteen wrappers · `_bmad/custom/*.toml` · the marked block in `AGENTS.md` |
-| Renames | a file whose content needs no judgment to move — `waves.yaml` → `specs.yaml`, the pre-0.5 registry names. Content is never rewritten |
+| Renames | a file whose content needs no judgment to move — `waves.yaml` → `specs.yaml`, the pre-0.5 registry names, and a pre-0.6.2 autopilot ledger to `autopilot-<mandate-id>.md`. Content is never rewritten |
+| Seeds | `docs/agents/` — the ticket engines' own config, already answered for this method, so `/setup-matt-pocock-skills` is not part of getting started. Seeded once; a file you already wrote is never touched |
 | Removes | Wrappers the method has retired — a `wdi-*` folder with a `SKILL.md` that is no longer one of the eighteen. Each removal is printed |
 | Reports | what is still in the OLD shape, as an `upgrade` line — and names `wdi-upgrade` as the next step. The installer does not move content; that is a decision, and the skill's |
 | Keeps | All of `.constitution/project/`, plus your initiative slug and your language choice. A setting somebody already chose is not the installer's to change behind their back |
 | Never resurrects | A folder you retired. On update, absence is treated as a decision |
+| Warns, never edits | An open `wdi-autopilot` mandate written before `ad-n` was parked by default, and a `docs/agents/domain.md` still pointing at a root `CONTEXT.md`. Both are values you chose; the installer names them and leaves them alone |
 
 It prints the version it replaced, what it wrote, what it kept, and what to do next.
 
