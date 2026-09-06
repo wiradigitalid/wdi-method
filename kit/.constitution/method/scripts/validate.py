@@ -351,6 +351,9 @@ def _legacy_tickets(spec: dict) -> list[dict]:
             ticket = {k: v for k, v in story.items() if k not in ("id", "depends_on")}
             ticket["id"] = f"{sid}-{story.get('id')}"
             ticket["blocked_by"] = [f"{sid}-{d}" for d in (story.get("depends_on") or [])]
+            # The story's OWN id is kept because the file on disk is named after it, not after the
+            # synthesized ticket id — see `_ticket_files`.
+            ticket["_legacy_story_id"] = str(story.get("id") or "")
             out.append(ticket)
     return out
 
@@ -752,8 +755,13 @@ def review_trace(c: Corpus, r: Result) -> None:  # was V13
                + ", ".join(sorted(stale_advisory)))
 
 
-def cap_tickets(c: Corpus) -> dict[str, list[dict]]:
-    """CAP -> ticket, traced through CAP -> FR -> UC -> ticket. No git, no timeline."""
+def cap_tickets(c: Corpus) -> dict[str, list[tuple[dict, dict]]]:
+    """CAP -> (spec, ticket), traced through CAP -> FR -> UC -> ticket. No git, no timeline.
+
+    The SPEC travels with its ticket because a ticket's status cannot be read without it — a closed
+    spec answers for its own tickets (`_ticket_status`). Dropping it here is what made `plan-dates`
+    raise `TypeError` instead of reporting, and a raise there takes the whole run with it.
+    """
     frs_of: dict[str, list[str]] = {}
     for fr in c.frs:
         frs_of.setdefault(str(fr.get("capability", "")), []).append(str(fr.get("id")))
@@ -761,11 +769,11 @@ def cap_tickets(c: Corpus) -> dict[str, list[dict]]:
     for uc in c.ucs:
         for fid in listy(uc, "satisfies"):
             ucs_of.setdefault(fid, []).append(str(uc.get("id")))
-    out: dict[str, list[dict]] = {}
+    out: dict[str, list[tuple[dict, dict]]] = {}
     for cap in c.caps:
         cid = str(cap.get("id"))
         wanted = {u for fid in frs_of.get(cid, []) for u in ucs_of.get(fid, [])}
-        out[cid] = [t for _, t in c.tickets()
+        out[cid] = [(spec, t) for spec, t in c.tickets()
                     if wanted & set(listy(t, "satisfies"))]
     return out
 
@@ -791,7 +799,7 @@ def plan_dates(c: Corpus, r: Result, asof: dt.date) -> None:  # was V14
             r.fail("plan-dates", cid, f"`planned_end` `{end}` is not an ISO date")
             continue
         items = by_cap.get(cid, [])
-        closed = bool(items) and all(_ticket_status(c, t) == "done" for t in items)
+        closed = bool(items) and all(_ticket_status(c, spec, t) == "done" for spec, t in items)
         if closed or due >= asof:
             continue
         late = (asof - due).days
@@ -1598,16 +1606,24 @@ def _ticket_files(c: Corpus, spec: dict, ticket: dict) -> list[Path]:
 
     The full id is tried too, so a product that names its files after the whole id is not punished
     for a convention this method never demanded of it.
+
+    `issues/` arrived WITH the flat `tickets:` shape. A pre-rename wave's files are in
+    `{spec_folder}/stories/`, named by the story's own id (`1-2-<slug>.md`) — so a synthesized
+    legacy ticket is looked up by that id, in both folders, BEFORE the tail-of-the-id fallback:
+    the tail of `W1-1-2` is `2`, which would find nothing here and `1-*.md` for every story in the
+    wave elsewhere. Reporting those as missing reports the migration, not a defect.
     """
     folder = _spec_folder(spec, ticket)
     if not folder:
         return []
     tid = str(ticket.get("id") or "")
-    issues = c.root / folder / "issues"
-    for stem in (tid.rsplit("-", 1)[-1], tid):
+    story = str(ticket.get("_legacy_story_id") or "")
+    tries = [("stories", story), ("issues", story)] if story else []
+    tries += [("issues", tid.rsplit("-", 1)[-1]), ("issues", tid)]
+    for sub_dir, stem in tries:
         if not stem:
             continue
-        found = sorted(issues.glob(f"{stem}-*.md"))
+        found = sorted((c.root / folder / sub_dir).glob(f"{stem}-*.md"))
         if found:
             return found
     return []

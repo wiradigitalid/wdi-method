@@ -357,6 +357,76 @@ test("a synthesized legacy ticket id is prefixed by its wave — two waves both 
   }
 });
 
+// Two gaps the legacy read above walked straight into, both found by running the new build against
+// the live product it was written for.
+//
+// `plan-dates` asks `_ticket_status` whether a CAP's tickets are done before it calls an overdue
+// date a finding — and it asked with two arguments, where that function has taken three (`c, spec,
+// ticket`) since the `waves:` -> `specs:` rename renamed `_story_status` under it. Nothing in this
+// suite gave a CAP a `planned_end`, so the call was never reached and the TypeError rode along
+// through 0.6.x: `validate.py` ends in a traceback instead of a report, and every other validator's
+// finding dies with it. A pre-rename wave used to reach it least of all — its tickets were
+// invisible here — which is exactly what the legacy read changed.
+const CAPS = (dir) => path.join(dir, ".control", "registry", "requirements-checkout-v1.yaml");
+const withPlannedEnd = (dir, date) =>
+  fs.writeFileSync(CAPS(dir), fs.readFileSync(CAPS(dir), "utf8")
+    .replace("  - id: CAP-1\n", `  - id: CAP-1\n    planned_end: '${date}'\n`));
+
+test("plan-dates REPORTS an overdue CAP instead of crashing — its ticket-status call had lost the spec", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => withPlannedEnd(dir, "2026-01-01"));
+  assert.doesNotMatch(out, /Traceback/,
+    `validate.py crashed on a CAP with a \`planned_end\` — one validator's bad call takes the whole `
+    + `run with it, so no other finding is reported either:\n${out}`);
+  assert.match(out, /plan-dates\s+CAP-1.*overdue/,
+    `plan-dates never reported an overdue CAP whose second ticket is not done:\n${out}`);
+
+  // The other half of that branch, and the reason the spec has to travel with the ticket: once
+  // every ticket the CAP owns reads `done`, the same past date is not a finding at all.
+  const delivered = afterMutation((dir) => {
+    withPlannedEnd(dir, "2026-01-01");
+    const f = path.join(dir, "_bmad-output", "specs", "spec-1-checkout", "issues",
+                        "02-reopen-an-order.md");
+    fs.writeFileSync(f, fs.readFileSync(f, "utf8")
+      .replace("**Status:** ready-for-agent", "**Status:** done"));
+  });
+  assert.doesNotMatch(delivered, /Traceback/, `validate.py crashed:\n${delivered}`);
+  assert.doesNotMatch(delivered, /plan-dates\s+CAP-1/,
+    `a CAP whose every ticket reads \`done\` is not overdue, whatever the date says:\n${delivered}`);
+});
+
+// The second gap: a pre-rename wave's ticket files were never under `issues/`. That folder came
+// with the flat `tickets:` shape; before it, the engine wrote `{spec_folder}/stories/`, named by
+// the story's OWN id (`1-2-*.md`). Looking only in `issues/` reports every story of an OPEN legacy
+// wave as having no file while the file sits one folder over — reporting the migration, not a
+// defect, which is the same thing `_spec_folder` already refuses to do for a folder name.
+const storyFile = (dir, body) => {
+  const d = path.join(dir, "_bmad-output", "specs", "spec-1-checkout", "stories");
+  fs.mkdirSync(d, { recursive: true });
+  fs.writeFileSync(path.join(d, "1-place-an-order.md"), body);
+};
+
+test("an OPEN legacy wave finds its story file in `stories/`, and still reads the status out of it", (t) => {
+  if (requireUv(t)) return;
+  const found = afterMutation((dir) => {
+    replaceSpecs(dir, LEGACY_WAVE("open"));
+    storyFile(dir, "# 1 — place an order\n\n**Status:** done\n");
+  });
+  assert.doesNotMatch(found, /ticket-status-one-home\s+W1-1.*no ticket file/,
+    `the story file is present under \`stories/\`, and reporting it missing sends a reader to look `
+    + `for a file the old shape never wrote:\n${found}`);
+
+  // Found is not the same as read. A story file that states no status anywhere is still a finding —
+  // otherwise the fix above would have bought silence rather than coverage.
+  const silent = afterMutation((dir) => {
+    replaceSpecs(dir, LEGACY_WAVE("open"));
+    storyFile(dir, "# 1 — place an order\n\nno status line anywhere in this body\n");
+  });
+  assert.match(silent, /ticket-status-one-home\s+W1-1.*states no status/,
+    `a story file under \`stories/\` is read the same way a ticket file is, or it is not read at `
+    + `all:\n${silent}`);
+});
+
 test("no-cycles fails on a blocked_by cycle — a frontier that is empty from the first tick", (t) => {
   if (requireUv(t)) return;
   const out = afterMutation((dir) => editSpecs(dir, "        blocked_by: []", "        blocked_by: [SPEC-1-02]"));
