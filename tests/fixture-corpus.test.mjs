@@ -265,6 +265,98 @@ test("ticket-status-one-home fails when the ticket file is missing, and when it 
     `ticket-status-one-home accepted a ticket file that states no status anywhere:\n${silent}`);
 });
 
+// A wave closed before `epics`/`stories` became a flat `tickets:` list, or before `waves:` itself
+// was renamed `specs:`, is real history a product cannot rewrite (retired alias, corpus-guide.md).
+// Two gaps let such a wave go dark the moment THIS package's own validator moved past it:
+// `spec_list` read only the new top-level key, so a file a product never had reason to touch below
+// its own filename made every spec inside it invisible — not merely its tickets; and a CLOSED
+// spec's ticket still had to be found on disk, even though Phase 4 distillation is what
+// legitimately deletes that file. Found on a live product that had run this method for weeks:
+// `promise_progress` read 0% with five closed waves behind it.
+const replaceSpecs = (dir, yaml) => fs.writeFileSync(SPECS(dir), yaml);
+
+const LEGACY_WAVE = (status) => [
+  "waves:",
+  "  - id: W1",
+  "    release: v1",
+  "    prd: [checkout-v1]",
+  `    status: ${status}`,
+  "    spec_folder: _bmad-output/specs/spec-1-checkout/",
+  "    epics:",
+  "      - id: W1-E1",
+  "        stories:",
+  "          - id: \"1\"",
+  "            satisfies: [UC-1]",
+  "            tests: [\"an order is written in one transaction\"]",
+  "",
+].join("\n");
+
+test("a pre-rename `waves:` file with `epics`/`stories` nesting, CLOSED, is read and goes GREEN with no ticket file on disk", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => replaceSpecs(dir, LEGACY_WAVE("closed")));
+  assert.doesNotMatch(out, /Traceback/, `validate.py crashed on a legacy \`waves:\` file:\n${out}`);
+  assert.match(out, /GREEN — no findings/,
+    `a closed pre-rename wave MUST read as done with no ticket file present — Phase 4 distillation `
+    + `is what removed it, not a defect to report back at G5:\n${out}`);
+});
+
+test("the same legacy shape on an OPEN wave still demands a real ticket file — the closed-spec exemption is not a blanket one", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => replaceSpecs(dir, LEGACY_WAVE("open")));
+  assert.match(out, /ticket-status-one-home\s+W1-1.*no ticket file/,
+    `an OPEN legacy wave was let through with no ticket file — the exemption is gated on `
+    + `\`status: closed\`, not on the shape of the record:\n${out}`);
+});
+
+test("a synthesized legacy ticket id is prefixed by its wave — two waves both naming story \"1\" MUST land as two distinct ticket ids in the RTM, not one", (t) => {
+  if (requireUv(t)) return;
+  // Proven by hand first, against a build with the prefix removed: BOTH rows below came back
+  // `ticket: '1'` — one wave's row silently indistinguishable from the other's. `no-cycles`, keyed
+  // by ticket id in one global dict, is what a REAL collision breaks loudest: a later wave's own
+  // `blocked_by` entry can overwrite an earlier wave's, or — as measured — a same-named sibling
+  // inside the SAME wave depending on "the other story" reads back as depending on itself the
+  // moment both waves' "1" collapse into one dict key. Asserting the two ids directly is simpler
+  // than reproducing that here, and it is what the prefix exists to guarantee.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-collide-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  try {
+    replaceSpecs(tmp, [
+      "waves:",
+      "  - id: W1",
+      "    release: v1",
+      "    prd: [checkout-v1]",
+      "    status: closed",
+      "    spec_folder: _bmad-output/specs/spec-1-checkout/",
+      "    epics:",
+      "      - id: W1-E1",
+      "        stories:",
+      "          - id: \"1\"",
+      "            satisfies: [UC-1]",
+      "            tests: [\"an order is written in one transaction\"]",
+      "  - id: W2",
+      "    release: v1",
+      "    prd: [checkout-v1]",
+      "    status: closed",
+      "    spec_folder: _bmad-output/specs/spec-1-checkout/",
+      "    epics:",
+      "      - id: W2-E1",
+      "        stories:",
+      "          - id: \"1\"",
+      "            satisfies: [UC-2]",
+      "            tests: [\"the order page renders for a valid code\"]",
+      "",
+    ].join("\n"));
+    execFileSync("uv", ["run", path.join(SCRIPTS, "validate.py"), "--root", ".", "--generate"],
+                 { cwd: tmp, encoding: "utf8", env: PY_ENV, stdio: ["ignore", "pipe", "pipe"] });
+    const generated = fs.readFileSync(path.join(tmp, ".control", "generated", "rtm.yaml"), "utf8");
+    assert.match(generated, /ticket: W1-1/, `W1's story never landed as ticket \`W1-1\`:\n${generated}`);
+    assert.match(generated, /ticket: W2-1/, `W2's story never landed as ticket \`W2-1\` — it likely `
+      + `collided with W1's under the bare id \`1\`:\n${generated}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test("no-cycles fails on a blocked_by cycle — a frontier that is empty from the first tick", (t) => {
   if (requireUv(t)) return;
   const out = afterMutation((dir) => editSpecs(dir, "        blocked_by: []", "        blocked_by: [SPEC-1-02]"));
