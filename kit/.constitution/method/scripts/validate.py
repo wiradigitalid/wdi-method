@@ -341,6 +341,18 @@ def _legacy_tickets(spec: dict) -> list[dict]:
     yet scheduled, and a closed wave has nothing left to schedule.
     """
     sid = str(spec.get("id") or "")
+
+    def scoped(raw: str) -> str:
+        """`W7-S2` under wave `W7` stays `W7-S2`, not `W7-W7-S2`.
+
+        The prefix exists so two waves both naming a story `"1"` cannot collide into one node. A
+        story already scoped to its wave has nothing to collide with, and prefixing it again produces
+        an id that matches no file, no memlog line, and nothing a person would search for. Measured on
+        a live repo whose RTM read `W7-W7-S2`.
+        """
+        sub = str(raw)
+        return sub if sid and sub.startswith(f"{sid}-") else f"{sid}-{sub}"
+
     out = []
     for epic in spec.get("epics") or []:
         if not isinstance(epic, dict):
@@ -349,8 +361,8 @@ def _legacy_tickets(spec: dict) -> list[dict]:
             if not isinstance(story, dict):
                 continue
             ticket = {k: v for k, v in story.items() if k not in ("id", "depends_on")}
-            ticket["id"] = f"{sid}-{story.get('id')}"
-            ticket["blocked_by"] = [f"{sid}-{d}" for d in (story.get("depends_on") or [])]
+            ticket["id"] = scoped(story.get("id"))
+            ticket["blocked_by"] = [scoped(d) for d in (story.get("depends_on") or [])]
             # The story's OWN id is kept because the file on disk is named after it, not after the
             # synthesized ticket id — see `_ticket_files`.
             ticket["_legacy_story_id"] = str(story.get("id") or "")

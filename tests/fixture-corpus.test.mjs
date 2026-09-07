@@ -1079,3 +1079,39 @@ test("corpus-in-git SKIPS where git cannot answer — a guard that goes green ou
   assert.match(out, /Skipped:[\s\S]*corpus-in-git/,
     `outside a git repo the guard MUST say it could not answer:\n${out}`);
 });
+
+// A story id that ALREADY carries its wave's prefix must not gain a second one. Two live repos name
+// their stories `W1-S1`, `W7-S2` — and the synthesized ticket read back `W7-W7-S2`, which matches no
+// file, no memlog line, and nothing a person would search for. The prefix exists to stop two waves
+// both naming a story "1" from colliding; a story already scoped to its wave has nothing to collide
+// with, so prefixing it again buys nothing and costs the id's readability.
+test("a legacy story id already prefixed by its wave is NOT prefixed twice", (t) => {
+  if (requireUv(t)) return;
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-doubleprefix-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  try {
+    replaceSpecs(tmp, [
+      "waves:",
+      "  - id: W1",
+      "    release: v1",
+      "    prd: [checkout-v1]",
+      "    status: closed",
+      "    spec_folder: _bmad-output/specs/spec-1-checkout/",
+      "    epics:",
+      "      - id: W1-E1",
+      "        stories:",
+      "          - id: \"W1-S1\"",
+      "            satisfies: [UC-1]",
+      "            tests: [\"an order is written in one transaction\"]",
+      "",
+    ].join("\n"));
+    execFileSync("uv", ["run", path.join(SCRIPTS, "validate.py"), "--root", ".", "--generate"],
+                 { cwd: tmp, encoding: "utf8", env: PY_ENV, stdio: ["ignore", "pipe", "pipe"] });
+    const rtm = fs.readFileSync(path.join(tmp, ".control", "generated", "rtm.yaml"), "utf8");
+    assert.doesNotMatch(rtm, /ticket: W1-W1-S1/,
+      `the wave prefix was applied to an id that already had it:\n${rtm}`);
+    assert.match(rtm, /ticket: W1-S1/, `the story's own id did not survive:\n${rtm}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
