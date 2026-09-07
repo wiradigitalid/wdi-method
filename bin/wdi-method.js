@@ -1273,6 +1273,39 @@ function specsOutsideScratch(text) {
   return out;
 }
 
+/** Specs still in the pre-rename plan shape that are NOT closed — the ones with work left in them.
+ *
+ * Same scanner shape as `specsOutsideScratch`, and the same exemption for the same reason: the
+ * convention binds work, not the record of work that is done.
+ */
+function specsInLegacyShape(text) {
+  const out = [];
+  let id = "";
+  let status = "";
+  let legacy = false;
+  const flush = () => {
+    if (id && legacy && status !== "closed") out.push(id);
+    id = "";
+    status = "";
+    legacy = false;
+  };
+  for (const line of text.split(/\r?\n/)) {
+    const row = /^\s{2}-\s+id:\s*(\S+)/.exec(line);
+    if (row) {
+      flush();
+      id = row[1].replace(/['"]/g, "");
+      if (/^W\d+$/.test(id)) legacy = true;
+      continue;
+    }
+    if (!id) continue;
+    const st = /^\s+status:\s*(\S+)/.exec(line);
+    if (st && !status) status = st[1].replace(/['"]/g, "");
+    if (/^\s+(epics|stories):/.test(line)) legacy = true;
+  }
+  flush();
+  return out;
+}
+
 function pendingUpgrades(target) {
   const has = (...p) => fs.existsSync(path.join(target, ...p));
   const read = (...p) => (has(...p) ? fs.readFileSync(path.join(target, ...p), "utf8") : "");
@@ -1298,7 +1331,20 @@ function pendingUpgrades(target) {
     items.push(`spec_folder outside .scratch/<spec-id>-<slug>/ on ${strays.join(", ")} `
                + `(the folder moves, then its cites)`);
   }
-  if (/^\s*-\s*id:\s*W\d+|^\s*(epics|stories):/m.test(read(".control", "registry", "specs.yaml"))) items.push("specs.yaml rows still W<n>/epics/stories (wdi-build re-cuts)");
+  // Reported only where it is still WORK. A closed pre-rename wave is read correctly (0.6.7 taught
+  // `Corpus.tickets()` to flatten `epics`/`stories` in memory), its `W<n>` id is a retired alias by
+  // design, and its ticket files are already allowed to be gone. Nothing there is waiting to move.
+  //
+  // Until 0.6.11 this fired on every legacy row and pointed at `wdi-build` to "re-cut" it. That
+  // instruction outlived the design it came from: `wdi-build` Phase 2 invokes `to-spec`/`to-tickets`
+  // to write a NEW contract and publish new tickets, and has no mode that converts an old wave.
+  // Three repos carrying twenty, forty-five and ten closed legacy rows were each told to run a skill
+  // that would answer "not mine" and stop.
+  const legacyOpen = specsInLegacyShape(read(".control", "registry", "specs.yaml"));
+  if (legacyOpen.length) {
+    items.push(`${legacyOpen.join(", ")} still in the W<n>/epics/stories shape and not closed `
+               + `(flattened into tickets, id kept as its retired alias)`);
+  }
   if (/^## (Executive Summary|Vision|Assumptions|Prerequisites)\s*$/m.test(read(".what", "_product-brief", "brief.md"))) items.push("brief.md in the 14-section shape");
   // Sections by NAME: the numbers moved between kits (Non-Goals was §7 in one, §5 in the next).
   if (anyIn(".what/_prd", "prd.md", /^## (\d+\.\s*)?(Document Purpose|Glossary|Non-Goals|Open Questions|Assumptions Index)\b|\*\*Proof of done:\*\*/m)) items.push("a prd.md in the 12-section shape, or with FR blocks");

@@ -221,6 +221,66 @@ test("update REPORTS a stale tracker config and a spec folder outside `.scratch/
   }
 });
 
+// The pre-rename plan shape used to be reported on every repo that had one, closed or not, with the
+// instruction "re-cut through `wdi-build` — not this skill". That instruction was left over from a
+// design `wdi-build` no longer has: its Phase 2 invokes `to-spec`/`to-tickets` to write a NEW
+// contract and publish new tickets. There is no "convert an old wave" mode to route to, and asking
+// for one over a wave that closed months ago is asking to re-plan finished work.
+//
+// So the shape is `wdi-upgrade`'s where it is still work, and nobody's where it is history. Three
+// live repos carried twenty, forty-five and ten legacy rows respectively, every one of them closed,
+// and all three were told to run a skill that would answer "not mine" and stop.
+const legacySpecs = (status) =>
+  "waves:\n  - id: W1\n    release: v1\n    prd: [checkout-v1]\n"
+  + `    status: ${status}\n`
+  + "    spec_folder: .scratch/w1-checkout/\n"
+  + "    epics:\n      - id: W1-E1\n        stories:\n"
+  + "          - id: \"1\"\n            satisfies: [UC-1]\n"
+  + "            tests: [\"an order is written in one transaction\"]\n";
+
+function updateWith(target, specsYaml) {
+  fs.writeFileSync(path.join(target, ".control", "registry", "specs.yaml"), specsYaml);
+  return strip(execFileSync(process.execPath,
+    [path.join(ROOT, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check"],
+    { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, CLAUDE_CONFIG_DIR: tmp("cfg4") } }));
+}
+
+test("a CLOSED legacy wave is not reported at all — it is read correctly and it is history", () => {
+  const target = tmp("pend-legacy-closed");
+  try {
+    seedEngines(target);
+    install(target);
+    const out = updateWith(target, legacySpecs("closed"));
+    assert.doesNotMatch(out, /epics\/stories/,
+      `a closed pre-rename wave was reported as pending. 0.6.7 taught the validator to read it, its `
+      + `id is a retired alias by design, and nothing about it is waiting to be moved:\n${out}`);
+    const after = out.slice(out.indexOf("After update:"));
+    assert.doesNotMatch(after, /run the wdi-upgrade skill/,
+      `the next steps still sent the owner to a skill with nothing to do:\n${after}`);
+  } finally {
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("an OPEN legacy wave IS reported, and as wdi-upgrade's own work", () => {
+  const target = tmp("pend-legacy-open");
+  try {
+    seedEngines(target);
+    install(target);
+    const out = updateWith(target, legacySpecs("open"));
+    assert.match(out, /epics\/stories/, `an open pre-rename wave was not reported:\n${out}`);
+    assert.match(out, /wdi-upgrade/,
+      `the report must name wdi-upgrade: flattening \`epics\`/\`stories\` into \`tickets\` is a `
+      + `mapping, and \`_legacy_tickets\` in validate.py already spells it out. Sending it to `
+      + `wdi-build asks an engine to re-plan work that is already planned:\n${out}`);
+    assert.doesNotMatch(out, /wdi-build re-cuts/,
+      "the old instruction is still there. `wdi-build` has no mode that converts a wave");
+  } finally {
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
 test("a CLOSED spec's folder is left where it is — the convention binds work, not finished history", () => {
   const target = tmp("pend-closed");
   try {

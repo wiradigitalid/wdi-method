@@ -43,7 +43,7 @@ before an earlier one lands content in a file that the earlier item is about to 
 | # | Probe | Old shape | New home |
 |---|---|---|---|
 | 1 | `.control/registry/requirements.yaml` exists | one file for `BG` · `CAP` · `FR` · `NFR` · `UJ` | `goals.yaml` (`BG`) · `requirements-<slug>.yaml` per PRD (`CAP` · `FR` · `NFR` · `UJ`) |
-| 2 | `specs.yaml` has `W<n>` ids, or `epics:` / `stories:` keys | pre-rename plan | re-cut through `wdi-build` — **not this skill**; report it and move on |
+| 2 | a spec with a `W<n>` id, or carrying `epics:` / `stories:`, that is **not `closed`** | pre-rename plan | flattened in place — **this skill's**, and § *The pre-rename plan* below is the mapping. A `closed` spec is left alone: `Corpus.tickets()` reads it correctly and its ticket files are already allowed to be gone |
 | 3 | `brief.md` has `## Executive Summary`, `## Vision`, `## Assumptions`, or `## Prerequisites`; or `## Goals` lists `BG-` statements | 14-section brief | 8 sections: `Why` merges Summary + Vision; Goals is a pointer, its rows in `goals.yaml`; Assumptions → `questions/assumptions.md`; Prerequisites → `questions/external.md` |
 | 4 | any `prd.md` has a section **named** Document Purpose, Glossary, Non-Goals, Open Questions, or Assumptions Index — under whatever number that kit gave it — or `**Proof of done:**` under a feature | 12-section PRD with `FR` blocks | 7 sections; `FR`/`NFR` text → `requirements-<slug>.yaml`, the PRD keeps `Realizes:` ids; Glossary → `product-glossary.md`; §8/§9 → `questions/`; §1 becomes a delta |
 | 5 | any `SRS-<pc>.md` `## UC Catalogue` has `\| UC-` rows | catalogue copied from `usecases.yaml` | one pointer line; the rows live in `usecases.yaml` |
@@ -80,6 +80,25 @@ and its markup: when it holds `: ` or `#` or starts with a quote, wrap the value
 `>-` block — never trade a colon for a dash or strip `**` and backticks to make it a plain scalar. A row with no home is reported by id, not guessed: the
 owner names it. When every row has moved, delete `requirements.yaml`; `id-allocated-once` fails if a
 row was copied instead of moved.
+
+**2 — the pre-rename plan.** A spec still shaped `epics: → stories:` is flattened into the one
+`tickets:` list the validator reads. Every part of this is a mapping; nothing here is a judgment, and
+nothing is invented:
+
+| Old | New |
+|---|---|
+| `waves:` as the file's top-level key | `specs:`. The rows below it do not otherwise change shape from this rename alone |
+| the spec's `W<n>` id | **unchanged.** It is a retired alias, and every memlog, `DEC-`, report and RTM row that names it MUST keep resolving. Renaming it to `SPEC-<n>` is the one thing this step MUST NOT do |
+| `epics:` → `stories:` nesting | one flat `tickets:` list, in the order the stories appear, epic by epic. The `epics` level is repealed: it grouped rows and bought nothing |
+| a story's own id (`"1"`, `"1-2"`) | `<spec-id>-<NN>`, renumbered from `01` in dependency order — `W3-01`, `W3-02`. A story id only ever promised uniqueness inside one epic, and this method keys tickets globally |
+| `depends_on: ["1-1"]` on a story | `blocked_by: [W3-01]` — the same edge, the new key, pointing at the new id |
+| `{spec_folder}/stories/1-2-<slug>.md` | `{spec_folder}/issues/<NN>-<slug>.md`, the `<NN>` matching the ticket's new id. `git mv`, so the file's history follows it |
+| a story's `touches:` | kept as `touches:`. A story never carried `component:`, and this step MUST NOT invent one — `wdi-init` owns that field |
+
+Two things stay untouched even here. The **status** of each ticket is read from its file and MUST NOT
+be copied into `specs.yaml` — `ticket-status-one-home` is what refuses that. And a `closed` spec is
+skipped whole: `validate.py` already flattens it in memory on every run, so rewriting the file changes
+no reading and only churns the record of finished work.
 
 Run `validate.py --check`. Green here means the registry is whole before any document starts pointing
 at it.
