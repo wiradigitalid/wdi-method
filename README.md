@@ -460,7 +460,7 @@ English, whatever the settings say — it travels to every repo through this pac
 
 It prints the version it replaced, what it wrote, what it kept, and what to do next.
 
-### Moving a repo from 0.6.x to 0.7.0
+### Moving a repo from 0.6.7 or earlier to 0.6.8
 
 Four things change for a repo already running the method. The first is the only one that can stop an
 update, and all four are mechanical.
