@@ -251,6 +251,36 @@ test("a domain.md somebody already corrected is NOT warned about again", () => {
   }
 });
 
+// The gate lived in `runNonInteractive` only, so `npx wdi-method update` typed in a terminal — the TUI,
+// and the way almost everybody runs it — printed "Engines: MISSING …" in the Detected note and carried
+// straight on to the confirm prompt. BMad had a hard stop there from the beginning; the engines had a
+// line of text. Required through one door and advisory through the other is not required.
+//
+// Asserted against the source because the wizard needs a TTY this suite does not have. The behavioural
+// half is the refusal tests above, which drive the non-interactive path.
+test("the TUI refuses too — the gate MUST NOT depend on which door you came through", () => {
+  const src = fs.readFileSync(path.join(ROOT, "bin", "wdi-method.js"), "utf8");
+  const wizard = src.slice(src.indexOf("async function runWizard"), src.indexOf("function runNonInteractive"));
+
+  const bmadStop = wizard.indexOf("!hasBmad");
+  assert.ok(bmadStop > 0, "the wizard's BMad refusal is gone — this test compares the engines gate to it");
+
+  assert.match(wizard, /skipEngines/,
+    "the wizard never consults `--skip-engines-check`, which means it never gates on the engines at "
+    + "all: it prints them as a fact and moves on");
+  // The shape is not asserted, only that the gate exists and ENDS the run: a check that reports and
+  // continues is what this whole test was written against.
+  const enginesStop = wizard.indexOf("!pre.skipEngines");
+  assert.ok(enginesStop > 0,
+    "the wizard has no refusal shaped like BMad's. A missing engine MUST stop an interactive install or "
+    + "update the same way, or `wdi-build` still gets discovered empty-handed at G5");
+  assert.match(wizard.slice(enginesStop, enginesStop + 400), /process\.exit\(1\)/,
+    "the wizard consults `--skip-engines-check` but does not exit — so it still reports and carries on");
+  assert.ok(enginesStop > bmadStop,
+    "the engines gate runs BEFORE the BMad one. BMad is step 1 and the engines step 2 — refusing out of "
+    + "order tells somebody to install the second thing while the first is still missing");
+});
+
 // This suite went green locally and red in CI, and the gap was the developer's own machine: the
 // mattpocock plugin is installed here, so the old `enginesPresent()` said yes for every test that ran
 // an install without the escape. On a runner it said no, and twenty-eight tests died at once — after

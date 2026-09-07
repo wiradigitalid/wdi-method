@@ -1807,6 +1807,17 @@ async function runWizard(pre) {
     process.exit(1);
   }
 
+  // Step 2, refused in step 2's place. This used to be a line in the Detected note and nothing more,
+  // so an interactive install or update sailed past a repo with no engines in it — the same repo the
+  // `--yes` path refuses. The order matters as much as the stop: BMad is step 1, so a repo missing
+  // both is told about BMad first rather than sent to install the second thing.
+  const engineGate = enginesReport(target);
+  if (!engineGate.present && !pre.skipEngines) {
+    p.note(enginesMissingMessage(engineGate.missing), "Engines next");
+    p.outro("Install them into this repo, then run this again: npx wdi-method");
+    process.exit(1);
+  }
+
   let first = !hasWdi;
   if (hasWdi) {
     const update = cancelIf(

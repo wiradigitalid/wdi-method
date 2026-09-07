@@ -29,11 +29,10 @@ page it is on.
 
 ## Install
 
-Three steps, in this order. The first is required before step 3 will run; the second can wait until
-**Both are required, and the installer refuses without either.** BMad has always been checked; the ticket
-engines are checked too, because every repo that learned they were missing learned it inside `wdi-build`
-with a spec already open. `--skip-engines-check` is the escape for the two cases that earn it: CI, and a
-repo that will never reach G5.
+Three steps, in this order, and **step 3 refuses until steps 1 and 2 are done** — through the TUI and
+through `--yes` alike. BMad has always been checked; the engines are checked too, because every repo that
+learned they were missing learned it inside `wdi-build` with a spec already open. `--skip-engines-check`
+is the escape for the two cases that earn it: CI, and a repo that will never reach G5.
 
 **1. BMad Method** — in the product repo, picking the same agents you will give this installer:
 
