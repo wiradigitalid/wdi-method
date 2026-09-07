@@ -1247,6 +1247,16 @@ function pendingUpgrades(target) {
   };
   const items = [];
   if (has(".control", "registry", "requirements.yaml")) items.push("requirements.yaml → goals.yaml + requirements-<slug>.yaml");
+  // The file the engines actually read. `/setup-matt-pocock-skills` writes its own answer here — no
+  // `specs.yaml`, no predefined path — and `seedAgentDocs` will not overwrite a file the product owns,
+  // so without this probe the repo never learns why its tickets scatter.
+  if (has("docs", "agents", "issue-tracker.md")
+      && !read("docs", "agents", "issue-tracker.md").includes("seeded by `wdi-method`")) {
+    items.push("docs/agents/issue-tracker.md is not the method's answer (npx wdi-method engines --fix)");
+  }
+  if (/^\s*spec_folder:\s*(?!\.scratch\/)\S/m.test(read(".control", "registry", "specs.yaml"))) {
+    items.push("a spec_folder outside .scratch/<spec-id>-<slug>/ (the folder moves, then its cites)");
+  }
   if (/^\s*-\s*id:\s*W\d+|^\s*(epics|stories):/m.test(read(".control", "registry", "specs.yaml"))) items.push("specs.yaml rows still W<n>/epics/stories (wdi-build re-cuts)");
   if (/^## (Executive Summary|Vision|Assumptions|Prerequisites)\s*$/m.test(read(".what", "_product-brief", "brief.md"))) items.push("brief.md in the 14-section shape");
   // Sections by NAME: the numbers moved between kits (Non-Goals was §7 in one, §5 in the next).

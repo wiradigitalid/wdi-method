@@ -185,6 +185,42 @@ test("`engines --fix` replaces upstream's tracker answer and keeps the old text 
   }
 });
 
+// A migration path nobody is told about is not a migration path. `wdi-upgrade` gained the two items
+// that move a repo onto the predefined paths, and `update` said nothing about either — so the four
+// repos this was written for would run `update`, see a clean summary, and carry on writing tickets
+// wherever the engine guessed. `pendingUpgrades()` is what puts the `upgrade` line on the summary and
+// `wdi-upgrade` in the next steps, so the probes belong there.
+test("update REPORTS a stale tracker config and a spec folder outside `.scratch/` as pending", () => {
+  const target = tmp("pend");
+  try {
+    seedEngines(target);
+    install(target);
+
+    // Upstream's answer, as `/setup-matt-pocock-skills` writes it: no `specs.yaml`, no predefined
+    // path. Two of four live repos still carried this, and it is why their tickets scattered.
+    fs.writeFileSync(path.join(target, "docs", "agents", "issue-tracker.md"),
+      "# Issue tracker: Local Markdown\n\nIssues live in `.scratch/`.\n");
+    // And a spec folder where every repo used to put it.
+    fs.writeFileSync(path.join(target, ".control", "registry", "specs.yaml"),
+      "specs:\n  - id: SPEC-1\n    release: v1\n    status: open\n"
+      + "    spec_folder: _bmad-output/specs/w1-settings/\n    tickets: []\n");
+
+    const out = strip(execFileSync(process.execPath,
+      [path.join(ROOT, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check"],
+      { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, CLAUDE_CONFIG_DIR: tmp("cfg2") } }));
+
+    assert.match(out, /issue-tracker\.md/,
+      `update said nothing about a tracker config that sends the engines to the wrong place:\n${out}`);
+    assert.match(out, /spec_folder/,
+      `update said nothing about spec folders still outside \`.scratch/\`:\n${out}`);
+    assert.match(out, /wdi-upgrade/,
+      `the summary named neither, so the next steps never named the skill that fixes them:\n${out}`);
+  } finally {
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
 test("engines-invocable goes RED when the flag comes back — what `npx skills update` does", (t) => {
   if (!HAVE_UV) {
     t.skip("uv is not installed, so validate.py cannot run here");
