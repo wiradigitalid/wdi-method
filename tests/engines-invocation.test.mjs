@@ -221,6 +221,39 @@ test("update REPORTS a stale tracker config and a spec folder outside `.scratch/
   }
 });
 
+test("a CLOSED spec's folder is left where it is — the convention binds work, not finished history", () => {
+  const target = tmp("pend-closed");
+  try {
+    seedEngines(target);
+    install(target);
+    // The repo this was measured on carries ten closed specs and not one open. Reporting all ten as
+    // pending would ask somebody to move ten folders of finished work, repoint every cite into them,
+    // and gain nothing: `spec_folder` still resolves, and 0.6.7 already made a closed spec's missing
+    // ticket file legitimate. The same exemption `ticket-status-one-home` grants, for the same reason.
+    fs.writeFileSync(path.join(target, ".control", "registry", "specs.yaml"),
+      "specs:\n"
+      + "  - id: SPEC-1\n    release: v1\n    status: closed\n"
+      + "    spec_folder: _bmad-output/specs/spec-1-checkout/\n    tickets: []\n"
+      + "  - id: SPEC-2\n    release: v1\n    status: open\n"
+      + "    spec_folder: _bmad-output/specs/spec-2-refunds/\n    tickets: []\n");
+
+    const out = strip(execFileSync(process.execPath,
+      [path.join(ROOT, "bin", "wdi-method.js"), "update", target, "--yes", "--skip-bmad-check"],
+      { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, CLAUDE_CONFIG_DIR: tmp("cfg3") } }));
+
+    assert.match(out, /spec_folder/, `the OPEN spec was not reported:\n${out}`);
+    assert.match(out, /SPEC-2/,
+      `the report must NAME the spec that needs moving — "a spec_folder outside .scratch/" over ten `
+      + `closed rows is how a summary gets skipped:\n${out}`);
+    assert.doesNotMatch(out, /SPEC-1/,
+      `a closed spec was reported as pending. Its folder is a record; moving it churns finished work `
+      + `and the cites into it:\n${out}`);
+  } finally {
+    fs.rmSync(target, { recursive: true, force: true });
+  }
+});
+
 test("engines-invocable goes RED when the flag comes back — what `npx skills update` does", (t) => {
   if (!HAVE_UV) {
     t.skip("uv is not installed, so validate.py cannot run here");

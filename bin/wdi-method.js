@@ -1234,6 +1234,45 @@ function setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen })
 // move, because moving it takes a decision about meaning: which PRD an `FR` belongs to, whether a
 // sentence was an assumption or a constraint. The `wdi-upgrade` skill does that half. This only
 // DETECTS it, cheaply, so the summary can say how much is waiting and where.
+/** Specs whose folder is not where the convention puts it — and that are still WORK.
+ *
+ * A closed spec is exempt, and one measured repo is why: ten closed specs, none open. Reporting all
+ * ten would ask somebody to move ten folders of finished work and repoint every cite into them, for
+ * nothing — `spec_folder` still resolves, and a closed spec's ticket file is already allowed to be
+ * gone. The same exemption `ticket-status-one-home` grants, for the same reason: the convention binds
+ * work, not the record of work that is done.
+ *
+ * Scanned line by line rather than parsed: this installer has no YAML reader, and both the flat
+ * `specs:` shape and the pre-rename `waves:` one open a row the same way.
+ */
+function specsOutsideScratch(text) {
+  const out = [];
+  let id = "";
+  let status = "";
+  let folder = "";
+  const flush = () => {
+    if (id && folder && status !== "closed" && !folder.startsWith(".scratch/")) out.push(id);
+    id = "";
+    status = "";
+    folder = "";
+  };
+  for (const line of text.split(/\r?\n/)) {
+    const row = /^\s{2}-\s+id:\s*(\S+)/.exec(line);
+    if (row) {
+      flush();
+      id = row[1].replace(/['"]/g, "");
+      continue;
+    }
+    if (!id) continue;
+    const st = /^\s+status:\s*(\S+)/.exec(line);
+    if (st && !status) status = st[1].replace(/['"]/g, "");
+    const sf = /^\s+spec_folder:\s*(\S+)/.exec(line);
+    if (sf && !folder) folder = sf[1].replace(/['"]/g, "");
+  }
+  flush();
+  return out;
+}
+
 function pendingUpgrades(target) {
   const has = (...p) => fs.existsSync(path.join(target, ...p));
   const read = (...p) => (has(...p) ? fs.readFileSync(path.join(target, ...p), "utf8") : "");
@@ -1254,8 +1293,10 @@ function pendingUpgrades(target) {
       && !read("docs", "agents", "issue-tracker.md").includes("seeded by `wdi-method`")) {
     items.push("docs/agents/issue-tracker.md is not the method's answer (npx wdi-method engines --fix)");
   }
-  if (/^\s*spec_folder:\s*(?!\.scratch\/)\S/m.test(read(".control", "registry", "specs.yaml"))) {
-    items.push("a spec_folder outside .scratch/<spec-id>-<slug>/ (the folder moves, then its cites)");
+  const strays = specsOutsideScratch(read(".control", "registry", "specs.yaml"));
+  if (strays.length) {
+    items.push(`spec_folder outside .scratch/<spec-id>-<slug>/ on ${strays.join(", ")} `
+               + `(the folder moves, then its cites)`);
   }
   if (/^\s*-\s*id:\s*W\d+|^\s*(epics|stories):/m.test(read(".control", "registry", "specs.yaml"))) items.push("specs.yaml rows still W<n>/epics/stories (wdi-build re-cuts)");
   if (/^## (Executive Summary|Vision|Assumptions|Prerequisites)\s*$/m.test(read(".what", "_product-brief", "brief.md"))) items.push("brief.md in the 14-section shape");
