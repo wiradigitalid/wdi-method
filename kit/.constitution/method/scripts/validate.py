@@ -526,9 +526,21 @@ def refs_resolve(c: Corpus, r: Result) -> None:  # was V6
         refs += [(str(ticket.get("id")), u) for u in listy(ticket, "satisfies")]
         refs += [(str(ticket.get("id")), b) for b in listy(ticket, "blocked_by")]
 
+    # A promise's id going missing has one likely cause and one wrong-looking-obvious repair. The
+    # cause: the row was DELETED when the product stopped promising it. The wrong repair: edit the
+    # reference — which `corpus-guide.md` refuses, because a `DEC-` records what happened and it did
+    # serve that promise at the time. One repo carried twelve of these before anyone worked out that
+    # the row was meant to stay, so the route travels with the finding.
+    promise_id = re.compile(r"^(BG|CAP|FR|NFR|UC)-\d+$")
     for owner, target in sorted(set(refs)):
         if target and target not in defined:
-            r.fail("refs-resolve", owner, f"points to `{target}` which does not exist in any registry")
+            hint = ""
+            if promise_id.match(target):
+                hint = (" — if it was withdrawn, the row STAYS with `status: withdrawn` and a "
+                        "`withdrawn_by`, and deleting it is what broke this reference (corpus-guide.md). "
+                        "Editing the reference instead rewrites a record of the past")
+            r.fail("refs-resolve", owner,
+                   f"points to `{target}` which does not exist in any registry{hint}")
 
 
 def _cycles(graph: dict[str, list[str]]) -> list[str]:

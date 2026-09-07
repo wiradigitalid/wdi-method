@@ -1134,6 +1134,16 @@ const addRows = (dir, capBlock, frBlock) => {
     .replace(/^journeys: \[\]/m, `${frBlock}\njourneys: []`));
 };
 
+/** Give DEC-001 a `serves:` — the fixture has none, and a mutation that edits a field which is not
+ * there is a test that passes without testing anything. Two of these did exactly that. */
+const servesIn = (dir, id) => {
+  const f = DECISIONS(dir);
+  const text = fs.readFileSync(f, "utf8");
+  const anchor = "    type: technical\n";
+  assert.ok(text.includes(anchor), "the fixture's DEC-001 no longer has the anchor this mutation uses");
+  fs.writeFileSync(f, text.replace(anchor, `${anchor}    serves: [${id}]\n`));
+};
+
 const WITHDRAWN_CAP = [
   "  - id: CAP-2",
   "    goal: BG-1",
@@ -1158,8 +1168,7 @@ test("a WITHDRAWN capability keeps every old reference resolving, and is asked f
   const out = afterMutation((dir) => {
     addRows(dir, WITHDRAWN_CAP, WITHDRAWN_FR.replace("functional:", ""));
     // A decision that served it, exactly as the live repo's eight do.
-    const d = DECISIONS(dir);
-    fs.writeFileSync(d, fs.readFileSync(d, "utf8").replace(/^(\s+)serves: \[/m, "$1serves: [CAP-2, "));
+    servesIn(dir, "CAP-2");
   });
   assert.doesNotMatch(out, /refs-resolve.*CAP-2/,
     `a decision naming the withdrawn capability failed to resolve. Deleting the row is what produced `
@@ -1189,4 +1198,34 @@ test("a LIVE row hanging off a withdrawn one is a FINDING — withdrawal MUST NO
   });
   assert.match(out, /withdrawn-recorded\s+FR-3/,
     `FR-3 is live and its capability is withdrawn, and nothing said so:\n${out}`);
+});
+
+// The finding a deleted-instead-of-withdrawn row produces is `refs-resolve`, and on its own it says
+// only "points to `CAP-8` which does not exist". A reader then has two candidate repairs and the
+// wrong one is the obvious one: edit the decision. One repo took twelve of these before anybody
+// worked out that the row was supposed to stay. So the finding carries the route now.
+test("refs-resolve names the withdrawn route when the missing id is a requirement's", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => {
+    // A decision serving a capability whose row was deleted — exactly the live repo's shape.
+    servesIn(dir, "CAP-99");
+  });
+  assert.match(out, /refs-resolve.*CAP-99/, `the dangling reference was not reported:\n${out}`);
+  assert.match(out, /withdrawn/,
+    `the finding does not mention that a withdrawn promise keeps its row. Without it the obvious `
+    + `repair is to edit the decision, which corpus-guide.md forbids — and which is what a real repo `
+    + `nearly did to eight of them:\n${out}`);
+});
+
+test("refs-resolve does NOT offer that route for a missing id that is not a requirement's", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => {
+    const f = REG(dir, "usecases.yaml");
+    fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace(/^(\s+)satisfies: \[/m, "$1satisfies: [SPEC-99, "));
+  });
+  assert.match(out, /refs-resolve.*SPEC-99/, `the dangling reference was not reported:\n${out}`);
+  const line = out.split("\n").find((l) => l.includes("SPEC-99")) || "";
+  assert.doesNotMatch(line, /withdrawn/,
+    `a spec id was offered the withdrawn route. Only a promise can be withdrawn; suggesting it for `
+    + `anything else sends the reader to write a field the guide never defined:\n${line}`);
 });
