@@ -460,6 +460,24 @@ English, whatever the settings say — it travels to every repo through this pac
 
 It prints the version it replaced, what it wrote, what it kept, and what to do next.
 
+### Moving a repo from 0.6.x to 0.7.0
+
+Four things change for a repo already running the method. The first is the only one that can stop an
+update, and all four are mechanical.
+
+| What changed | What it means for your repo |
+|---|---|
+| **The engines must be in the repo** | `install` and `update` refuse until `to-spec`, `to-tickets`, `implement`, `tdd`, `code-review` and `domain-modeling` are here — `npx skills@latest add mattpocock/skills`. The Claude Code plugin no longer counts: three of the six ship locked against skill invocation, nothing outside the file unlocks them, and a plugin's files are not yours to edit. `--skip-engines-check` still installs without them |
+| **The engines are invoked, not handed to you** | `wdi-build` calls `to-spec`, `to-tickets`, `implement`, `tdd` and `code-review` itself, so `wdi-autopilot` can finish a spec with nobody watching. Every `update` re-unlocks the repo's copies, because `npx skills update` puts the author's lock back — and `engines-invocable` in `validate.py` goes red when it has |
+| **Thirteen BMad skills are retired at G5, and now enforced** | `bmad-spec`, `bmad-build`, `bmad-build-auto`, `bmad-code-review`, `bmad-retrospective`, `bmad-agent-dev`, `bmad-create-epics-and-stories`, `bmad-create-story`, `bmad-dev-story`, `bmad-dev-auto`, `bmad-quick-dev`, `bmad-sprint-planning`, `bmad-sprint-status`. Each is locked out of model invocation and denied in `.claude/settings.json`; typing the slash command yourself still works. `bmad-skill-register.md` carries the list and the criterion — retired only where this method has a named replacement, which is why `bmad-qa-generate-e2e-tests` and `bmad-checkpoint-preview` are not on it |
+| **A spec has one predefined home** | `.scratch/<spec-id>-<slug>/`, with `SPEC.md` and `issues/<NN>-<slug>.md` inside it. Left free, that folder name gets written a different way in every repo and traces back to nothing. A row in `specs.yaml` is now what makes an effort a spec rather than ad hoc work — the path no longer says |
+
+Run the `wdi-upgrade` skill after updating: it names what is still in the old shape, including a
+`docs/agents/issue-tracker.md` that still carries `/setup-matt-pocock-skills`' own answer, and the spec
+folders that need moving. `npx wdi-method engines` reports the engine state on its own, and
+`npx wdi-method engines --fix` repairs what can be repaired without touching anything you wrote — the
+previous config is kept as `.bak`.
+
 ---
 
 ## Changing the method
