@@ -52,7 +52,8 @@ mis-route in this flow, because every other gate is the same for every component
 | `wdi-method update` just ran and printed **no** `upgrade` line | Nothing. The update was mechanical and complete; carry on from wherever the gates say you are |
 | `wdi-method install` just ran, first time in this repo | `wdi-init` intent `setup` — the global `mode`, and nothing has started until it is set |
 | Someone asks whether to run `/setup-matt-pocock-skills` | **No**, unless they are changing tracker. `install` and `update` seed `docs/agents/` already answered for this method; re-running the interview restores defaults that contradict Article 3 |
-| The installer refused, naming the ticket engines | Not a skill. Install them — `/plugin install mattpocock-skills`, or `npx skills@latest add mattpocock/skills` — then run the installer again |
+| The installer refused, naming engines | Not a skill. `npx skills@latest add mattpocock/skills` — **into this repo**, all six it names; a user-level plugin does not count. Then run the installer again |
+| An engine will not invoke, or `engines-invocable` is red | `wdi-init` intent `engines` — `npx skills update` puts the author's `disable-model-invocation` back, and one command strips it out again |
 | No registry, or no global `mode` set | `wdi-init` intent `setup` — nothing has started |
 | No `.what/_product-brief/brief.md` | `wdi-problem` — G1 has not started |
 | A brief exists, and no PRD covers the area in play | `wdi-product` intent `prd` |

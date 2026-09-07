@@ -52,6 +52,13 @@ before an earlier one lands content in a file that the earlier item is about to 
 | 8 | `.control/generated/brief.md`, `blueprint.md`, or `prd-*.md` exist | human pages in the machine folder | `.what-rendered/` · `.how-rendered/` — `render` clears the old ones |
 | 9 | `.what-rendered/` or `.how-rendered/` absent | no reader's tree yet | born by `render` |
 | 10 | any `.md` outside `.constitution/` cites `.control/generated/brief.md`, `blueprint.md`, or `prd-<slug>.md` | a pointer at a page that moved | `.what-rendered/_product-brief/brief.md` · `.how-rendered/blueprint.md` · `.what-rendered/_prd/<slug>/prd.md` — `cites-resolve` fails until it is repointed |
+| 11 | `docs/agents/issue-tracker.md` does not contain the words `seeded by ``wdi-method``` | the engines' config as `/setup-matt-pocock-skills` wrote it: everything in `.scratch/` with no registry behind it, `specs.yaml` never mentioned | the method's own answer. **`npx wdi-method engines --fix`** rewrites it and keeps the old text as `issue-tracker.md.bak`. Two of four live repos still had upstream's, which is why their tickets landed wherever the engine guessed |
+| 12 | any `spec_folder` in `specs.yaml` is outside `.scratch/`, or its leaf does not begin with the spec's own id | spec folders under `_bmad-output/specs/`, leaf named freely — four repos wrote it four ways, one of them all four inside itself | `.scratch/<spec-id>-<slug>/`. Move the directory, rewrite the `spec_folder` row, then repoint every cite — `cites-resolve` is red until you do, and it is how you find them all |
+
+Items 11 and 12 are the engines' half of a version jump, and they come FIRST when both are hit:
+item 11 writes where a spec's files belong, item 12 moves them there. Doing 12 first means moving
+folders to a location the engines have not been told about, and the next `to-tickets` writes to the old
+one anyway.
 
 Anything not in the list is not this skill's. A brief that already has `## Why` is done; skip it.
 

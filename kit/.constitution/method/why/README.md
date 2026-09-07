@@ -80,11 +80,17 @@ beginning. Steps 0–4 happen once in the life of the product.
 `.how-rendered/<pc>/SDD-<pc>.md` at G4. The working documents under `.what/` and `.how/` point at the
 registry instead of repeating it and are the AI's. `SPEC.md` and ticket files are **not read by humans**.
 
-`to-spec`, `to-tickets`, and `implement` come from [mattpocock/skills](https://github.com/mattpocock/skills):
-in Claude Code `/plugin install mattpocock-skills`; for Codex, Cursor, and other agents
-`npx skills@latest add mattpocock/skills` (copies them into the repo — take `setup-matt-pocock-skills`
-too). Then `/setup-matt-pocock-skills` once, to name the tracker. G1–G4 run without them; `wdi-build`
-and the Fast Path do not.
+Six engines come from [mattpocock/skills](https://github.com/mattpocock/skills) — `to-spec`,
+`to-tickets`, `implement`, `tdd`, `code-review`, and `domain-modeling` (that last one is G3's, invoked by
+`wdi-blueprint`). They are installed **into the repo**, on any agent:
+`npx skills@latest add mattpocock/skills`. A user-level plugin does not count, and the reason is
+mechanical: three of the six ship with `disable-model-invocation: true`, nothing outside the file lifts
+it, and a plugin's files are not the repo's to edit. `wdi-method` strips it from the repo's own copies so
+`wdi-build` and `wdi-autopilot` can invoke them, and re-applies that on every update because
+`npx skills update` restores the author's file.
+
+You do NOT need `/setup-matt-pocock-skills`: the installer seeds `docs/agents/` already answered for this
+method. G1–G4 run without the engines; `wdi-build` and the Fast Path do not.
 
 ## The run, every time after
 

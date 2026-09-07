@@ -12,7 +12,7 @@ Two intents, run in this order:
 
 | Intent | Writes | Wraps |
 |---|---|---|
-| `catalog` | Per `<pc>`: § Actor Register · § UC Catalogue · `03-domain/domain-model.md`. Product level: `.what/business-rules.md` · `.control/product-glossary.md` · `usecases.yaml` | `mattpocock-skills:domain-modeling` |
+| `catalog` | Per `<pc>`: § Actor Register · § UC Catalogue · `03-domain/domain-model.md`. Product level: `.what/business-rules.md` · `.control/product-glossary.md` · `usecases.yaml` | `domain-modeling` |
 | `platform` | `.how/_platform/`: the spine · C4 L1/L2/L3 · `cross-cutting.md` · the three inventories. Registry: `containers` | `bmad-architecture` |
 
 **Blueprint content is untouched by `mode` and by `risk_accepted`.** Everything above exists at every mode,
@@ -65,10 +65,10 @@ whose nouns nobody defined.
 the count passes a third of a component's use cases, derive it again — `delivery-flow-guide.md` owns the rule
 and it MUST NOT be negotiated.
 
-### Domain modelling is active, and `mattpocock-skills:domain-modeling` is its engine
+### Domain modelling is active, and `domain-modeling` is its engine
 
 The domain model is not written by taking dictation. **You MUST invoke
-`mattpocock-skills:domain-modeling`** to derive it, the same way the spine goes through
+`domain-modeling`** to derive it, the same way the spine goes through
 `bmad-architecture` — this skill never does the deriving itself, it positions the engine, verifies the
 result against `srs-guide.md`, and lands it in this method's template.
 

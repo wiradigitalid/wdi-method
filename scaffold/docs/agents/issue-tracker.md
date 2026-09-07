@@ -5,16 +5,28 @@ Where issues live for this repo, and what `to-spec`, `to-tickets`, and `triage` 
 This file is seeded by `wdi-method`. It is the product's from here on: change the tracker whenever you
 like, but keep the three invariants below, because `wdi-build` and the validators read them.
 
-## Two places, and they are not the same place
+## One root, and the registry is what tells the two apart
+
+Everything lives under `.scratch/`, one directory per effort:
 
 | | Owned by | Lives at |
 |---|---|---|
-| **A spec's tickets** — the work behind an `FR` | `wdi-build`, at G5 | `{spec_folder}/issues/<NN>-<slug>.md`, `spec_folder` from `.control/registry/specs.yaml` |
+| **A spec** — the work behind an `FR` | `wdi-build`, at G5 | `.scratch/<spec-id>-<slug>/SPEC.md` and `.scratch/<spec-id>-<slug>/issues/<NN>-<slug>.md`, with `spec_folder` in `.control/registry/specs.yaml` naming that directory |
 | **Ad hoc work** — a quick bug report, a small idea, engineering-skill scratch | this file's convention | `.scratch/<slug>/` |
 
-`.scratch/` MUST NOT become a second place to plan a feature that already has an `FR`. The moment ad hoc
-work turns out to touch an `FR`, it stops and becomes a spec through `wdi-build` — the Fast Path rule in
-`delivery-flow-guide.md` owns that boundary.
+**The path no longer says which is which — the registry does.** An effort with a row in `specs.yaml`
+is a spec and answers to G5; an effort with no row is ad hoc. That is deliberate: one root means the
+engines need no case analysis and `to-tickets` publishes to the same place every time, and it puts the
+distinction where something can actually check it.
+
+`<spec-id>` is the id from `specs.yaml` — `.scratch/spec-3-checkout/`, never a bare slug. Left free,
+that leaf gets written four different ways in four repos, and one repo managed all four inside itself:
+a bare wave number, a `spec-` prefix with no number, a prefix with one, and a slug alone. Every one of
+them was allowed, and none could be traced back to the row that owns it. The id in front is what makes
+the folder answer to `specs.yaml`.
+
+Ad hoc work that turns out to touch an `FR` **stops and becomes a spec** through `wdi-build` — the Fast
+Path rule in `delivery-flow-guide.md` owns that boundary. It gains a row and a rename, not a second home.
 
 ## The three invariants
 
@@ -30,8 +42,9 @@ Whatever tracker this repo uses — local markdown, GitHub, GitLab, Jira — the
 
 ## Conventions — local markdown
 
-- One effort per directory: `.scratch/<slug>/`
-- One file per ticket at `.scratch/<slug>/issues/<NN>-<slug>.md`, numbered from `01`, never a single
+- One effort per directory: `.scratch/<spec-id>-<slug>/` for a spec, `.scratch/<slug>/` for ad hoc work
+- The spec, where the size calls for one, is `SPEC.md` in that directory
+- One file per ticket at `<effort>/issues/<NN>-<slug>.md`, numbered from `01`, never a single
   combined file
 - Blocking edges as a `Blocked by: NN, NN` line near the top
 - Comments append at the bottom under a `## Comments` heading

@@ -47,12 +47,16 @@ inventory, and putting somebody else's skill in it makes the register a lie.
 
 No → **absorb the discipline and invoke nothing.** Prose we could have written is not an engine.
 
-An engine whose output this corpus keeps is invoked even when it is a **plugin rather than part of this
-package's install** — `mattpocock-skills:domain-modeling` is the case, and `wdi-blueprint` invokes it. Two
-rules make that safe in a repo that does not have it:
+An engine whose output this corpus keeps is invoked even though it is **not part of this package's
+install** — `domain-modeling` is the case, and `wdi-blueprint` invokes it. It is one of the six the
+installer requires IN the repo, so it is named without a plugin prefix: a repo may hold the engines as
+its own files or not at all, and `mattpocock-skills:domain-modeling` resolves to nothing in the first
+case. Two rules make the reference safe in a repo that does not have it:
 
-- **A missing plugin is a state, not a defect.** Report it once, name the standard the work is still held
-  to, and do the work. You MUST NOT block a gate on it, and you MUST NOT report its absence as a finding.
+- **A missing engine is a state, not a defect — at G1–G4.** Report it once, name the standard the work
+  is still held to, and do the work. You MUST NOT block one of those gates on it, and you MUST NOT
+  report its absence as a finding. G5 is the exception and always was: `wdi-build` cannot run without
+  the engines, and the installer refuses rather than let that be discovered with a spec already open.
 - **The wrapper carries the standard, never the plugin.** What the engine is invoked *for* MUST be written
   in the wrapping skill as behaviours to verify — so the same bar is met either way, and a run that
   produced none of them is reported as a transcription rather than landed.

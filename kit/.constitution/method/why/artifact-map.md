@@ -117,7 +117,7 @@ someone else performs. `../document/corpus-guide.md` holds the binding version o
 | `wdi-blueprint` | `.what/<pc>/` § Actor Register + § UC Catalogue + `03-domain/domain-model.md` · `.what/business-rules.md` · `.control/product-glossary.md` · all of `.how/_platform/` except `design-system.md` |
 | `wdi-component` | `.what/<pc>/` slots `02`–`05` · `.how/<pc>/` except `01-ux/` |
 | `wdi-ux` | `EXPERIENCE.md` · `.how/<pc>/01-ux/` · `.how/_platform/design-system.md` |
-| `wdi-build` | `specs.yaml` · `_bmad-output/specs/` · `src/` · `web/` |
+| `wdi-build` | `specs.yaml` · `.scratch/<spec-id>-<slug>/` · `src/` · `web/` |
 | `wdi-decision` | `.control/decisions/` · `decisions.yaml`, and at apply time whatever `touches` names — through each file's owner |
 | `wdi-question` | `.control/questions/` |
 | `wdi-log` | `.control/meetings/` · `.control/project-non-technical-log.md` |

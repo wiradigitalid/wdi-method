@@ -42,15 +42,25 @@ cd /path/to/your/product-repo
 npx bmad-method install
 ```
 
-**2. mattpocock/skills** — one of the two paths, not both (both leaves every skill twice):
+**2. mattpocock/skills** — **into this repo**, on every agent:
 
 ```bash
-# Claude Code — a managed bundle that updates when its author ships
-claude plugins install mattpocock-skills      # or, inside a session:  /plugin install mattpocock-skills
-
-# Codex, Cursor, OpenCode, other agents — copies the skills into this repo; keep setup-matt-pocock-skills selected
 npx skills@latest add mattpocock/skills
 ```
+
+Take all six the method drives: `to-spec`, `to-tickets`, `implement`, `tdd`, `code-review`, and
+`domain-modeling`. Either install mode works — "copy" or "symlink".
+
+**The Claude Code plugin is not an alternative here, and the reason is mechanical.** `to-spec`,
+`to-tickets` and `implement` ship with `disable-model-invocation: true`, so no skill can invoke them;
+nothing outside the file lifts that flag, and a plugin's files are not this repo's to edit. WDI Method
+strips it from the copies the repo owns — which is what lets `wdi-build` invoke an engine and
+`wdi-autopilot` run an iteration with nobody watching — and re-applies that on every update, because
+`npx skills update` restores the author's file. The installer refuses without the six, and
+`--skip-engines-check` is the escape for CI and for a repo that will never reach G5.
+
+If you also have the plugin installed for your user, the repo's copies are what run; removing the
+plugin keeps `/to-spec` unambiguous.
 
 **You do not need to run `/setup-matt-pocock-skills` to get started.** Step 3 seeds `docs/agents/` with
 the two answers WDI Method actually has a requirement on, so the engines are aligned from the first

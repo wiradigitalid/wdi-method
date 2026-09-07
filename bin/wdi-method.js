@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
 import {
@@ -66,14 +67,65 @@ const GENERIC_FOLDER_PATTERNS = new Set([
 ]);
 
 const BMAD_INSTALL = `npx bmad-method install`;
-// The ticket engines G5 runs. BMad writes the documents; these cut the work. They are a Claude Code
-// plugin installed per USER, not per repo, so the check reads the plugin registry — and the check
-// warns instead of blocking, because G1–G4 run without them and a first install has no G5 yet.
+// The engines G5 runs. BMad writes the documents; these cut the work.
+//
+// They are installed IN THE REPO, and a user-level plugin no longer counts. Three reasons, and the
+// third is what forced it: a method whose G5 depends on what the operator happened to install on
+// their laptop behaves differently per machine; `.control/wdi-method.yaml` cannot record a version
+// it does not own; and `to-spec`, `to-tickets` and `implement` ship with
+// `disable-model-invocation: true`, which nothing outside the file can lift — the gate reads the
+// frontmatter and consults no setting, and `skillOverrides` only ever tightens. Owning the file is
+// the only route to an engine a skill can invoke, so owning the file is now the requirement.
+// Upstream ships that route deliberately: the plugin is "subscribe rather than fork", `skills.sh`
+// "copies editable skill files into your project, so you can hack on them and make them your own".
 const ENGINES_REPO = "https://github.com/mattpocock/skills";
 const ENGINES_PLUGIN = "mattpocock-skills";
 const ENGINES_INSTALL = `/plugin install ${ENGINES_PLUGIN}`;
 const ENGINES_INSTALL_ANY = "npx skills@latest add mattpocock/skills";
 const ENGINES_SETUP = "/setup-matt-pocock-skills";
+// Six, not five. `domain-modeling` is G3's — `wdi-blueprint` invokes it — and it used to be reached
+// by its plugin-namespaced name. With the plugin no longer required that name resolves to nothing,
+// so the skill joins the local install and every reference to it dropped the prefix.
+const ENGINE_SKILLS = ["to-spec", "to-tickets", "implement", "tdd", "code-review", "domain-modeling"];
+// The three that arrive flagged. `tdd`, `code-review` and `domain-modeling` never carried the flag
+// and MUST NOT gain one.
+const ENGINE_FLAGGED = ["to-spec", "to-tickets", "implement"];
+const ENGINE_LOCK = "skills-lock.json";
+const GUARD_MARK = "Driven by `wdi-build` and `wdi-autopilot`";
+const GUARD_LINE = `> **${GUARD_MARK}.** \`wdi-method\` unlocked model invocation for this `
+  + "engine in this repo so those two can drive it unattended. Invoked from anywhere else — a stray "
+  + "session, a subagent that thought this looked relevant — stop and say so: this engine publishes "
+  + "to the tracker and writes code.";
+
+// Every folder a platform reads skills from. One list, because a repo installs the engines wherever
+// `npx skills add` was pointed, and that installer offers symlinks across several of them.
+const SKILL_HOMES = [".claude", ".agents", ".agent", ".cursor", ".codex"];
+
+// BMad skills RETIRED at G5. This array is the single home of that list: `bmad-skill-register.md`
+// carries the same names for a reader, and a test fails when the two disagree.
+//
+// The criterion, and it is why the list is this long and not longer: a BMad skill is retired only
+// where this method has a NAMED replacement for what it produces. `bmad-build` and `bmad-agent-dev`
+// produce code that `implement` produces; `bmad-spec` a contract that `to-spec` produces;
+// `bmad-create-epics-and-stories` an `epics` level this method REPEALED in code, not merely in
+// prose. `bmad-qa-generate-e2e-tests` and `bmad-checkpoint-preview` have no replacement here, so
+// they are NOT retired — banning a capability with nothing in its place is how a method gets
+// worked around instead of followed.
+const BMAD_RETIRED_G5 = [
+  "bmad-spec",
+  "bmad-build",
+  "bmad-build-auto",
+  "bmad-code-review",
+  "bmad-retrospective",
+  "bmad-agent-dev",
+  "bmad-create-epics-and-stories",
+  "bmad-create-story",
+  "bmad-dev-story",
+  "bmad-dev-auto",
+  "bmad-quick-dev",
+  "bmad-sprint-planning",
+  "bmad-sprint-status",
+];
 const REPO_URL = "https://github.com/wiradigitalid/wdi-method";
 const HELP_SKILL = "wdi-help";
 const INIT_SKILL = "wdi-init";
@@ -113,6 +165,7 @@ function usage() {
   install [dir]             first install (TUI unless --yes)
   update  [dir]             update      (TUI unless --yes)
   verify  [dir]
+  engines [dir] [--fix]     report the six engines, their invocation state, and the BMad G5 ban
   promote <live-dir> --rescue   pull a method change back out of a consumer (not the normal flow)
 
   --yes                     non-interactive
@@ -136,6 +189,7 @@ function parseArgs(argv) {
     agents: null,
     skipBmad: false,
     rescue: false,
+    fix: false,
     yes: false,
     product: null,
     client: null,
@@ -156,7 +210,7 @@ function parseArgs(argv) {
     return args;
   }
   const first = rest[0];
-  if (["install", "update", "verify", "promote"].includes(first)) {
+  if (["install", "update", "verify", "promote", "engines"].includes(first)) {
     args.cmd = rest.shift();
   } else if (first.startsWith("-")) {
     args.cmd = "wizard";
@@ -167,6 +221,7 @@ function parseArgs(argv) {
   while (rest.length) {
     const t = rest.shift();
     if (t === "--skip-bmad-check") args.skipBmad = true;
+    else if (t === "--fix") args.fix = true;
     else if (t === "--skip-engines-check") args.skipEngines = true;
     else if (t === "--rescue") args.rescue = true;
     else if (t === "--yes" || t === "-y") args.yes = true;
@@ -293,11 +348,45 @@ function requireTarget(dir) {
   return target;
 }
 
-/** `to-spec` · `to-tickets` · `implement` — present as a user-level plugin, or copied into the repo. */
-function enginesPresent(target) {
-  for (const dir of [".claude", ".agents", ".agent", ".cursor", ".codex"]) {
-    if (fs.existsSync(path.join(target, dir, "skills", "to-tickets", "SKILL.md"))) return true;
+/** Skill files in the repo, keyed by name, de-duplicated by the file each one REALLY is.
+ *
+ * The de-duplication is the point. `npx skills add` offers "symlink — single source of truth" when
+ * more than one agent is selected, so one SKILL.md is reachable through `.claude/skills/` and
+ * `.agents/skills/` at once. Walking directories would patch it twice — and where the link points
+ * into `node_modules`, patching it at all would edit a dependency.
+ */
+function repoSkillFiles(target, names) {
+  const out = new Map();
+  for (const home of SKILL_HOMES) {
+    for (const name of names) {
+      const file = path.join(target, home, "skills", name, "SKILL.md");
+      if (!fs.existsSync(file)) continue;
+      let real = file;
+      try {
+        real = fs.realpathSync(file);
+      } catch {}
+      if (!out.has(name)) out.set(name, new Map());
+      out.get(name).set(real, file);
+    }
   }
+  return out;
+}
+
+/** The six engines, in the REPO. A user-level plugin is not an answer here — see ENGINE_SKILLS. */
+function enginesReport(target) {
+  const files = repoSkillFiles(target, ENGINE_SKILLS);
+  const missing = ENGINE_SKILLS.filter((n) => !files.has(n));
+  return { files, missing, present: missing.length === 0 };
+}
+
+function enginesPresent(target) {
+  return enginesReport(target).present;
+}
+
+/** Only ever a WARNING. The plugin's copies are namespaced and still flagged, so they can neither be
+ * invoked nor shadow the repo's — but `/to-spec` in the UI becomes ambiguous, and `npx skills
+ * update` run against a plugin-shaped install is one way the flag comes back. */
+function pluginEnginesRegistered() {
   const cfg = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), ".claude");
   const registry = path.join(cfg, "plugins", "installed_plugins.json");
   if (!fs.existsSync(registry)) return false;
@@ -307,6 +396,149 @@ function enginesPresent(target) {
   } catch {
     return false;
   }
+}
+
+/** Strip the author's flag, and write one guard line where it stood.
+ *
+ * The flag was the only thing stopping a stray session from publishing tickets. Removing it without
+ * naming who may drive the engine trades a hard gate for nothing, so the two arrive together.
+ * Idempotent by construction: no flag and a guard already present means the file is returned as-is,
+ * which is what keeps a second `update` from stacking a second line.
+ */
+function withInvocationEnabled(text) {
+  let out = text;
+  if (/^disable-model-invocation\s*:.*$/m.test(out)) {
+    out = out.replace(/^disable-model-invocation\s*:.*\r?\n/m, "");
+  }
+  if (!out.includes(GUARD_MARK)) {
+    out = out.replace(/^(---\r?\n[\s\S]*?\r?\n---\r?\n)/, `$1\n${GUARD_LINE}\n`);
+  }
+  return out;
+}
+
+function enableEngineInvocation(target) {
+  const { files } = enginesReport(target);
+  const patched = new Set();
+  for (const name of ENGINE_FLAGGED) {
+    const copies = files.get(name);
+    if (!copies) continue;
+    for (const real of copies.keys()) {
+      const before = fs.readFileSync(real, "utf8");
+      const after = withInvocationEnabled(before);
+      if (after === before) continue;
+      fs.writeFileSync(real, after, "utf8");
+      patched.add(name);
+    }
+  }
+  if (patched.size) {
+    note(`engines invocable: ${[...patched].join(" · ")} — author's flag removed, guard line written`);
+  }
+  return [...patched];
+}
+
+/** The mirror image, pointed at BMad's G5 wrappers: the flag ADDED rather than removed.
+ *
+ * A rule in a document lost this argument for three releases. `bmad-build` sits in the repo's own
+ * skill folder claiming it "implements any user intent, requirement, story, bug fix or change
+ * request", model-invocable, while the sanctioned engines sat in a plugin the model could not call.
+ * The harness rewarded the forbidden path. This is what stops rewarding it — and it leaves the
+ * human route open, because the gate only refuses the Skill tool: `/bmad-build` typed by a person
+ * still runs.
+ */
+function withModelInvocationDisabled(text) {
+  if (/^disable-model-invocation\s*:\s*true/m.test(text)) return text;
+  if (!/^---\r?\n/.test(text)) return text; // no frontmatter of its own: not ours to invent one
+  if (/^disable-model-invocation\s*:/m.test(text)) {
+    return text.replace(/^disable-model-invocation\s*:.*$/m, "disable-model-invocation: true");
+  }
+  return text.replace(/^---\r?\n/, "---\ndisable-model-invocation: true\n");
+}
+
+function retireBmadG5(target) {
+  const files = repoSkillFiles(target, BMAD_RETIRED_G5);
+  const patched = new Set();
+  for (const [name, copies] of files) {
+    for (const real of copies.keys()) {
+      const before = fs.readFileSync(real, "utf8");
+      const after = withModelInvocationDisabled(before);
+      if (after === before) continue;
+      fs.writeFileSync(real, after, "utf8");
+      patched.add(name);
+    }
+  }
+  if (patched.size) {
+    note(`retired at G5: ${patched.size} BMad skill${patched.size === 1 ? "" : "s"} can no longer be `
+         + `model-invoked (a person typing the slash command still can)`);
+  }
+  return [...patched];
+}
+
+/** Second layer, and the only one that survives BMad reinstalling its own wrappers mid-week.
+ *
+ * Merged, never replaced: a product's own permissions are its own. Invalid JSON is reported rather
+ * than repaired — rewriting a settings file nobody can parse is how a repo loses its allowlist.
+ */
+function writeDenyRules(target) {
+  const file = path.join(target, ".claude", "settings.json");
+  let settings = {};
+  if (fs.existsSync(file)) {
+    try {
+      settings = JSON.parse(fs.readFileSync(file, "utf8"));
+    } catch {
+      note(".claude/settings.json is not valid JSON — deny rules NOT written; fix it and re-run");
+      return 0;
+    }
+    if (!settings || typeof settings !== "object" || Array.isArray(settings)) return 0;
+  }
+  const perms = settings.permissions && typeof settings.permissions === "object"
+    && !Array.isArray(settings.permissions) ? settings.permissions : {};
+  const deny = Array.isArray(perms.deny) ? perms.deny : [];
+  const want = BMAD_RETIRED_G5.map((n) => `Skill(${n})`);
+  const added = want.filter((rule) => !deny.includes(rule));
+  if (!added.length) return 0;
+  perms.deny = [...deny, ...added];
+  settings.permissions = perms;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+  note(`deny rules for ${added.length} retired BMad skill${added.length === 1 ? "" : "s"} `
+       + `→ .claude/settings.json`);
+  return added.length;
+}
+
+/** A trace of what the engines were when the method last looked — not a lockfile.
+ *
+ * `npx skills add` writes its own `skills-lock.json` with a folder hash per skill, and that hash
+ * stops matching the moment the flag is stripped. So the register records the hash of the file the
+ * method actually reads, AFTER the patch. It is informational: `engines-invocable` decides by
+ * looking for the flag, not by comparing hashes, because a legitimate content change MUST NOT read
+ * as a defect.
+ */
+function engineFingerprints(target) {
+  const { files } = enginesReport(target);
+  const out = {};
+  for (const name of ENGINE_SKILLS) {
+    const copies = files.get(name);
+    if (!copies) continue;
+    const [real] = [...copies.keys()].sort();
+    out[name] = createHash("sha256").update(fs.readFileSync(real)).digest("hex").slice(0, 12);
+  }
+  return out;
+}
+
+function engineInvocationState(target) {
+  const { files } = enginesReport(target);
+  const blocked = [];
+  for (const name of ENGINE_FLAGGED) {
+    const copies = files.get(name);
+    if (!copies) continue;
+    for (const real of copies.keys()) {
+      if (/^disable-model-invocation\s*:\s*true/m.test(fs.readFileSync(real, "utf8"))) {
+        blocked.push(name);
+        break;
+      }
+    }
+  }
+  return { blocked };
 }
 
 function bmadMissingMessage() {
@@ -328,12 +560,18 @@ function bmadMissingMessage() {
 //
 // So it blocks, and `--skip-engines-check` is the escape, exactly as `--skip-bmad-check` is for BMad. The
 // escape matters: CI installs into a bare checkout, and a repo that will never reach G5 is a real case.
-function enginesMissingMessage() {
+function enginesMissingMessage(missing) {
+  const names = (missing && missing.length ? missing : ENGINE_SKILLS).join(" · ");
   return [
-    "The ticket engines are not installed. G5 (wdi-build) and wdi-autopilot need all three.",
+    `The engines are not in this repo. Missing: ${names}`,
     "",
-    `  Claude Code:  ${ENGINES_INSTALL}`,
-    `  Other agents: ${ENGINES_INSTALL_ANY}`,
+    "They MUST be installed INTO the repo, not as a user-level plugin — the method strips",
+    "`disable-model-invocation` from its own copies so `wdi-build` and `wdi-autopilot` can drive",
+    "them, and a plugin's files are not the repo's to edit.",
+    "",
+    `  ${ENGINES_INSTALL_ANY}`,
+    "",
+    `Take all six: ${ENGINE_SKILLS.join(" · ")}. Choose "copy" or "symlink" — either is read.`,
     "",
     "You do NOT need to run the setup skill after this — the installer seeds docs/agents/ already",
     `answered for this method. Run ${ENGINES_SETUP} only to change tracker.`,
@@ -341,6 +579,39 @@ function enginesMissingMessage() {
     "",
     "G1-G4 run without them. To install anyway and add them later:  --skip-engines-check",
   ].join("\n");
+}
+
+/** `docs/agents/` is the engines' config, and its PATH is the author's: `to-spec`, `to-tickets`,
+ * `implement` and `triage` read `docs/agents/issue-tracker.md` and `docs/agents/domain.md` and
+ * nowhere else. What the files SAY is this method's, and that is the half that kept going wrong:
+ * a repo that ran `/setup-matt-pocock-skills` carries upstream's answer, which sends every engine to
+ * `.scratch/` with no registry behind it and never mentions `specs.yaml`. Two of four live repos
+ * still had it.
+ *
+ * The installer does not touch a product-owned file, and that rule stays. This is the repair, run
+ * from `wdi-method engines --fix` — by `wdi-init` or `wdi-upgrade`, knowingly — and it keeps the
+ * previous text beside it as `.bak` rather than deleting an answer somebody may have meant.
+ */
+function repairAgentDocs(target) {
+  const dir = path.join(target, "docs", "agents");
+  const fixed = [];
+  for (const name of ["issue-tracker.md", "domain.md"]) {
+    const seed = path.join(ROOT, "scaffold", "docs", "agents", name);
+    if (!fs.existsSync(seed)) continue;
+    const to = path.join(dir, name);
+    if (!fs.existsSync(to)) {
+      copyFile(seed, to);
+      fixed.push(`${name} (seeded)`);
+      continue;
+    }
+    const text = fs.readFileSync(to, "utf8");
+    if (text.includes("seeded by `wdi-method`")) continue;
+    fs.writeFileSync(`${to}.bak`, text, "utf8");
+    copyFile(seed, to);
+    fixed.push(`${name} (was upstream's — previous text kept as ${name}.bak)`);
+  }
+  for (const line of fixed) note(`repaired docs/agents/${line}`);
+  return fixed;
 }
 
 // The product's custom room. Three properties, and all three MUST hold together:
@@ -889,13 +1160,33 @@ function seedEmptyLayers(target, { first }) {
 function writeStamp(target) {
   const control = path.join(target, ".control");
   if (!fs.existsSync(control)) return;
-  const stamp = [
+  const eng = enginesReport(target);
+  const fp = engineFingerprints(target);
+  const names = Object.keys(fp);
+  const lines = [
     "# Written by wdi-method install/update. A trace, not a lockfile.",
     `wdi_method: ${PKG.version}`,
     `bmad_method: ${readBmadVersion(target) || '""'}`,
-    `installed_at: ${today()}`,
-    "",
-  ].join("\n");
+  ];
+  if (names.length) {
+    const blocked = engineInvocationState(target).blocked;
+    lines.push("engines:");
+    lines.push("  source: local");
+    lines.push("  package: mattpocock/skills");
+    lines.push(`  lock: ${fs.existsSync(path.join(target, ENGINE_LOCK)) ? ENGINE_LOCK : '""'}`);
+    lines.push(`  model_invocation: ${blocked.length ? "blocked" : "enabled"}`);
+    if (eng.missing.length) lines.push(`  missing: [${eng.missing.join(", ")}]`);
+    lines.push("  # sha256 of each SKILL.md AFTER the flag was stripped, first 12. Informational:");
+    lines.push("  # engines-invocable decides by looking for the flag, not by comparing these.");
+    lines.push("  skills:");
+    for (const name of names) lines.push(`    ${name}: ${fp[name]}`);
+  } else {
+    lines.push("engines:");
+    lines.push("  source: none   # none in this repo — G5 cannot run until they are installed");
+  }
+  lines.push(`installed_at: ${today()}`);
+  lines.push("");
+  const stamp = lines.join("\n");
   fs.writeFileSync(path.join(control, "wdi-method.yaml"), stamp, "utf8");
   note("stamped .control/wdi-method.yaml");
 }
@@ -1111,12 +1402,25 @@ function printSummary(target, agents, { first, was, written, skipped, skills, to
                         `run the ${INIT_SKILL} skill, intent ${DIM}readers${RESET}, ` +
                         `to write it for this repo's stack`);
   }
-  summaryLine("engines", enginesPresent(target)
-    ? `to-spec · to-tickets · implement — found (${ENGINES_PLUGIN})`
-    : `to-spec · to-tickets · implement — NOT found. G5 (wdi-build) and the Fast Path need them; G1–G4 run without them`);
-  if (!enginesPresent(target)) {
-    summaryLine("", `${DIM}·${RESET} Claude Code: ${DIM}${ENGINES_INSTALL}${RESET} — other agents: ${DIM}${ENGINES_INSTALL_ANY}${RESET}`);
-    summaryLine("", `${DIM}·${RESET} then ${DIM}${ENGINES_SETUP}${RESET} once, to name the tracker · ${ENGINES_REPO}`);
+  const engReport = enginesReport(target);
+  summaryLine("engines", engReport.present
+    ? `${ENGINE_SKILLS.join(" · ")} — found (in this repo)`
+    : `NOT found: ${engReport.missing.join(" · ")}. G5 (wdi-build) and the Fast Path need them; G1–G4 run without them`);
+  if (!engReport.present) {
+    summaryLine("", `${DIM}·${RESET} into THIS repo: ${DIM}${ENGINES_INSTALL_ANY}${RESET} — a user-level plugin does not count`);
+    summaryLine("", `${DIM}·${RESET} docs/agents/ is already seeded, so ${DIM}${ENGINES_SETUP}${RESET} is not needed · ${ENGINES_REPO}`);
+  } else {
+    const blocked = engineInvocationState(target).blocked;
+    if (blocked.length) {
+      summaryLine("", `${DIM}·${RESET} still flagged, so no skill can invoke ${blocked.join(" · ")} — run ${DIM}npx wdi-method engines --fix${RESET}`);
+    }
+  }
+  // Upstream's own warning: "installing both leaves you with every skill twice." It is survivable —
+  // the plugin's copies are namespaced and still flagged, so they can neither be invoked nor shadow
+  // the repo's — but `/to-spec` in the UI stops being one thing, so it is said out loud.
+  if (pluginEnginesRegistered()) {
+    summaryLine("", `${DIM}·${RESET} the ${ENGINES_PLUGIN} plugin is ALSO installed for this user — the repo's copies are what run;`);
+    summaryLine("", `${DIM}·${RESET} remove the plugin to keep ${DIM}/to-spec${RESET} unambiguous`);
   }
   const pending = first ? [] : pendingUpgrades(target);
   if (pending.length) {
@@ -1215,6 +1519,12 @@ function apply(target, agents,
   setProductIdentity(target, { name: product, client });
   setLanguagePolicy(target, { docLanguage, docFilenameLanguage, chosen: languageChosen });
   upsertAgentFiles(target, agents, product);
+  // Mechanical, idempotent, and re-run on EVERY update because both sides are restored behind our
+  // back: `npx skills update` puts the author's flag back, and BMad's installer rewrites its own
+  // wrappers. A one-time fix would hold for about a week.
+  enableEngineInvocation(target);
+  retireBmadG5(target);
+  writeDenyRules(target);
   writeStamp(target);
   printSummary(target, agents, { first, was, written, skipped, skills, tomls, opencodeCmds });
   printNextSteps({
@@ -1222,6 +1532,52 @@ function apply(target, agents,
     productSet: Boolean(product) && !identityIsPlaceholder(product),
     upgradePending: !first && pendingUpgrades(target).length > 0,
   });
+}
+
+function enginesCommand(target, { fix }) {
+  const before = enginesReport(target);
+  console.log("");
+  console.log(`  engines   ${before.present ? "all present" : `MISSING ${before.missing.join(" · ")}`}`);
+  for (const name of ENGINE_SKILLS) {
+    const copies = before.files.get(name);
+    if (!copies) continue;
+    const flagged = [...copies.keys()].some((f) =>
+      /^disable-model-invocation\s*:\s*true/m.test(fs.readFileSync(f, "utf8")));
+    const where = [...copies.values()].map((f) => posixRel(target, f)).join(", ");
+    console.log(`    ${name.padEnd(17)}${flagged ? "flagged — no skill can invoke it" : "invocable"}  ${DIM}${where}${RESET}`);
+  }
+  const banned = repoSkillFiles(target, BMAD_RETIRED_G5);
+  const open = [];
+  for (const [name, copies] of banned) {
+    const shut = [...copies.keys()].every((f) =>
+      /^disable-model-invocation\s*:\s*true/m.test(fs.readFileSync(f, "utf8")));
+    if (!shut) open.push(name);
+  }
+  console.log(`  bmad G5   ${banned.size} installed, ${open.length ? `STILL model-invocable: ${open.join(" · ")}` : "all retired"}`);
+  const tracker = path.join(target, "docs", "agents", "issue-tracker.md");
+  const trackerOwn = fs.existsSync(tracker)
+    && fs.readFileSync(tracker, "utf8").includes("seeded by `wdi-method`");
+  console.log(`  config    docs/agents/issue-tracker.md ${trackerOwn ? "is the method's" : "is NOT the method's — upstream's answer sends the engines to the wrong place"}`);
+  console.log("");
+
+  if (!fix) {
+    if (!before.present || open.length || !trackerOwn
+        || engineInvocationState(target).blocked.length) {
+      console.log(`  ${DIM}to repair what can be repaired:${RESET} npx wdi-method engines --fix`);
+      console.log("");
+    }
+    return;
+  }
+  repairAgentDocs(target);
+  enableEngineInvocation(target);
+  retireBmadG5(target);
+  writeDenyRules(target);
+  writeStamp(target);
+  ok("engines aligned");
+  if (!before.present) {
+    console.log("");
+    console.log(enginesMissingMessage(before.missing));
+  }
 }
 
 function verify(target, agents) {
@@ -1436,8 +1792,11 @@ async function runWizard(pre) {
       : "BMad Method: not installed",
     hasWdi ? "WDI Method: already present — the installer will offer an update" : "WDI Method: not present",
     enginesPresent(target)
-      ? "Ticket engines (mattpocock-skills): installed"
-      : `Ticket engines (mattpocock-skills): not found — needed at G5 only; ${ENGINES_INSTALL} (${ENGINES_REPO})`,
+      ? `Engines (mattpocock/skills, in this repo): all ${ENGINE_SKILLS.length} present`
+      : `Engines: MISSING ${enginesReport(target).missing.join(" · ")} — ${ENGINES_INSTALL_ANY} (${ENGINES_REPO})`,
+    engineInvocationState(target).blocked.length
+      ? `Engine invocation: BLOCKED for ${engineInvocationState(target).blocked.join(" · ")} — npx wdi-method engines --fix`
+      : "Engine invocation: enabled (the author's disable-model-invocation is stripped from the repo's copies)",
     nonempty ? "Folder is not empty (normal for a product repo already under way)" : "Folder is empty",
   ].join("\n");
   p.note(facts, "Detected");
@@ -1582,7 +1941,7 @@ function runNonInteractive(args) {
     die(bmadMissingMessage());
   }
   if (!args.skipEngines && !enginesPresent(target)) {
-    die(enginesMissingMessage());
+    die(enginesMissingMessage(enginesReport(target).missing));
   }
   const existing = readIndexIdentity(target);
   const product = args.product || existing.name;
@@ -1600,7 +1959,7 @@ function runNonInteractive(args) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  if (!["wizard", "install", "update", "verify", "promote"].includes(args.cmd)) {
+  if (!["wizard", "install", "update", "verify", "promote", "engines"].includes(args.cmd)) {
     usage();
     process.exit(2);
   }
@@ -1621,6 +1980,10 @@ async function main() {
     }
     note("--rescue: pulling the method back out of a consumer. Read the diff before committing.");
     promote(args.dir);
+    return;
+  }
+  if (args.cmd === "engines") {
+    enginesCommand(requireTarget(args.dir), { fix: Boolean(args.fix) });
     return;
   }
   const wantTui = !args.yes && args.cmd !== "verify" && process.stdin.isTTY && process.stdout.isTTY;

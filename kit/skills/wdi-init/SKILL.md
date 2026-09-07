@@ -11,7 +11,8 @@ of where things are, a reader that can see this product's code.
 
 | Intent | Does | Precondition | How often |
 |---|---|---|---|
-| `setup` | Guide the global `mode` setting · scaffold the registries that are still empty · **report** the documents already present, read-only · derive the two structure maps | before G1 | once per project |
+| `setup` | Guide the global `mode` setting · scaffold the registries that are still empty · **report** the documents already present, read-only · derive the two structure maps · align the engines | before G1 | once per project |
+| `engines` | Run `npx wdi-method engines --fix`, then report what it changed: the flag stripped from `to-spec` · `to-tickets` · `implement` so `wdi-build` can invoke them, the retired BMad G5 wrappers locked out of model invocation and denied in `.claude/settings.json`, and `docs/agents/` repaired where it still carried upstream's answer | after every `wdi-method install` or `update` | each version jump, and any time `engines-invocable` is red |
 | `component` | Propose the slicing from the brief plus every PRD · birth what is accepted: registry row plus `SRS`/`SDD` skeletons · propose `mode`, `risk_accepted`, `risk_note`, `owns` | **G2 passed** | each time a component is born |
 | `mode` | Change `mode` — global in `index.yaml`, or one component in `components.yaml`. Guided | — | any time |
 | `risk` | Set or review one component's `risk_accepted`, with disclosure of what it touches | the component exists | any time, usually before G4 |
@@ -25,6 +26,23 @@ of where things are, a reader that can see this product's code.
   `corpus-guide.md` owns that rule.
 - Retiring or renaming a Product Component that already carries an SRS **is not its authority**. That
   goes through `wdi-decision`. Birthing is cheap; retiring is not.
+
+## Intent `engines`
+
+One command does the work — `npx wdi-method engines --fix` — and this intent exists because the work is
+not the installer's to do unasked. Two of the three things it touches are files somebody else owns:
+`docs/agents/*.md` is the product's, and the engines' `SKILL.md` files are the author's. `install` and
+`update` do the two mechanical halves (the flag, the BMad lock) on every run; the config repair happens
+only here, knowingly, and the previous text is kept as `.bak`.
+
+Report, always, in this order: which engines are present and which are missing (all six are required —
+`to-spec` · `to-tickets` · `implement` · `tdd` · `code-review` · `domain-modeling`), which had the flag
+stripped, how many BMad wrappers were locked, and whether `docs/agents/issue-tracker.md` was upstream's
+or already the method's. If any engine is missing, say so and stop: `npx skills@latest add
+mattpocock/skills` is the owner's to run, and a user-level plugin does not count — its files cannot be
+unlocked.
+
+Then run `validate.py`. `engines-invocable` green is the proof, not the report.
 
 ## Intent `setup`
 

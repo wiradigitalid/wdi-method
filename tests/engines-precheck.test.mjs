@@ -1,6 +1,9 @@
-// G5 runs on two engines this package does not ship: `to-spec` and `to-tickets` (the mattpocock-skills
-// plugin, installed per user). For three releases the installer checked BMad and said nothing about them,
-// so the first time anyone learned they were missing was inside wdi-build, with a spec already open.
+// G5 runs on six engines this package does not ship. They MUST be installed into the repo itself
+// (`npx skills@latest add mattpocock/skills`), and a user-level plugin is no longer an answer: the
+// method strips `disable-model-invocation` from its own copies so `wdi-build` can invoke them, and a
+// plugin's files are not the repo's to edit. For three releases the installer checked BMad and said
+// nothing about the engines, so the first time anyone learned they were missing was inside wdi-build,
+// with a spec already open.
 //
 // The check BLOCKS, and `--skip-engines-check` is the escape. It used to warn and let the install
 // through, on the reasoning that G1–G4 run without the engines and a first install has no G5 yet. Both
@@ -20,6 +23,29 @@ const strip = (s) => s.replace(/\x1b\[[0-9;]*m/g, "");
 
 function tmp(name) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `wdi-${name}-`));
+}
+
+const ENGINES = ["to-spec", "to-tickets", "implement", "tdd", "code-review", "domain-modeling"];
+
+/** What `npx skills add` leaves behind: the author's six files, in the repo. */
+function seedEngines(target, only = ENGINES) {
+  for (const name of only) {
+    const dir = path.join(target, ".claude", "skills", name);
+    fs.mkdirSync(dir, { recursive: true });
+    const flag = ["to-spec", "to-tickets", "implement"].includes(name)
+      ? "disable-model-invocation: true\n" : "";
+    fs.writeFileSync(path.join(dir, "SKILL.md"), `---\nname: ${name}\n${flag}---\n\n# ${name}\n`);
+  }
+}
+
+/** A user-level plugin registry that DOES carry the plugin. The gate must not care. */
+function withPlugin(configDir) {
+  fs.mkdirSync(path.join(configDir, "plugins"), { recursive: true });
+  fs.writeFileSync(path.join(configDir, "plugins", "installed_plugins.json"), JSON.stringify({
+    version: 2,
+    plugins: { "mattpocock-skills@claude-plugins-official": [{ scope: "user", version: "1.2.3" }] },
+  }));
+  return configDir;
 }
 
 function install(target, configDir, extra = ["--skip-engines-check"]) {
@@ -45,10 +71,12 @@ test("install on a machine WITHOUT the ticket engines REFUSES, and says exactly 
   try {
     const { ok, out } = installUnescaped(target, cfg);
     assert.equal(ok, false, `the install went through without the engines:\n${out}`);
-    assert.match(out, /\/plugin install mattpocock-skills/,
-      "the refusal must carry the exact install command — a reader should not have to look it up");
     assert.match(out, /npx skills@latest add mattpocock\/skills/,
-      "the refusal must also carry the path for agents that are not Claude Code — the installer supports them");
+      "the refusal must carry the exact install command — a reader should not have to look it up");
+    assert.match(out, /to-spec/, "the refusal must name WHICH engines are missing, not just that some are");
+    assert.match(out, /domain-modeling/,
+      "domain-modeling is one of the six — `wdi-blueprint` invokes it at G3, and it used to be reached "
+      + "by a plugin-namespaced name that now resolves to nothing");
     assert.match(out, /github\.com\/mattpocock\/skills/, "the refusal must name the source");
     assert.match(out, /setup-matt-pocock-skills/,
       "the refusal must name the setup step too — the engines alone are not enough, they need a tracker");
@@ -69,7 +97,7 @@ test("--skip-engines-check installs anyway, and the summary still names what is 
     const out = install(target, cfg);
     assert.ok(fs.existsSync(path.join(target, ".control", "wdi-method.yaml")),
       `the escape did not let the install through:\n${out}`);
-    assert.match(out, /engines\s+to-spec · to-tickets · implement — NOT found/,
+    assert.match(out, /engines\s+NOT found: to-spec · to-tickets · implement/,
       `the escape silenced the summary too — it must still say what is missing:\n${out}`);
     assert.match(out, /G1–G4 run without them/, "the summary must say the install is still usable");
   } finally {
@@ -77,32 +105,54 @@ test("--skip-engines-check installs anyway, and the summary still names what is 
     fs.rmSync(cfg, { recursive: true, force: true });
   }
 });
-test("install on a machine WITH the plugin registered reports the engines as found", () => {
-  const target = tmp("eng");
-  const cfg = tmp("cfg-plugin");
+// The old gate accepted the user-level plugin, and that is exactly what made this suite pass here
+// and fail in CI: the answer depended on whose laptop ran it. It also could not be repaired — the
+// three flagged engines can only be unlocked in a file the repo owns. So the plugin is now a
+// warning and nothing more, and this is the test that keeps it that way.
+test("the user-level plugin does NOT satisfy the gate — the answer must not depend on whose machine ran it", () => {
+  const target = tmp("eng-plugin");
+  const cfg = withPlugin(tmp("cfg-plugin"));
   try {
-    fs.mkdirSync(path.join(cfg, "plugins"), { recursive: true });
-    fs.writeFileSync(path.join(cfg, "plugins", "installed_plugins.json"), JSON.stringify({
-      version: 2,
-      plugins: { "mattpocock-skills@claude-plugins-official": [{ scope: "user", version: "1.2.3" }] },
-    }));
-    const out = install(target, cfg);
-    assert.match(out, /engines\s+to-spec · to-tickets · implement — found/,
-      `the plugin is registered but the summary did not see it:\n${out}`);
+    const { ok, out } = installUnescaped(target, cfg);
+    assert.equal(ok, false,
+      `the plugin was registered for this user and the install went through on that basis. On a `
+      + `runner without it the same install refuses — which is how twenty-eight tests once died `
+      + `after a tag was pushed:\n${out}`);
+    assert.match(out, /npx skills@latest add/, "the refusal must point at the in-repo install");
   } finally {
     fs.rmSync(target, { recursive: true, force: true });
     fs.rmSync(cfg, { recursive: true, force: true });
   }
 });
 
-test("engines copied into the repo itself (.claude/skills/to-tickets) also count", () => {
+test("all six engines in the repo satisfy the gate, and the plugin alongside them is called out", () => {
   const target = tmp("repoeng");
-  const cfg = tmp("cfg-empty2");
+  const cfg = withPlugin(tmp("cfg-both"));
   try {
-    fs.mkdirSync(path.join(target, ".claude", "skills", "to-tickets"), { recursive: true });
-    fs.writeFileSync(path.join(target, ".claude", "skills", "to-tickets", "SKILL.md"), "---\nname: to-tickets\n---\n");
-    const out = install(target, cfg);
-    assert.match(out, /engines\s+to-spec · to-tickets · implement — found/, out);
+    seedEngines(target);
+    const out = install(target, cfg, []);
+    assert.match(out, /engines\s+to-spec/, `the repo's own copies were not seen:\n${out}`);
+    assert.match(out, /found \(in this repo\)/, `the summary must say WHERE they were found:\n${out}`);
+    // Upstream's own warning: "installing both leaves you with every skill twice." Survivable, but
+    // `/to-spec` in the UI stops being one thing, so it is said rather than left to be discovered.
+    assert.match(out, /plugin is ALSO installed/,
+      `both copies are present and nothing said so:\n${out}`);
+  } finally {
+    fs.rmSync(target, { recursive: true, force: true });
+    fs.rmSync(cfg, { recursive: true, force: true });
+  }
+});
+
+test("five of six is still a refusal, and it names the one that is missing", () => {
+  const target = tmp("repoeng-five");
+  const cfg = tmp("cfg-five");
+  try {
+    seedEngines(target, ENGINES.filter((n) => n !== "code-review"));
+    const { ok, out } = installUnescaped(target, cfg);
+    assert.equal(ok, false, `a repo missing code-review installed anyway:\n${out}`);
+    assert.match(out, /Missing: code-review/,
+      `the refusal must name the missing engine and only it — "engines not installed" sends a reader `
+      + `to reinstall five they already have:\n${out}`);
   } finally {
     fs.rmSync(target, { recursive: true, force: true });
     fs.rmSync(cfg, { recursive: true, force: true });
@@ -133,8 +183,11 @@ test("install SEEDS docs/agents/ pre-answered, so the engines are aligned before
       "it must name where the vocabulary actually lives, or 'do not use CONTEXT.md' leaves a hole");
 
     const t = fs.readFileSync(tracker, "utf8");
-    assert.match(t, /\{spec_folder\}\/issues\//,
-      "the seeded issue-tracker.md must point a spec's tickets at spec_folder, not at .scratch/");
+    assert.match(t, /\.scratch\/<spec-id>-<slug>\/issues\//,
+      "the seeded issue-tracker.md must give the engines ONE predefined place for a spec's tickets");
+    assert.match(t, /specs\.yaml/,
+      "it must say the registry is what tells a spec from ad hoc work — one root means the path no "
+      + "longer does");
     assert.match(t, /ticket-status-one-home/,
       "it must name the validator that reads ticket status, since that is the invariant a tracker swap breaks");
   } finally {
@@ -199,29 +252,27 @@ test("a domain.md somebody already corrected is NOT warned about again", () => {
 });
 
 // This suite went green locally and red in CI, and the gap was the developer's own machine: the
-// mattpocock plugin is installed here, so `enginesPresent()` said yes for every test that ran an install
-// without the escape. On a runner it says no, and twenty-eight tests died at once — after the tag was
-// already pushed.
+// mattpocock plugin is installed here, so the old `enginesPresent()` said yes for every test that ran
+// an install without the escape. On a runner it said no, and twenty-eight tests died at once — after
+// the tag was already pushed.
 //
-// The structural fix is that every non-gate test passes `--skip-engines-check`. This test is what stops
-// the next one being written without it: it reads the test files themselves, the same way project-room
-// asserts against bin/wdi-method.js's source.
-test("every test that installs or updates carries BOTH escapes — or it only passes on a machine like the author's", () => {
-  const dir = import.meta.dirname;
-  const offenders = [];
-  for (const name of fs.readdirSync(dir)) {
-    if (!name.endsWith(".test.mjs")) continue;
-    // This file owns the gate: it MUST be able to run an install with no escape at all.
-    if (name === "engines-precheck.test.mjs") continue;
-    const lines = fs.readFileSync(path.join(dir, name), "utf8").split(/\r?\n/);
-    lines.forEach((line, i) => {
-      if (!line.includes('"--skip-bmad-check"')) return;
-      if (line.includes('"--skip-engines-check"')) return;
-      offenders.push(`${name}:${i + 1}  ${line.trim()}`);
-    });
-  }
-  assert.deepEqual(offenders, [],
-    "an install/update in a test carries --skip-bmad-check but not --skip-engines-check. It will pass on "
-    + "a machine with the mattpocock plugin installed and fail on every machine without it:\n  "
-    + offenders.join("\n  "));
+// The old fix was a rule about test files: every non-gate install passes `--skip-engines-check`. That
+// rule is now redundant where a test seeds the engines itself, and the hazard it guarded is gone at
+// the root: the gate no longer reads the plugin registry at all. This asserts the root, against the
+// installer's own source, the same way project-room does — a rule about test files could only ever
+// catch the tests somebody remembered to write.
+test("the engines gate reads the REPO, and the plugin registry only to warn", () => {
+  const src = fs.readFileSync(path.join(ROOT, "bin", "wdi-method.js"), "utf8");
+  const gate = src.slice(src.indexOf("function enginesReport"), src.indexOf("function pluginEnginesRegistered"));
+  assert.doesNotMatch(gate, /installed_plugins\.json/,
+    "the gate consults the user-level plugin registry again. Whether an install succeeds then depends "
+    + "on whose machine ran it, and the three flagged engines still cannot be unlocked — a plugin's "
+    + "files are not the repo's to edit");
+  assert.match(src, /function pluginEnginesRegistered/,
+    "the plugin check itself MUST survive: two copies of every engine is worth one warning line");
+  // Minus the declaration, which the same pattern matches.
+  const uses = src.match(/(?<!function )pluginEnginesRegistered\(\)/g) || [];
+  assert.equal(uses.length, 1,
+    `pluginEnginesRegistered() is called ${uses.length} times. It belongs in the summary and nowhere `
+    + `else — any second caller is a decision being made on it`);
 });

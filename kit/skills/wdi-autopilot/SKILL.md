@@ -37,8 +37,10 @@ NOT start the loop while any row in the first two groups is red.
 | Group | Row | Red when |
 |---|---|---|
 | **Engines** | BMad installed; every `wdi-*` skill the run will call present | A wrapper is missing — name it and `npx wdi-method update` |
-| | `to-spec` · `to-tickets` · `implement` found, with the **path** of each `SKILL.md` | Not found. Name the two install paths `wdi-build` names |
-| | A route past `disable-model-invocation` — see below | Neither route is available |
+| | All six engines present IN this repo — `to-spec` · `to-tickets` · `implement` · `tdd` · `code-review` · `domain-modeling` — with the **path** of each `SKILL.md` | Any missing. `npx skills@latest add mattpocock/skills`; a user-level plugin does not count |
+| | The three flagged engines are **invocable**: no `disable-model-invocation` in the repo's copies | Any still flagged — no skill can invoke it, so Phase 2 would stall. `npx wdi-method engines --fix`, or the `wdi-init` / `wdi-upgrade` skill |
+| | The retired BMad G5 wrappers are locked out of model invocation, and `.claude/settings.json` denies them | Any still invocable. Same fix — BMad's installer restores its wrappers whenever it runs |
+| | This skill and `wdi-build` are themselves invocable — no `skillOverrides` entry in `settings.json` set to `off` or `user-invocable-only` | Either is overridden. Nothing else can start the loop, and the override is silent |
 | | The tracker the engines publish to is configured — `docs/agents/issue-tracker.md`, written once by `/setup-matt-pocock-skills` | Missing. `to-tickets` would stop to ask for it, and this skill never asks; the owner runs the setup before confirming |
 | | Reviewers separate from the builder can be dispatched | The session cannot spawn a second agent and any touched component is `risk_accepted: low` — Step 3 of `wdi-build` would block |
 | | `.constitution/project/codebase-stack-guide.md` names build and test commands, **and the test command exits 0 here** | Absent or failing. Every ticket's "full suite green once" and the smoke test read it. Found at minute one, not at hour six |
@@ -59,19 +61,22 @@ NOT start the loop while any row in the first two groups is red.
 **Every row arrives with its default already in it**, and the owner changes only what they want changed —
 the same rule the installer follows. A preflight that asks fourteen questions one at a time has failed.
 
-### The route past `disable-model-invocation`
+### The engines are invoked — there is no route to find
 
-The three engines carry `disable-model-invocation: true`. That flag blocks the Skill tool — for this session
-and for every subagent — and no setting lifts it. It does **not** block reading the file. Two routes exist,
-and preflight names which one it found:
+`to-spec`, `to-tickets` and `implement` ship with `disable-model-invocation: true`, which blocks the Skill
+tool for this session and every subagent, and no setting lifts it: the gate reads the frontmatter and
+consults nothing else. Two releases of this skill worked around that by reading the engine's `SKILL.md`
+and carrying out its process. **That route is retired.** The engines are installed in the repo, the
+installer strips the flag from the repo's own copies, and `wdi-build` invokes them like any other skill.
 
-| Route | How | Trade |
-|---|---|---|
-| **Read and follow** — preferred | The builder brief says: *read `<path>/SKILL.md` and carry out its process*. The engine's rules arrive whole; only the trigger changed | Nothing in the plugin is touched; the author's updates still arrive |
-| **Copy into the repo** | `npx skills@latest add mattpocock/skills` copies the skills under the repo's skill folder; the flag is removed from the three copies, and the project skill `/to-spec` coexists with the plugin's namespaced one | The copies stop receiving the author's updates |
+What preflight checks is therefore not *which route exists* but *whether the flag is back* — `npx skills
+update` restores the author's file byte for byte, and `engines-invocable` in `validate.py` is red when it
+has. A stalled Phase 2 three hours into an unattended run is what this replaces.
 
-The `to-tickets` quiz — granularity and blocking edges — is **answered by this skill**: ticket count from the
-size table in `delivery-flow-guide.md`, edges from `depends_on` and `touches`. Each answer is one ledger row.
+The `to-tickets` quiz — granularity and blocking edges — is still **answered by this skill**: ticket
+count from the size table in `delivery-flow-guide.md`, edges from `depends_on` and `touches`. The answers
+are passed IN the invocation, and each one is a ledger row. An engine that stops to ask inside an
+unattended run is a run that stalls with nobody there to answer.
 
 ### Confirmation becomes the mandate
 
@@ -146,8 +151,8 @@ The ledger is what makes the next firing continue rather than restart, so every 
 | G2 passed, no components | `wdi-init` intents `component` · `mode` · `risk`. Each `mode` and `risk_accepted` is a ledger row with its reason |
 | Components, no catalogue or spine | `wdi-blueprint` `catalog`, then `platform`. Hold G3 |
 | G3 passed, a component above `catalog` lacks depth | `wdi-component`. Hold G4 for that component; set `g4_passed` |
-| G4 clear for a candidate row | `wdi-report` intent `estimate`, pick the top candidate row, `wdi-build` for it — **unattended branch** |
-| A spec is open | Continue `wdi-build` from its next phase or ticket. The frontier is read from the tickets |
+| G4 clear for a candidate row | `wdi-report` intent `estimate`, pick the top candidate row, then **invoke `wdi-build`** for it — **unattended branch** |
+| A spec is open | **Invoke `wdi-build`**, which continues from its next phase or ticket. The frontier is read from the tickets |
 | A spec just closed | `wdi-reconcile` over the gate scope; carry every drift finding to its owning skill in one edit pass |
 | Every `FR` in scope closed | § Finish |
 | Work remains but **nothing is runnable** — all of it parked or blocked | § Finish, with the run marked **incomplete** and each blocker named |
@@ -351,8 +356,11 @@ When § The work table reaches § Finish:
 - Merging a red ticket into the run branch, or patching the branch forward instead of reverting the merge
 - Marking the PR ready over red CI, or handing over a run branch with a ticket half-applied
 - Parallel builders sharing a worktree, or a registry written by anyone but the coordinator
-- Claiming a Skill-tool invocation of `to-spec`, `to-tickets`, or `implement` — the route is read-and-follow
-  or a repo copy, and the ledger names which
+- Reproducing an engine's process inline instead of invoking it — `to-spec`, `to-tickets`, `implement`,
+  `tdd` and `code-review` are invoked, and a paraphrase of an engine is not the engine. If one will not
+  invoke, that is a stop with a named cause and a one-command fix, not something to write around
+- Reaching for a retired BMad wrapper when an engine will not invoke — `bmad-build` is the closest
+  thing to hand and the furthest thing from allowed
 - Editing a guard, a test, or an assertion to go green — no mandate reaches that
 - Answering a ★ question a validator already answered
 

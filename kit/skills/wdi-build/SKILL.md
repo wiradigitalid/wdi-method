@@ -9,14 +9,27 @@ One unit of work, one invocation. A spec used to need four calls — open it, pr
 ticket, close it — and three of those were bookkeeping. They are all in here now, because a unit of work that
 needs four invocations gets three of them skipped.
 
-**The engine layer below this gate is not BMad's.** `to-spec`, `to-tickets`, and `implement` produce the
-contract, the tickets, and the code; `tdd` and `code-review` do the work inside them. `bmad-spec`,
-`bmad-build`, `bmad-build-auto`, and `bmad-code-review` are **retired** and MUST NOT be invoked.
+**The engine layer below this gate is not BMad's, and it MUST be this one.** `to-spec`, `to-tickets`,
+and `implement` produce the contract, the tickets, and the code; `tdd` and `code-review` do the work
+inside them. All five are `mattpocock/skills`, installed **in this repo** — the installer refuses
+without them. Thirteen BMad skills are **retired** at this gate and MUST NOT be used anywhere:
+`bmad-spec`, `bmad-build`, `bmad-build-auto`, `bmad-code-review`, `bmad-retrospective`,
+`bmad-agent-dev`, `bmad-create-epics-and-stories`, `bmad-create-story`, `bmad-dev-story`,
+`bmad-dev-auto`, `bmad-quick-dev`, `bmad-sprint-planning`, `bmad-sprint-status`. That is enforced, not
+requested: `install` and `update` lock each one out of model invocation and add a `Skill()` deny rule.
+`bmad-skill-register.md` carries the list and the criterion behind it.
 
-**Three of those engines are human-invoked.** `to-spec`, `to-tickets`, and `implement` carry
-`disable-model-invocation: true`, so this skill CANNOT invoke them and MUST NOT claim to. It states the command
-for the owner to run, waits, then verifies the result and lands it. That is not a workaround: the points where
-those engines need a human are the gates, and owner time is what a gate is for.
+**All five engines are INVOKED, by this skill, through the Skill tool.** Upstream ships `to-spec`,
+`to-tickets` and `implement` with `disable-model-invocation: true`; `wdi-method` strips it from the
+copies this repo owns, so there is no command to hand to the owner and no reading-and-following to do.
+Where an engine needs a decision — the seams, the `to-tickets` quiz — that decision is made before the
+invocation and passed IN it, because an engine that stops to ask inside an unattended run is a run
+that stalls with nobody there to answer.
+
+**If an engine will not invoke, stop and say why.** `disable-model-invocation` back in its frontmatter
+is what `npx skills update` does, and the fix is one command: `npx wdi-method engines --fix`, or the
+`wdi-init` / `wdi-upgrade` skill. MUST NOT work around it by pasting the engine's process inline: the
+engine's rules are its own, and a paraphrase of them is not the engine.
 
 **Under an active mandate the owner's part is `wdi-autopilot`'s.** A `DEC-` of `type: mandate` at
 `status: accepted`, unexpired, moves **every** "the owner runs" and "the owner decides" in this skill to the
@@ -89,12 +102,18 @@ Size does not choose which gates are active — that is `mode`'s job. It decides
 
 ## Phase 2 — The contract, and the tickets
 
-Two engines, and **the owner runs both.** State the command, wait, then verify and land.
+Two engines, and **this skill invokes both.** Invoke, then verify and land.
 
-| Size | What the owner runs | What lands |
+| Size | What this skill invokes | What lands |
 |---|---|---|
-| `M` · `L` | `/to-spec`, then `/to-tickets` | `SPEC.md` in `spec_folder` · ticket files · the `tickets` index rows |
-| `S` | `/to-tickets` only | ticket files · the `tickets` index rows. **No `SPEC.md`** |
+| `M` · `L` | `to-spec`, then `to-tickets` | `SPEC.md` in `spec_folder` · ticket files · the `tickets` index rows |
+| `S` | `to-tickets` only | ticket files · the `tickets` index rows. **No `SPEC.md`** |
+
+Each invocation carries what the engine would otherwise stop to ask: the tracker is already configured
+in `docs/agents/issue-tracker.md`, the seams and the testing decisions are settled above, and the
+`to-tickets` quiz — granularity and blocking edges — is answered from the size table in
+`delivery-flow-guide.md` plus `depends_on` and `touches`. Under a mandate every one of those answers is
+also a ledger row.
 
 At `S` the tickets **are** the contract. `to-tickets` accepts a conversation directly, so a middle document
 buys nothing there. From `M` up it is written first, because two things have to be settled **before** tickets
@@ -115,10 +134,13 @@ is here and name the prior art.
   `to-tickets` does not ask for on its own, so it is the one most likely to be missing.
 - **Every ticket is vertical.** A slice of one layer is not a ticket. The exception is a wide refactor,
   sequenced expand → migrate in batches → contract; `delivery-flow-guide.md` owns that rule.
-- **Ticket files land under `spec_folder`.** Their **shape** is the engine's — one file per ticket, numbered
-  in dependency order, blocking edges declared — and only the root is ours, because `to-tickets` states its
-  own location is tracker-specific and configured. A ticket at the repo root, or under `docs/` or
-  `.scratch/`, is drift: Article 3 names every layer this method has and those are not among them.
+- **Ticket files land under `spec_folder`, and `spec_folder` is `.scratch/<spec-id>-<slug>/`.** Their
+  **shape** is the engine's — one file per ticket, numbered in dependency order, blocking edges declared
+  — and the location is ours, written in `docs/agents/issue-tracker.md` where the engines read it. The
+  id in front of the slug is not decoration: four live repos wrote that leaf four different ways, one of
+  them all four inside a single repo, and a folder nothing can trace back to a row in `specs.yaml` is
+  how a spec goes missing. A ticket at the repo root, or under `docs/`, or in a `.scratch/` directory
+  with no row in `specs.yaml`, is drift.
 
 `SPEC.md` and ticket files **are not read by humans.** Both are machine contracts, and no review burden MAY be
 moved onto them. `wdi-review` MAY still be dispatched over the contract; its trace lands on the spec in
@@ -132,9 +154,9 @@ satisfied MUST NOT be started, however ready it looks.
 
 | # | Step | Engine | Exit condition |
 |---|---|---|---|
-| 1 | Encode | `/tdd` | **Failing tests exist that encode this ticket's acceptance criteria** |
-| 2 | Build | `/implement` — the owner runs it; it uses `/tdd` at the agreed seams | Those tests green, typecheck clean, full suite green once |
-| 3 | Panel | `code-review`, as a **separate** dispatch | Panel adjudicated, zero unresolved must-fix |
+| 1 | Encode | invoke `tdd` | **Failing tests exist that encode this ticket's acceptance criteria** |
+| 2 | Build | invoke `implement` — it uses `tdd` at the agreed seams and calls `code-review` itself | Those tests green, typecheck clean, full suite green once |
+| 3 | Panel | invoke `code-review`, as a **separate** dispatch by a **different** agent | Panel adjudicated, zero unresolved must-fix |
 | 4 | Publish | — | Branch pushed, PR open, ticket-closing checklist answered |
 | 5 | CI | — | All checks conclude green on the pushed head SHA |
 
