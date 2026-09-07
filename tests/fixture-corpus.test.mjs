@@ -85,6 +85,25 @@ test("a defect planted in the fixture IS caught — the baseline can actually fa
   }
 });
 
+// `timeline.py` is where a progress report comes from, and this test used to pass without ever
+// reaching the code that builds one: the fixture has no `.control/generated/` and is not a git repo,
+// so both of timeline's early exits fired and "did not crash" meant "did not run". Behind them,
+// `span_of` was being handed `cap_tickets`'s (spec, ticket) PAIRS and calling `.get` on the tuple —
+// every product whose capability had tickets lost its whole report to an AttributeError at line 140.
+// So the tree here is generated AND committed, and the assertion is on the output, not the absence
+// of a traceback.
+function reportableTree() {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wdi-timeline-"));
+  fs.cpSync(FIXTURE, tmp, { recursive: true });
+  const g = (...args) => execFileSync("git", args, { cwd: tmp, stdio: "ignore" });
+  g("init", "-q");
+  g("add", "-A");
+  // Identity on the command, not from the machine: a CI runner with no configured user.name must still commit.
+  g("-c", "user.email=fixture@wdi", "-c", "user.name=fixture", "commit", "-qm", "fixture");
+  generateIn(tmp);
+  return tmp;
+}
+
 test("timeline.py and inventory.py run against the fixture without crashing", (t) => {
   if (requireUv(t)) return;
   for (const name of ["timeline.py", "inventory.py"]) {
@@ -95,6 +114,31 @@ test("timeline.py and inventory.py run against the fixture without crashing", (t
       out = `${e.stdout || ""}${e.stderr || ""}`;
     }
     assert.doesNotMatch(out, /Traceback/, `${name} crashed:\n${out}`);
+  }
+});
+
+test("timeline.py REPORTS on a capability that has tickets — the report is the point, not the exit code", (t) => {
+  if (requireUv(t)) return;
+  const tmp = reportableTree();
+  try {
+    let out;
+    try {
+      out = execFileSync("uv", ["run", path.join(SCRIPTS, "timeline.py"), "--root", "."],
+                         { cwd: tmp, encoding: "utf8", env: PY_ENV, stdio: ["ignore", "pipe", "pipe"] });
+    } catch (e) {
+      out = `${e.stdout || ""}${e.stderr || ""}`;
+    }
+    assert.doesNotMatch(out, /Traceback/, `timeline.py crashed on a capability with tickets:\n${out}`);
+    const yaml = path.join(tmp, ".control", "generated", "timeline.yaml");
+    assert.ok(fs.existsSync(yaml),
+      `timeline.py wrote no timeline. It exits early with no generated/ and no git, which is how this `
+      + `test passed for as long as the crash behind those exits went unnoticed:\n${out}`);
+    const text = fs.readFileSync(yaml, "utf8");
+    assert.match(text, /id: CAP-1/, `the capability is missing from the timeline:\n${text}`);
+    assert.match(text, /actual_start: '\d{4}-\d{2}-\d{2}'/,
+      `no capability got a real span, so span_of was never exercised on tickets:\n${text}`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
 
@@ -133,6 +177,41 @@ test("a validator walks the corpus, not somebody's build output", (t) => {
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
+});
+
+// The pruning above is a hardcoded list, and it can only ever name what THIS package thought of. A
+// product that vendors an upstream checkout to read it — `.temp/churchcrm-src/` in one repo — files
+// it under `.gitignore` and considers the matter closed. `cites-resolve` then read every `.md` in it
+// and produced 172 findings about somebody else's source tree: not this corpus, not in the clone,
+// and not repairable by the person reading the finding. The same file already asked git rather than
+// parsing `.gitignore` itself (`_ignore_rule`), and the walker simply was not using the answer.
+test("the walker skips what the product gitignores, and reads it when nothing does", (t) => {
+  if (requireUv(t)) return;
+  const plant = (dir) => {
+    const vendored = path.join(dir, ".temp", "vendor-src", "docs");
+    fs.mkdirSync(vendored, { recursive: true });
+    fs.writeFileSync(path.join(vendored, "README.md"),
+                     "Upstream says `src/gone/nowhere.php` and `.control/does-not-exist.md`.\n");
+  };
+
+  const ignored = afterMutation((dir) => {
+    execFileSync("git", ["init", "-q"], { cwd: dir, stdio: "ignore" });
+    fs.writeFileSync(path.join(dir, ".gitignore"), ".temp/\n");
+    plant(dir);
+  });
+  assert.doesNotMatch(ignored, /vendor-src/,
+    `a folder the product gitignores was walked and reported on. It is not in any clone, and no `
+    + `reader of the finding can repair it:\n${ignored}`);
+  assert.match(ignored, /GREEN — no findings/, `the corpus itself should still be green:\n${ignored}`);
+
+  // The same tree with nothing ignoring it: the plant MUST be read. Without this half, a walker that
+  // skipped everything would pass the assertion above.
+  const read = afterMutation((dir) => {
+    execFileSync("git", ["init", "-q"], { cwd: dir, stdio: "ignore" });
+    plant(dir);
+  });
+  assert.match(read, /cites-resolve.*vendor-src.*does-not-exist/,
+    `nothing ignored this file and cites-resolve did not read it — the test above proves nothing:\n${read}`);
 });
 
 // ---------------------------------------------------------------------------------------------

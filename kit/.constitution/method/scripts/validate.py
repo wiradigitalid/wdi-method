@@ -1366,18 +1366,62 @@ PRUNE_DIRS = frozenset({
 })
 
 
+_IGNORED: dict[Path, frozenset[str]] = {}
+
+
+def _git_ignored(root: Path) -> frozenset[str]:
+    """What git ignores in this tree, repo-relative posix — a whole ignored directory as `name/`.
+
+    ONE call for the whole run. `git check-ignore` per folder inside `os.walk` is one subprocess per
+    folder, and on a big tree that costs more than the walk it is protecting.
+
+    Git answers rather than a hand-written parser, for the reason `_ignore_rule` sets out: nested
+    `.gitignore` files, negation with `!`, and `core.excludesFile` are exactly where a parser of this
+    one repo is wrong. `--directory` collapses a wholly-ignored folder into a single entry, which is
+    the granularity the walker prunes at — and a folder holding TRACKED files is never collapsed, so
+    corpus that is in git cannot be pruned away by this.
+
+    Outside a repo, or with no git, this is empty and PRUNE_DIRS carries the walk alone. That is why
+    PRUNE_DIRS stays: it is the fallback, and a `node_modules/` nobody remembered to ignore still has
+    to be pruned — a dangling symlink in one took a whole run down once.
+    """
+    got = _IGNORED.get(root)
+    if got is None:
+        out = git(root, "ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z")
+        got = frozenset(x for x in (out or "").split("\0") if x)
+        _IGNORED[root] = got
+    return got
+
+
 def _walk_corpus(root: Path, suffixes: tuple[str, ...]) -> list[Path]:
-    """Every file under `root` with one of `suffixes`, sorted, pruning PRUNE_DIRS as it goes.
+    """Every file under `root` with one of `suffixes`, sorted, pruning PRUNE_DIRS and what git ignores.
+
+    Ignored material is not this product's corpus: it is not in the clone, nobody reviews it, and
+    nothing in it can be repaired by the reader of a finding. A vendored upstream checkout under
+    `.temp/` produced 172 `cites-resolve` findings in one repo, every one of them about somebody
+    else's source tree.
 
     Sorted because determinism is this script's contract: two runs over the same tree MUST report the
     same thing in the same order.
     """
+    ignored = _git_ignored(root)
+
+    def rel(path: Path) -> str:
+        try:
+            return path.relative_to(root).as_posix()
+        except ValueError:  # a walk that left the tree — treat it as unignored and let PRUNE_DIRS rule
+            return ""
+
     out: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root, onerror=lambda _e: None):
-        dirnames[:] = sorted(d for d in dirnames if d not in PRUNE_DIRS)
+        here = Path(dirpath)
+        dirnames[:] = sorted(d for d in dirnames
+                             if d not in PRUNE_DIRS and f"{rel(here / d)}/" not in ignored)
         for name in filenames:
-            if name.endswith(suffixes):
-                out.append(Path(dirpath) / name)
+            # An ignored FILE inside a folder that is otherwise corpus: git lists it on its own,
+            # because `--directory` only collapses folders that are ignored whole.
+            if name.endswith(suffixes) and rel(here / name) not in ignored:
+                out.append(here / name)
     return sorted(out)
 
 

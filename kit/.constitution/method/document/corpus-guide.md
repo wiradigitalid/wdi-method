@@ -63,6 +63,12 @@ decision or a PRD MAY point into it. Research, brainstorming, forge, and PRFAQ r
 A run folder MUST NOT be deleted **while anything still needs it** — the `update` intents re-read the original
 inputs in place. "Never deleted" is not the rule; the rule is a **retirement condition**, and it is below.
 
+**What git ignores is not corpus.** A vendored upstream checkout kept for reading, a scratch download, a
+build cache — if the product excludes it from git it is in no clone, nobody curates it, and the validators
+do not read it. The other half of that rule is `corpus-in-git`: a folder the method itself keeps MUST NOT be
+excluded, and the two lock together — material is either in git and checked, or ignored and not corpus. What
+`.gitignore` MUST NOT be used for is quieting a finding about a file that really is this product's.
+
 ### A withdrawn promise STAYS in the registry
 
 A `BG` · `CAP` · `FR` · `NFR` · `UC` the product stops promising is marked, never deleted:

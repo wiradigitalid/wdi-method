@@ -119,7 +119,11 @@ def ticket_span(c: Corpus, spec: dict, ticket: dict) -> dict:
 
 
 def fr_tickets(c: Corpus) -> dict[str, list[dict]]:
-    """FR -> ticket, through its UCs. cap_tickets()'s twin, one level down."""
+    """FR -> ticket, through its UCs. cap_tickets()'s twin, one level down.
+
+    Twin in what it traces, NOT in what it returns: this one unpacks and hands back ticket rows,
+    `cap_tickets` hands back (spec, ticket).
+    """
     ucs_of: dict[str, list[str]] = {}
     for uc in c.ucs:
         for fid in listy(uc, "satisfies"):
@@ -134,7 +138,11 @@ def fr_tickets(c: Corpus) -> dict[str, list[dict]]:
 
 
 def span_of(c: Corpus, items: list[dict], spans: dict[str, dict]) -> tuple[str | None, str | None, bool]:
-    """(earliest start, latest end, closed). Closed only when ALL are finished."""
+    """(earliest start, latest end, closed). Closed only when ALL are finished.
+
+    `items` are ticket ROWS. Its two feeders disagree on shape — `fr_tickets` returns rows,
+    `cap_tickets` returns (spec, ticket) pairs — so a caller holding the pairs unpacks them first.
+    """
     if not items:
         return None, None, False
     starts = [spans[str(t.get("id"))]["start"] for t in items]
@@ -181,7 +189,12 @@ def gen_timeline(c: Corpus, asof: dt.date) -> dict:
     out = []
     for cap in c.caps:
         cid = str(cap.get("id"))
-        items = by_cap.get(cid, [])
+        # `cap_tickets` hands back (spec, ticket) pairs — the spec travels because a ticket's status
+        # cannot be read without it. `spec_of` already answers that here, so what this loop wants is
+        # the ticket row. Reading the pair AS a row is what crashed every product whose capability had
+        # tickets: `.get` on a tuple, inside `span_of`, and the whole progress report lost with it.
+        cap_pairs = by_cap.get(cid, [])
+        items = [t for _, t in cap_pairs]
         start, end, closed = span_of(c, items, spans)
         planned_end = str(cap.get("planned_end") or "")
         row = {
