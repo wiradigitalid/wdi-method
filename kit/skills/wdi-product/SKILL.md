@@ -119,6 +119,28 @@ A changed promise changes what other documents can still claim. Check, and **rep
 Then run the change-control matrix in `delivery-flow-guide.md` and **report** which gates reopen. You MUST
 NOT reopen one yourself.
 
+### Withdrawing a promise — the row stays
+
+A `BG` · `CAP` · `FR` · `NFR` the product stops promising is **marked, never deleted**. Deleting it is
+how a repo ended up with twelve `refs-resolve` findings: two capabilities were withdrawn by decision,
+their rows removed, and eight `DEC-` rows still named them — six of the eight having genuinely served
+them at the time, which `corpus-guide.md` forbids editing away.
+
+1. The withdrawal is a **decision first**. Route to `wdi-decision`; you MUST NOT withdraw a promise on
+   your own authority, and `withdrawn_by` needs that `DEC-` id to point at.
+2. Then mark the row, in place, in its own `requirements-<slug>.yaml`:
+   `status: withdrawn` and `withdrawn_by: DEC-NNN`. Everything else on the row is left as it was — it
+   is a record of what was promised, not a draft.
+3. Withdraw **down the chain in the same pass**: an `FR` under a withdrawn `CAP`, an `NFR` under it,
+   a `UC` satisfying a withdrawn `FR`. `withdrawn-recorded` reports a live row left hanging off a
+   withdrawn one, and that finding is the whole point — a half-withdrawn chain still promises half of
+   something.
+4. The id is **spent**. `id-allocated-once` counts a withdrawn row, so the number is never handed to
+   anything else.
+
+What you MUST NOT do: delete the row, renumber around the gap, or edit a `DEC-` that served it.
+`corpus-guide.md` § *A withdrawn promise STAYS in the registry* owns the rule.
+
 ## Rules
 
 - You MUST NOT write a second PRD for an area that already has one. The reader test decides, and its answer

@@ -185,6 +185,27 @@ def git(root: Path, *args: str) -> str | None:
 REQUIREMENT_KEYS = ("goals", "capabilities", "functional", "nonfunctional", "journeys")
 
 
+def is_withdrawn(row: dict) -> bool:
+    """`status: withdrawn` — the product stopped promising this, and the row STAYED.
+
+    Deleting it is what a repo used to do, and the cost was measured: two capabilities withdrawn by
+    decision, their rows removed, and twelve `refs-resolve` findings — eight `DEC-` rows still named
+    them, six of which genuinely served them at the time. `corpus-guide.md` forbids the other repair:
+    a retired name in a record of what happened is a fact about the past, and a `DEC-` is exactly
+    that record.
+
+    So a withdrawn row is read TWO ways. It is still **defined** — every old reference resolves and
+    `id-allocated-once` still refuses the number to anyone else. It is no longer **promised** — no UC
+    is owed, no ticket, no RTM row, and `promise_progress` is not dragged down by something nobody
+    promises.
+    """
+    return str(row.get("status") or "").strip().lower() == "withdrawn"
+
+
+def promised(items: list[dict]) -> list[dict]:
+    return [row for row in items if not is_withdrawn(row)]
+
+
 @dataclass
 class Corpus:
     root: Path
@@ -253,23 +274,23 @@ class Corpus:
     # --- shortcuts used repeatedly
     @property
     def goals(self) -> list[dict]:
-        return rows(self.requirements, "goals")
+        return promised(rows(self.requirements, "goals"))
 
     @property
     def caps(self) -> list[dict]:
-        return rows(self.requirements, "capabilities")
+        return promised(rows(self.requirements, "capabilities"))
 
     @property
     def frs(self) -> list[dict]:
-        return rows(self.requirements, "functional")
+        return promised(rows(self.requirements, "functional"))
 
     @property
     def nfrs(self) -> list[dict]:
-        return rows(self.requirements, "nonfunctional")
+        return promised(rows(self.requirements, "nonfunctional"))
 
     @property
     def ucs(self) -> list[dict]:
-        return rows(self.usecases, "usecases")
+        return promised(rows(self.usecases, "usecases"))
 
     @property
     def decs(self) -> list[dict]:
@@ -281,6 +302,15 @@ class Corpus:
         if own:
             return own
         return str(self.index.get("mode") or "").strip() or "catalog"
+
+    @property
+    def withdrawn_rows(self) -> list[dict]:
+        """Every withdrawn requirement row, with the key it came from — the id side of the split."""
+        out = []
+        for key in REQUIREMENT_KEYS:
+            out += [(key, row) for row in rows(self.requirements, key) if is_withdrawn(row)]
+        out += [("usecases", row) for row in rows(self.usecases, "usecases") if is_withdrawn(row)]
+        return [row for _, row in out]
 
     @property
     def lcs(self) -> list[dict]:
@@ -473,6 +503,8 @@ def refs_resolve(c: Corpus, r: Result) -> None:  # was V6
         defined.add(str(spec.get("id")))
     for _, ticket in c.tickets():
         defined.add(str(ticket.get("id")))
+    # Withdrawn, therefore still defined. This is the whole point of keeping the row.
+    defined |= {str(row.get("id")) for row in c.withdrawn_rows if row.get("id") is not None}
 
     refs: list[tuple[str, str]] = []
     for cap in c.caps:
@@ -1631,6 +1663,47 @@ def engines_invocable(c: Corpus, r: Result) -> None:
                        f"update` restores it; `npx wdi-method engines --fix` strips it back out")
 
 
+def withdrawn_recorded(c: Corpus, r: Result) -> None:
+    """Two things, and without either one `withdrawn` is just a word that quiets a validator.
+
+    **It names the decision.** Withdrawing a promise is decision-worthy on the method's own terms —
+    `corpus-guide.md` lists "no `BG`/`CAP`/`FR`/`NFR`/`UC`/`LC` id is born, renamed, or retired" as a
+    test for whether something is a `DEC-`. So `withdrawn_by` MUST name one that exists.
+
+    **It does not orphan what is left.** A live `FR` whose capability is withdrawn still promises
+    something whose capability nobody promises any more. Withdrawal that takes half a chain with it
+    silently is worse than the deletion this replaced, because at least deletion went red.
+    """
+    dec_ids = {str(d.get("id")) for d in c.decs}
+    for row in c.withdrawn_rows:
+        rid = str(row.get("id") or "")
+        by = str(row.get("withdrawn_by") or "").strip()
+        if not by:
+            r.fail("withdrawn-recorded", rid, "is `status: withdrawn` and names no `withdrawn_by`. "
+                            "Withdrawing a promise is a decision — name the `DEC-` that took it, or the "
+                            "word is only silencing a validator")
+        elif by not in dec_ids:
+            r.fail("withdrawn-recorded", rid, f"names `withdrawn_by: {by}`, which is not a decision in "
+                            f"`decisions.yaml`")
+
+    withdrawn_ids = {str(row.get("id")) for row in c.withdrawn_rows}
+    if not withdrawn_ids:
+        return
+    for row, parent_key, what in ([(x, "goal", "goal") for x in c.caps]
+                                  + [(x, "capability", "capability") for x in c.frs]
+                                  + [(x, "capability", "capability") for x in c.nfrs]):
+        parent = str(row.get(parent_key) or "").strip()
+        if parent and parent in withdrawn_ids:
+            r.fail("withdrawn-recorded", str(row.get("id")),
+                   f"is live, and the {what} it hangs off (`{parent}`) is withdrawn. Withdraw this row "
+                   f"too, or move it under something still promised")
+    for uc in c.ucs:
+        for fr in listy(uc, "satisfies"):
+            if fr in withdrawn_ids:
+                r.fail("withdrawn-recorded", str(uc.get("id")),
+                       f"is live and satisfies `{fr}`, which is withdrawn")
+
+
 def id_allocated_once(c: Corpus, r: Result) -> None:  # was V28
     """One id, one row — across every file the requirement registry is split into.
 
@@ -1665,7 +1738,7 @@ def run_checks(c: Corpus, asof: dt.date) -> Result:
     # no two copies left to compare.
     # V19 is REPEALED. It checked one line item — an `RTR-` file in .control/reports/ — and the
     # retrospective it archived was the only thing spec size `L` ever decided. Both went together.
-    for fn in (goal_has_fr, fr_has_uc, uc_scheduled, ticket_has_test, nfr_has_enforcer, refs_resolve, no_cycles, applied_dec_touches, locked_gate_passed, parallel_tickets_blocked, lc_registered, review_trace, chain_links, memlog_home, spec_names_release_prd, ticket_status_one_home, defect_root_cause, entity_one_writer, spec_after_g4, high_risk_named, mandate_accept, cites_resolve, container_built, custom_room_declared, corpus_in_git, engines_invocable, id_allocated_once):
+    for fn in (goal_has_fr, fr_has_uc, uc_scheduled, ticket_has_test, nfr_has_enforcer, refs_resolve, no_cycles, applied_dec_touches, locked_gate_passed, parallel_tickets_blocked, lc_registered, review_trace, chain_links, memlog_home, spec_names_release_prd, ticket_status_one_home, defect_root_cause, entity_one_writer, spec_after_g4, high_risk_named, mandate_accept, cites_resolve, container_built, custom_room_declared, corpus_in_git, engines_invocable, withdrawn_recorded, id_allocated_once):
         fn(c, r)
     plan_dates(c, r, asof)
     return r
@@ -1868,7 +1941,7 @@ def gen_status(c: Corpus, rtm: dict, result: Result) -> dict:
         per_spec.append({"spec": wid, "status": spec.get("status"),
                          "tickets_done": done, "tickets_total": len(items),
                          "work_progress": _pct(done, len(items))})
-    applicable = 27  # goal-has-fr..id-allocated-once minus V10 and V19, both repealed
+    applicable = 28  # goal-has-fr..id-allocated-once minus V10 and V19, both repealed
     return {
         "promise_progress": _pct(green, len(counted)),
         "rtm_rows": {"green": green, "counted": len(counted),

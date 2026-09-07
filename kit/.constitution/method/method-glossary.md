@@ -88,6 +88,7 @@ there is only Product Component.
 | `DEC-` | A decision |
 | `LC-` | A Logical Component |
 | `OQ-` | An open question |
+| `status: withdrawn` | On a `BG` · `CAP` · `FR` · `NFR` · `UC` row: the product stopped promising it, and the row stays so every old reference still resolves and its id is never reused. It names the `DEC-` that withdrew it in `withdrawn_by`. Still **defined**, no longer **promised** — `corpus-guide.md` owns the rule |
 | `RTR-` | **Retired.** It was an archived retrospective in `.control/reports/`; the retrospective step and `V19` went together. A frozen `RTR-` file stays where it is |
 | `CAP-` | A capability — the planning unit |
 | `NT-` | A non-technical fact |

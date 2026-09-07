@@ -63,6 +63,41 @@ decision or a PRD MAY point into it. Research, brainstorming, forge, and PRFAQ r
 A run folder MUST NOT be deleted **while anything still needs it** — the `update` intents re-read the original
 inputs in place. "Never deleted" is not the rule; the rule is a **retirement condition**, and it is below.
 
+### A withdrawn promise STAYS in the registry
+
+A `BG` · `CAP` · `FR` · `NFR` · `UC` the product stops promising is marked, never deleted:
+
+```yaml
+  - id: CAP-8
+    title: "Publish an order as a public page"
+    status: withdrawn
+    withdrawn_by: DEC-026
+```
+
+**Why the row stays.** One repo deleted two withdrawn capabilities and paid for it in twelve
+`refs-resolve` findings: eight `DEC-` rows still named them in `serves:`, and six of those eight
+genuinely served them at the time. The other repair — editing those decisions — is refused by the
+section above: a `DEC-` is a record of what happened, and a retired name inside one is a fact about
+the past.
+
+**So a withdrawn row is read two ways, and both matter.** It is still **defined**: every old
+reference resolves, and `id-allocated-once` still refuses the number to anything else — an id is
+allocated once, withdrawal included. It is no longer **promised**: no `UC` is owed, no ticket, no RTM
+row, and `promise_progress` is not dragged down by something nobody promises any more.
+
+**Two rules keep it honest**, and `withdrawn-recorded` is what enforces both:
+
+- `withdrawn_by` MUST name a `DEC-` that exists. Retiring an id is decision-worthy on this method's
+  own terms — the **ID chain** row under § *Landing that MUST be confirmed first* says so outright —
+  and without the pointer `withdrawn` is only a word that quiets a validator.
+- A live row MUST NOT hang off a withdrawn one. An `FR` under a withdrawn `CAP` still promises
+  something whose capability nobody promises: withdraw it too, or move it under something live.
+  Withdrawal that takes half a chain with it silently is worse than the deletion it replaced, because
+  deletion at least went red.
+
+`wdi-product` owns the edit, because it owns the row. The withdrawal itself goes through
+`wdi-decision` first — the `DEC-` is what `withdrawn_by` points at.
+
 ## Who lands what
 
 There is no separate placement skill. A skill lands the output of the layer **it owns**, and the landing is

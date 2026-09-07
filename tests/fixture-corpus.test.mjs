@@ -1115,3 +1115,78 @@ test("a legacy story id already prefixed by its wave is NOT prefixed twice", (t)
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+// WITHDRAWING A PROMISE. A capability the product stops promising used to be DELETED from the
+// registry, and one live repo shows what that costs: `CAP-7` and `CAP-8` were withdrawn by decision,
+// their rows removed, and twelve `refs-resolve` findings appeared — eight `DEC-` rows still name them
+// in `serves:`, and six of those eight genuinely served them at the time.
+//
+// `corpus-guide.md` already forbids the obvious repair: "A retired name appearing in a document that
+// records what happened is a fact about the past, not drift, and a sweep MUST NOT rename it." A
+// `DEC-` is exactly such a record. So the row stays, marked `status: withdrawn`, and it names the
+// decision that withdrew it. Every old reference keeps resolving, the id is never reused, and the
+// withdrawal is visible where the promise was made.
+const REQS = (dir) => path.join(dir, ".control", "registry", "requirements-checkout-v1.yaml");
+const addRows = (dir, capBlock, frBlock) => {
+  const f = REQS(dir);
+  fs.writeFileSync(f, fs.readFileSync(f, "utf8")
+    .replace("functional:", `${capBlock}\nfunctional:`)
+    .replace(/^journeys: \[\]/m, `${frBlock}\njourneys: []`));
+};
+
+const WITHDRAWN_CAP = [
+  "  - id: CAP-2",
+  "    goal: BG-1",
+  "    title: \"Publish an order as a public page\"",
+  "    priority: must",
+  "    target_release: v1",
+  "    status: withdrawn",
+  "    withdrawn_by: DEC-002",
+].join("\n");
+
+const WITHDRAWN_FR = [
+  "  - id: FR-3",
+  "    capability: CAP-2",
+  "    title: \"A visitor can publish their order\"",
+  "    proof: \"The public page renders\"",
+  "    status: withdrawn",
+  "    withdrawn_by: DEC-002",
+].join("\n");
+
+test("a WITHDRAWN capability keeps every old reference resolving, and is asked for no coverage", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => {
+    addRows(dir, WITHDRAWN_CAP, WITHDRAWN_FR.replace("functional:", ""));
+    // A decision that served it, exactly as the live repo's eight do.
+    const d = DECISIONS(dir);
+    fs.writeFileSync(d, fs.readFileSync(d, "utf8").replace(/^(\s+)serves: \[/m, "$1serves: [CAP-2, "));
+  });
+  assert.doesNotMatch(out, /refs-resolve.*CAP-2/,
+    `a decision naming the withdrawn capability failed to resolve. Deleting the row is what produced `
+    + `twelve of those findings in a real repo, and the guide forbids editing the decisions instead:\n${out}`);
+  assert.match(out, /GREEN — no findings/,
+    `a withdrawn promise was asked to carry a UC, a ticket, or an RTM row. Nothing is promised any `
+    + `more, so nothing is owed — and dragging the RTM down forever is how promise_progress stops `
+    + `meaning anything:\n${out}`);
+});
+
+test("a withdrawn row that names no decision is a FINDING — otherwise it is a way to silence checks", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) =>
+    addRows(dir, WITHDRAWN_CAP.replace("\n    withdrawn_by: DEC-002", ""), ""));
+  assert.match(out, /withdrawn-recorded\s+CAP-2/,
+    `a row marked withdrawn with nothing behind it went unreported. Then "withdrawn" is a word anyone `
+    + `can add to make a red validator go quiet:\n${out}`);
+});
+
+test("a LIVE row hanging off a withdrawn one is a FINDING — withdrawal MUST NOT orphan a promise", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => {
+    // CAP-2 withdrawn, but FR-3 under it left live: the FR still promises something whose capability
+    // nobody promises any more. Silence here is how a withdrawal quietly takes half a chain with it.
+    addRows(dir, WITHDRAWN_CAP, WITHDRAWN_FR.replace("\n    status: withdrawn", "")
+                                           .replace("\n    withdrawn_by: DEC-002", ""));
+  });
+  assert.match(out, /withdrawn-recorded\s+FR-3/,
+    `FR-3 is live and its capability is withdrawn, and nothing said so:\n${out}`);
+});
