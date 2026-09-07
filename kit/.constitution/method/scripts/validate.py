@@ -1135,18 +1135,64 @@ def _dec_date(c: Corpus, dec: dict) -> dt.date | None:
     return None
 
 
+# A mandate whose authority ONCE stood. `accepted` and `applied` are live; `superseded` is retired,
+# and retirement is NOT retroactive — the owner accepted it in person, and what was taken under it
+# while it stood stays accepted. Reading this status as present tense is what turned a whole run's
+# decisions red the day the owner changed one setting of the mandate, with no repair available that
+# does not falsify the record: the decisions are frozen, and the supersession really happened.
+MANDATE_STOOD = ("accepted", "applied", "superseded")
+
+
+def _dec_fm(c: Corpus, dec: dict) -> dict:
+    """The frontmatter of a decision's own file — `supersedes`/`superseded_by` live there in the
+    template, and a product that wrote them only in the file is not wrong."""
+    did = str(dec.get("id") or "")
+    if not did:
+        return {}
+    for path in sorted(c.root.glob(f".control/decisions/{did}-*.md")):
+        return frontmatter(path) or {}
+    return {}
+
+
+def _revoked_on(c: Corpus, mandate: dict, by_id: dict[str, dict]) -> dt.date | None:
+    """The day a superseded mandate stopped delegating: the date of the decision that replaced it.
+
+    For a mandate, supersession IS revocation — `wdi-autopilot` names it as the way a run is ended
+    for good, and the way a setting is changed. So it binds tighter than `expires`, and the window
+    ends at whichever of the two came first.
+    """
+    if str(mandate.get("status") or "") != "superseded":
+        return None
+    ref = str(mandate.get("superseded_by") or _dec_fm(c, mandate).get("superseded_by") or "").strip()
+    if not ref:
+        return None
+    return _dec_date(c, by_id.get(ref) or {})
+
+
 def mandate_accept(c: Corpus, r: Result) -> None:
-    """A decision accepted BY DELEGATION points at a real mandate that had not lapsed when it was taken.
+    """A decision accepted BY DELEGATION points at a mandate that stood, and had not ended, when it was taken.
 
     `wdi-autopilot` lets the agent accept decisions the owner would have accepted, and that is legal
     only because the owner accepted the MANDATE in person. So three things hold: a mandate is never
-    itself accepted by another decision — the chain of authority has a person at its root; an accepted
-    mandate names the day it ends, or it is standing permission; and a decision whose `accepted_by` is
-    a `DEC-` names one that is `type: mandate`, accepted, and unexpired on the decision's own date.
+    itself accepted by another decision — the chain of authority has a person at its root; a mandate
+    that stood names the day it ends, or it is standing permission; and a decision whose `accepted_by`
+    is a `DEC-` names one that is `type: mandate`, stood on the decision's own date, and had not ended
+    by then — expired, or superseded, whichever came first.
+
+    Every question it asks is about the PAST, so every answer is read from the past. A mandate's
+    status today says when its authority ENDED, never that it was never granted: `superseded` is a
+    retired mandate, and the decisions taken under it while it stood are still accepted. The one
+    thing supersession does change is the window — see `_revoked_on`.
 
     It says nothing about WHAT was decided — that is the ledger's job and the owner's review.
     """
     by_id = {str(d.get("id")): d for d in c.decs}
+    # Which mandates were actually USED. A retired mandate's obligations are read from what was taken
+    # under it, not from its status: superseding one that delegated nothing owes no account of a run
+    # that never happened, and superseding one that delegated forty decisions owes exactly what it
+    # owed the day before — otherwise supersession is a way to make the ledger demand disappear.
+    delegated_under = {str(d.get("accepted_by") or "").strip() for d in c.decs
+                       if str(d.get("type") or "") != "mandate"}
     for dec in c.decs:
         did = str(dec.get("id"))
         ref = str(dec.get("accepted_by") or "").strip()
@@ -1156,7 +1202,7 @@ def mandate_accept(c: Corpus, r: Result) -> None:
                 r.fail("mandate-accept", did,
                        f"is a mandate accepted by delegation (`accepted_by: {ref}`) — the mandate is the one "
                        f"decision the owner accepts in person")
-            if status in ("accepted", "applied"):
+            if status in ("accepted", "applied") or (status == "superseded" and did in delegated_under):
                 if not ref:
                     r.fail("mandate-accept", did, "is an accepted mandate and `accepted_by` names nobody — "
                                                   "a person and a date is enough")
@@ -1177,6 +1223,17 @@ def mandate_accept(c: Corpus, r: Result) -> None:
                     # silently disables the lapse comparison for every decision taken under this mandate.
                     r.fail("mandate-accept", did, f"`mandate.expires: {raw}` is not a date — write `YYYY-MM-DD`. "
                                                   f"An expiry nothing can read stops nothing")
+                if status == "superseded" and _revoked_on(c, dec, by_id) is None:
+                    # Retiring a mandate and not dating the retirement leaves the delegation reading as
+                    # good until `expires` — the opposite of what superseding it was for. Same failure as
+                    # the unparseable expiry above: a bound that looks present and compares nothing.
+                    r.fail("mandate-accept", did,
+                           "is a superseded mandate with decisions accepted under it, and nothing dates the "
+                           "supersession — `superseded_by` naming the decision that replaced it, and "
+                           "`supersedes` back on that one (both sides, decision-guide.md), is what says when "
+                           "the delegation was revoked. Until it is there the mandate reads as delegating "
+                           "right up to its `expires`. Recording a supersession is the one edit an applied "
+                           "decision allows")
             continue
         if not ref.startswith("DEC-"):
             continue
@@ -1188,19 +1245,26 @@ def mandate_accept(c: Corpus, r: Result) -> None:
             r.fail("mandate-accept", did, f"`accepted_by: {ref}` is not a `type: mandate` decision — only a mandate "
                                           f"delegates acceptance")
             continue
-        if str(target.get("status") or "") not in ("accepted", "applied"):
-            r.fail("mandate-accept", did, f"`accepted_by: {ref}` is `{target.get('status')}`, not accepted — "
-                                          f"nothing was delegated yet")
+        if str(target.get("status") or "") not in MANDATE_STOOD:
+            r.fail("mandate-accept", did, f"`accepted_by: {ref}` is `{target.get('status')}` — nothing was ever "
+                                          f"delegated. A mandate delegates from `accepted` onward, and a "
+                                          f"`superseded` one still stands for what was taken before it ended")
             continue
         params = target.get("mandate") if isinstance(target.get("mandate"), dict) else {}
         expires = _dec_date(c, {"date": params.get("expires")})
+        revoked = _revoked_on(c, target, by_id)
         when = _dec_date(c, dec)
+        # Whichever end came first is the one that counts.
+        limit, ended, tail = expires, "expired on", "the delegation had lapsed"
+        if revoked and (expires is None or revoked < expires):
+            limit, ended, tail = (revoked, "was superseded on",
+                                  "the delegation was revoked then, whatever its `expires` still says")
         if when is None:
             r.fail("mandate-accept", did, f"is accepted under `{ref}` but no date says when — `date:` in its "
-                                          f"frontmatter is what the expiry is checked against")
-        elif expires and when > expires:
-            r.fail("mandate-accept", did, f"was taken on {when.isoformat()}, after `{ref}` expired on "
-                                          f"{expires.isoformat()} — the delegation had lapsed")
+                                          f"frontmatter is what the mandate's window is checked against")
+        elif limit and when > limit:
+            r.fail("mandate-accept", did, f"was taken on {when.isoformat()}, after `{ref}` {ended} "
+                                          f"{limit.isoformat()} — {tail}")
 
 
 def defect_root_cause(c: Corpus, r: Result) -> None:  # was V20

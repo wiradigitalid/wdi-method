@@ -25,7 +25,8 @@ awake to refuse them — and the run would renew its own authority. The lapsed d
 expiry ends the run instead of restarting it.
 
 Typing `/wdi-autopilot` while a mandate is active opens the iteration door, not the preflight. To change a
-setting, the owner supersedes the mandate with a new one — `wdi-decision` owns supersession.
+setting, the owner supersedes the mandate with a new one — `wdi-decision` owns supersession. A superseded
+mandate keeps everything it already accepted: the delegation ends that day, it does not unwind.
 
 ## Door 1 — Preflight
 
@@ -237,7 +238,7 @@ Stated on the preflight page, because a run nobody can stop is not a run anybody
 |---|---|---|
 | Pause | Cancel the loop, or interrupt the session | The current iteration finishes its step and lands its ledger row. Nothing is left half-written |
 | Resume | `/wdi-autopilot` again, or start the loop again | The mandate is still active, so it comes in through the iteration door and continues from `## Resume` |
-| End it for good | Supersede the mandate through `wdi-decision`, or let `expires` pass | **Cancelling the loop does NOT revoke the mandate.** Until it is superseded or lapses, any later firing resumes the run |
+| End it for good | Supersede the mandate through `wdi-decision`, or let `expires` pass | **Cancelling the loop does NOT revoke the mandate.** Until it is superseded or lapses, any later firing resumes the run. The supersession names its replacement on both sides — that date is what revoked the delegation, and `mandate-accept` asks for it once the mandate has accepted anything |
 
 ## The ledger
 

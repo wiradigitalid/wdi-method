@@ -996,6 +996,89 @@ test("mandate-accept refuses an expiry it cannot read as a date — otherwise th
     `an unparseable expiry was accepted, which disables the lapse check for everything under it:\n${out}`);
 });
 
+// A mandate is RETIRED by supersession — `wdi-autopilot` names it as both the way a setting is changed
+// and the way a run is ended for good. Read as present tense, that status turned every decision the run
+// had already taken red the moment the owner did either, and no repair existed: the decisions are frozen
+// and the supersession really happened. A live repo lost a whole preflight to it. What supersession DOES
+// change is where the window ends — that day, not `expires`.
+const MANDATE_ACCEPTED = `    status: accepted
+    type: mandate`;
+const MANDATE_SUPERSEDED = `    status: superseded
+    superseded_by: DEC-004
+    type: mandate`;
+const MANDATE_SUPERSEDED_UNDATED = `    status: superseded
+    type: mandate`;
+
+const supersede = (dir, { pointer = "row", replacedOn = "2026-01-25" } = {}) => {
+  editDecisions(dir, MANDATE_ACCEPTED,
+                pointer === "row" ? MANDATE_SUPERSEDED : MANDATE_SUPERSEDED_UNDATED);
+  fs.appendFileSync(DECISIONS(dir), `  - id: DEC-004
+    title: "The autopilot mandate is replaced"
+    status: accepted
+    type: course-correction
+    date: '${replacedOn}'
+    accepted_by: "Wira, ${replacedOn}"
+    touches: []
+`);
+  if (pointer === "file") {
+    // Where the decision TEMPLATE puts `superseded_by`. A product that recorded the supersession only
+    // in the file is not wrong, and a reader that knows the registry row alone calls it undated.
+    const f = path.join(dir, ".control", "decisions", "DEC-002-autopilot-mandate-checkout.md");
+    fs.writeFileSync(f, fs.readFileSync(f, "utf8").replace(`status: accepted
+`, `status: superseded
+superseded_by: DEC-004
+`));
+  }
+};
+
+test("a SUPERSEDED mandate still stands for what was taken under it — retirement is not retroactive", (t) => {
+  if (requireUv(t)) return;
+  for (const pointer of ["row", "file"]) {
+    const out = afterMutation((dir) => supersede(dir, { pointer }));
+    assert.match(out, /GREEN — no findings/,
+      `DEC-003 was accepted on 2026-01-21 under a mandate the owner accepted in person and replaced on `
+      + `2026-01-25 (supersession recorded in the ${pointer}). That is not a finding, and no repair could `
+      + `make it stop being one — the decision is frozen and the supersession happened:
+${out}`);
+  }
+});
+
+test("a decision taken AFTER its mandate was superseded is refused — supersession revokes", (t) => {
+  if (requireUv(t)) return;
+  const out = afterMutation((dir) => supersede(dir, { replacedOn: "2026-01-20" }));
+  assert.match(out, /mandate-accept +DEC-003.*2026-01-21.*superseded on 2026-01-20/,
+    `the mandate was replaced on 2026-01-20 and a decision dated 2026-01-21 still claimed it. Its own `
+    + `expiry (2026-02-01) is the wrong bound once a mandate has been retired:
+${out}`);
+});
+
+test("a superseded mandate with decisions under it MUST date the supersession", (t) => {
+  if (requireUv(t)) return;
+  // Same failure shape as the unparseable expiry: with no pointer forward there is no revocation date,
+  // so the comparison silently falls back to `expires` and the mandate reads as delegating for another
+  // eleven days after the owner ended it.
+  const out = afterMutation((dir) => supersede(dir, { pointer: "none" }));
+  assert.match(out, /mandate-accept +DEC-002.*superseded_by/,
+    `a mandate was retired with decisions hanging off it and nothing said when, so the only bound left `
+    + `is the expiry it was supposed to cut short:
+${out}`);
+});
+
+test("superseding a mandate does NOT retire the ledger it owes", (t) => {
+  if (requireUv(t)) return;
+  // The obligation follows what was DELEGATED, not the status. Read as present tense, a status change
+  // made for an unrelated reason deletes the demand for the run's only account of itself — the cheapest
+  // possible way to hide one.
+  const out = afterMutation((dir) => {
+    supersede(dir);
+    fs.rmSync(path.join(dir, ".control", "memlog", "autopilot-DEC-002.md"));
+  });
+  assert.match(out, /mandate-accept +DEC-002.*no ledger/,
+    `the ledger of a run that took decisions for the owner went missing, and superseding the mandate was `
+    + `enough to stop anybody asking for it:
+${out}`);
+});
+
 test("high-risk-named refuses a MANDATE as the acceptor — a run MUST NOT accept a sensitive risk for the owner", (t) => {
   if (requireUv(t)) return;
   // high-risk-named accepts any DEC- id that resolves. The mandate resolves. So an unattended run could raise

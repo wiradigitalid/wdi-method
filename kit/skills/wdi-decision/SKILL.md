@@ -108,7 +108,8 @@ blocked waiting on one, the block is reported, never resolved by self-approval.
 **One delegation, and it is checkable.** Under a `DEC-` of `type: mandate` at `status: accepted` whose
 `expires` has not passed, `wdi-autopilot` MAY accept a decision on the owner's behalf, writing
 `accepted_by: DEC-<mandate>` on the row and `date:` in the file. `mandate-accept` holds the chain: the target is a
-real mandate, accepted, unexpired on that date — and the mandate itself is **never** accepted by delegation.
+real mandate that **stood** on that date and had not ended by then — expired or superseded, whichever came
+first — and the mandate itself is **never** accepted by delegation.
 That is the one decision whose `accepted_by` is a person and a date, the way `risk_accepted_by` is.
 
 An `accepted` `DEC-` that is still unapplied MAY be corrected in place, with the correction recorded in the
@@ -184,6 +185,11 @@ reopen a gate yourself, and you MUST NOT treat a green application as a gate tha
   waiting, then checking the next is where the time goes — `corpus-guide.md` § One decided change is one
   edit pass owns the rule.
 - You MUST NOT apply into a spec that is already closed.
+- **Supersession is written on both sides**: `superseded_by` on the retired decision, `supersedes` on the one
+  replacing it. Nothing else about an `applied` decision MAY be touched, and this is the exception — a reader
+  following the old id needs the pointer forward, and for a `type: mandate` that pointer's date is what says
+  when the delegation stopped. Retiring a mandate that accepted decisions without it is a `mandate-accept`
+  finding.
 - `AD-N` is a different thing: a living rule with Binds · Prevents · Rule, edited in place. You MUST NOT convert
   one into the other.
 - A decision that emerged from a failed third fix attempt MUST say so in Why. That is the signal

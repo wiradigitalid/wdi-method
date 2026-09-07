@@ -164,7 +164,15 @@ the owner with a name and a date and carrying an `expires`, lets `wdi-autopilot`
 under it — `accepted_by: DEC-<mandate>`. What each of the three guards above protected — *a human made
 the call* — still holds: the human made one call, and it is on the record, dated, and ending. The mandate
 itself MUST NOT be accepted by delegation, and `mandate-accept` refuses one that is, one with no
-`expires`, and any decision dated after its mandate lapsed.
+`expires`, and any decision dated after its mandate had ended.
+
+**A mandate ends twice over, and the earlier end is the one that counts:** its `expires` passes, or it
+is superseded. Superseding a mandate revokes the delegation from the day of the decision that replaced
+it — which is why a superseded mandate that delegated anything MUST carry `superseded_by`, and why
+recording that pointer is the one edit an `applied` decision allows. What supersession does NOT do is
+reach backwards: the decisions taken under the mandate while it stood remain accepted, their
+`accepted_by` still names it, and the ledger it owes is still owed. A retired mandate is a mandate that
+ended, never one that was never granted.
 
 ## Finding a decision
 
