@@ -379,11 +379,16 @@ A `DEC-` freezes when it is applied. A change of mind produces a new one; it nev
 
 ## The mechanical half
 
-`validate.py` runs twenty-seven named validators — `goal-has-fr`, `cites-resolve`, `no-cycles`,
+`validate.py` runs twenty-nine named validators — `goal-has-fr`, `cites-resolve`, `no-cycles`,
 `id-allocated-once`, and the rest, each named for the thing it checks — over the registries and the
 corpus, and `inventory.py` derives the three inventories from code and reports the difference against the
 plan without patching either side. There is no validator that compares two copies of one fact, because
 the corpus keeps no copies.
+
+**The corpus is what git tracks.** A vendored dependency tree inside a gitignored folder is not this
+product's writing, and since 0.6.17 the walk skips what the repo ignores. The other half of that rule is
+`corpus-in-git`: a folder the method commits MUST NOT be ignored, so `.gitignore` cannot be used to quiet
+a finding about a file that really is yours.
 
 The validators exist because prose that nothing checks is prose that gets contradicted by the first
 person in a hurry. Every one of them also states **the state in which it does not apply** — a rule that
@@ -512,6 +517,9 @@ carefully to read the diff. [`CONTRIBUTING.md`](CONTRIBUTING.md) has the detail,
 Open an [issue](https://github.com/wiradigitalid/wdi-method/issues) for a bug or a proposal. Read
 [`CONTRIBUTING.md`](CONTRIBUTING.md) before sending a pull request — it explains where a change belongs,
 how versioning works here, and what to check before publishing.
+
+[`CHANGELOG.md`](CHANGELOG.md) is what changed in each version, and what each change means for a repo
+that already has the method installed. Read it before an `update` that crosses more than a patch.
 
 ## License
 

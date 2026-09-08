@@ -149,6 +149,7 @@ an agent may do, and a workflow that published on tag would hand npm releases to
 
 ```bash
 npm test && npm publish --dry-run                 # below — the only command that shows publish warnings
+# write the CHANGELOG.md entry first — it goes in the same commit as the change, not after the tag
 npm version patch -m "chore(release): %s"         # minor/major: the maintainer only. Commits and tags v<version>
 git push --follow-tags                            # a plain push does not send the tag npm version just made
 # → Actions: release.yml tests, checks tag == package.json, drafts the GitHub release
@@ -158,6 +159,12 @@ gh release edit v<version> --notes-file NOTES.md  # optional — replace the gen
 
 Then, in a consuming repo, `npx wdi-method@latest update --yes` is the tarball smoke test: the installed
 package is not the working tree, and `files` in `package.json` decides what shipped.
+
+**Every version bump brings a `CHANGELOG.md` entry, in the same commit as the change.** The entry is
+written for the person deciding how carefully to read an `update` diff, so it says what the version means
+for a repo that already has the method installed — and says *nothing beyond `update`* when that is the
+answer. A tag whose changelog entry arrives later is a tag whose GitHub release notes are generated from
+commit subjects nobody wrote for a reader.
 
 ## Before you publish
 

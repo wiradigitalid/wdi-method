@@ -23,6 +23,10 @@ happened to be working takes that signal away. `CONTRIBUTING.md` carries the sam
 An agent MUST NOT run `npm publish`. Publishing is irreversible after 72 hours and happens under the
 maintainer's account.
 
+Every bump MUST bring a `CHANGELOG.md` entry in the same commit, written for the person deciding how
+carefully to read an `update` diff — what changed, and what a repo that already has the method installed
+has to do about it. `CONTRIBUTING.md` carries the same rule for humans.
+
 ## Language
 
 Everything in this repository is **English** — the installer's interface included, and so is every
