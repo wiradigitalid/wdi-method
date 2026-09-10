@@ -184,6 +184,7 @@ verifies the result, and lands the memlog.
 | Writing the spine, an `AD-N`, C4, or one of the three inventories | `.constitution/method/document/architecture-guide.md` |
 | Opening, accepting, or applying a `DEC-` | `.constitution/method/document/decision-guide.md` |
 | Writing or reading a structure map | `.constitution/method/structure-guide.md` |
+| Writing or changing a CI workflow, or deciding whether a push may start a cloud run | `.constitution/method/ci-guide.md` |
 | Looking for where code lives, or placing new code | `.control/structure-codebase.md` |
 | Looking for where a document lives | `.control/structure-document.md` |
 | Writing or reviewing code | `.constitution/project/codebase-stack-guide.md` · `.constitution/project/codebase-conventions-guide.md` · `.constitution/project/codebase-brownfield-guide.md` |

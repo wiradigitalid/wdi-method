@@ -43,6 +43,7 @@ Never a rule. When it disagrees with a guide, the guide wins and the disagreemen
 | [`language-guide.md`](language-guide.md) | Naming anything — a code identifier, a code file, a document file |
 | [`method-glossary.md`](method-glossary.md) | Unsure what a method term means — layer, wave, Product Component, ID code |
 | [`structure-guide.md`](structure-guide.md) | Writing or checking the two structure maps in `.control/` |
+| [`ci-guide.md`](ci-guide.md) | Writing or changing a CI workflow; when a push may start a cloud run, and what MUST NOT |
 
 ## `document/` — document rules
 

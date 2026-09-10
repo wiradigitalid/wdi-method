@@ -181,6 +181,14 @@ loop), a loop to fire it — `/loop 5m /wdi-autopilot` in Claude Code — and a 
 or a copy of the engines inside the repo. The validator `mandate-accept` keeps the one thing the method never
 gives up: a person, dated, at the root of every delegated acceptance.
 
+**One run, one cloud run.** Commits stay granular — one per ticket — and the run branch is pushed as often
+as the work needs, but none of those pushes starts a GitHub Actions run: the workflow fires **once**, at
+the end of the cycle, when the PR is marked ready for review. Until then the evidence is the local suite,
+which is free. That is what stops one unattended run over fifteen tickets from spending most of a month's
+Actions allowance in two days — a Windows runner bills at 2x the minutes and macOS at 10x, and on a private
+repository every one of those comes out of the allowance. `.constitution/method/ci-guide.md` carries the
+trigger shape and two workflow templates, `ci.yml` and `korpus.yml`.
+
 **Refine, do not advance.** When a page does not convince you, run the same skill again and say what is
 wrong — it updates the document it owns. Nothing downstream exists yet, so nothing breaks. Advancing past a
 page you did not believe is how every later page inherits the doubt.

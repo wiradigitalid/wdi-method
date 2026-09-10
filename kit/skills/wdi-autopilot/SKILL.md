@@ -46,7 +46,8 @@ NOT start the loop while any row in the first two groups is red.
 | | Reviewers separate from the builder can be dispatched | The session cannot spawn a second agent and any touched component is `risk_accepted: low` — Step 3 of `wdi-build` would block |
 | | `.constitution/project/codebase-stack-guide.md` names build and test commands, **and the test command exits 0 here** | Absent or failing. Every ticket's "full suite green once" and the smoke test read it. Found at minute one, not at hour six |
 | | The remote accepts the run branch — `git push --dry-run` — and `main` is reachable as a PR base | Auth or remote failure. The first real push is at the first spec close, hours in |
-| | A CI workflow is configured | None. Step 5 would wait for checks that never arrive; say so and read Step 2's own runs as the evidence instead |
+| | A CI workflow is configured | None. § Finish would wait for checks that never arrive; say so and read the local suite as the evidence instead |
+| | **No workflow fires on an intermediate push** — the run branch is pushed dozens of times and a metered runner MUST NOT start on any of them. `ci-guide.md` § Trigger shape is the check: `workflow_dispatch` present, the automatic trigger `pull_request` `types: [ready_for_review]`, no bare `on: push` | A workflow triggers on every push. Fix it before the mandate is written — one autopilot run over fifteen tickets has spent most of a month's allowance in two days — or, where the workflow is not this repo's to change, the run holds every intermediate push and the preflight page says so |
 | **Position** | `gates_passed` in `index.yaml`, `g4_passed` per component, validators green (`validate.py`) | A red validator. Name it; autopilot MUST NOT start on a corpus already red |
 | | An isolated worktree | A shared checkout. `wdi-build` refuses one, so this skill refuses earlier |
 | | `from_gate` — the first gate the run will hold itself | Below the last passed gate. Default: the gate after the last one passed |
@@ -135,6 +136,12 @@ An iteration returns at exactly **three stops**, and names which:
 | **Capacity** | The session's context is near its limit, or a dispatched step cannot be spawned here. The ledger's last row is a boundary the next firing resumes from. **The same capacity reason twice in a row is recorded under Blocked instead** — the next firing is the same session on the same machine, so a spawn that is unavailable now is unavailable then, and retrying it is the spin this design exists to prevent |
 | **Blocked** | A step failed at its cap — two return trips in `wdi-build`, a third failed fix — and is recorded under **Blocked** in `## Resume`. The next firing takes the next **runnable** row, never this one again |
 
+**No iteration triggers a cloud run.** Commits stay granular — one per ticket, plus the memlog and the
+registry catch-up — and the run branch MAY be pushed as often as the coordinator likes so the work is never
+only on one machine. What an iteration MUST NOT do is start a metered runner: no `workflow_dispatch`, no PR
+marked ready, no re-run requested on a ticket that is not finished. Evidence during the run is the **local**
+suite, which `wdi-build` Phase 3 Step 2 already requires and which costs nothing. See § Cycle-end CI.
+
 **Runnable** means: not listed under Blocked in `## Resume`, and not parked by the mandate. A blocked row is
 retried only when the owner unblocks it or a later change removes the cause — and the ledger row that
 recorded the block says which. A run that re-picks a blocked step spends the whole mandate window on it, and
@@ -180,9 +187,11 @@ the method's, and none of them relaxes here:
   suite green once; a merge that turns the branch red is reverted, not patched forward. **Reverting a merge
   leaves the branch counted as merged**, so re-merging the same branch brings back nothing: the ticket
   returns to `ready-for-agent` and its redo lands on a **new** branch cut from the revert.
-- **A spec MUST NOT close while the run branch's last pushed head is red.** That is a **Blocked** row, not a
-  follow-up. Closing over red carries the failure forward, and every later ticket's local "full suite green
-  once" hides it behind a suite that was never the branch's.
+- **A spec MUST NOT close while the run branch is red locally.** Run the full suite on the run branch's head
+  after the merge — not the ticket worktree's, the branch's — and a red one is a **Blocked** row, not a
+  follow-up. Closing over red carries the failure forward, and every later ticket's own "full suite green
+  once" hides it behind a suite that was never the branch's. This local check is what replaces a per-spec
+  CI run, and it is the reason the cloud runner can safely wait until § Finish.
 
 ### One run, one branch, one PR
 
@@ -199,11 +208,36 @@ branch, one PR, nothing else on the remote.
 | In `wdi-build` | Under a mandate |
 |---|---|
 | Step 4 pushes a ticket branch and opens a PR per ticket | The ticket is committed to the run branch — directly, or merged in from its own worktree by the coordinator. The ticket-closing checklist is still answered first. **No PR per ticket** |
-| Step 5 watches CI per PR | The coordinator pushes the run branch **at every spec close**; the first push opens the one PR as a **draft**; CI is watched per push, on the pushed head SHA, and judged exactly as Step 5 says |
+| Step 5 watches CI per PR | The coordinator pushes the run branch **at every spec close** — and that push starts **no cloud run**; the first push opens the one PR as a **draft**. CI runs **once**, at § Finish, and is judged exactly as Step 5 says on the pushed head SHA |
 | `MUST NOT merge` | Holds harder. The run never merges to `main`; the owner does, once, after § Finish |
 
 A second PR is a red flag. Where a change cannot ride the run branch — a hotfix `main` needs today — it is
 reported for the owner, not opened by the run.
+
+### Cycle-end CI — the cloud runner fires once
+
+**One mandate, one cloud run.** Cloud runners are metered — a Windows runner bills at 2x and macOS at 10x,
+and on a private repository those minutes come out of a monthly allowance. A run that let CI start at every
+ticket commit and every spec close burned most of a month's allowance in two days, which is the defect this
+rule exists for. `ci-guide.md` owns the workflow shape; this is what the run does with it.
+
+**Committing often is not the lever, and MUST NOT be treated as one.** A ticket commit, a memlog rewrite, a
+registry catch-up and a spec-close push are all still required, at the same frequency as before.
+
+| Phase of the run | Pushes | Starts a cloud run |
+|---|---|---|
+| Every ticket, every memlog and registry write | The run branch, as often as the coordinator likes | **No** |
+| Every spec close | The run branch; the first push opens the one PR as a **draft** | **No** — a draft PR is work in progress, and `pull_request` `types: [ready_for_review]` does not fire for it |
+| § Finish, once | The final head | **Yes** — exactly once |
+
+Three ways the runner is held off, in this order of preference:
+
+1. **The workflow's own triggers.** With `ci-guide.md`'s shape an intermediate push matches nothing: there is
+   no bare `on: push`, and the PR is a draft. Nothing extra is needed, and this is what preflight checks.
+2. **`[skip ci]` on the pushed head commit**, where the repo's workflow is not this run's to change. GitHub
+   honours it for `push` and `pull_request` events.
+3. **Hold the push**, where neither is available: the work stays on the local run branch until § Finish. Last
+   resort, because it is the one that loses the work if the machine does.
 
 
 ### What the agent decides, and what it does with the answer
@@ -325,10 +359,28 @@ When § The work table reaches § Finish:
 3. Raise the mandate to `applied`, `touches` naming the ledger, and rewrite `## Resume` one last time so it
    reads as the run's end state rather than a step that never came.
 4. **Leave the run branch in a state the owner can merge.** A ticket still in flight is either finished or
-   its merge reverted — the branch is never handed over half-applied. Then push, wait for CI to conclude on
-   that head SHA, and mark the one PR **ready for review** *only if it is green*. Red keeps the PR a
-   **draft** and is reported red: a PR marked ready is an invitation to merge, and the run MUST NOT extend
-   one over a red branch, nor patch to turn it green at the door.
+   its merge reverted — the branch is never handed over half-applied. Run the full suite locally on that
+   head first: **that is the last free check, and a cloud run started over a red local suite spends metered
+   minutes to learn what was already known.**
+
+   Then push the final head and **trigger the one cloud run** — the single point in the whole mandate where
+   that is allowed. How, in this order:
+
+   | The workflow offers | Do | The run appears on |
+   |---|---|---|
+   | `pull_request` `types: [ready_for_review]` | Mark the draft PR **ready for review** | The PR's head SHA |
+   | `workflow_dispatch` | Dispatch it against the run branch, then mark the PR ready once it concludes green | The dispatched ref |
+   | Neither — a plain `on: push` workflow | The final push carries no `[skip ci]`, which is what makes it the one push of the run that starts anything | The pushed head SHA |
+
+   Wait for every check to conclude, then confirm the checks belong to that **head SHA** — a green report
+   from a stale run is a false report, and after a run of pushes that started nothing, a stale run is
+   exactly what is lying around. Judge and classify each failure as `wdi-build` Step 5 says, at the same cap
+   of 2 return trips. Every return trip is a **second** cloud run, so it is spent on a fix the local suite
+   has already proven, never on a guess.
+
+   Green marks the one PR **ready for review**. Red keeps it a **draft** and is reported red: a PR marked
+   ready is an invitation to merge, and the run MUST NOT extend one over a red branch, nor patch to turn it
+   green at the door.
 5. Cancel the loop: in Claude Code, the `loop` skill's cancel; elsewhere, tell the owner the loop has nothing
    left to do.
 6. Write the final report as the Output below. The owner merges; the run never does.
@@ -339,7 +391,11 @@ When § The work table reaches § Finish:
 - Starting the loop before the mandate is `accepted`, or on a red validator
 - **Opening preflight from a loop firing, or writing a mandate the owner did not confirm in this turn**
 - Treating an expired mandate as a reason to start over rather than to finish
-- Closing a spec, or marking the PR ready, while the last pushed head is red
+- Closing a spec while the run branch's own full suite is red, or marking the PR ready while CI is red
+- **Starting a cloud run before § Finish** — a PR marked ready mid-run, a workflow dispatched to check a
+  ticket, or an intermediate push left free to match a bare `on: push` trigger
+- Answering the quota problem by committing less often, instead of by fixing what a push triggers
+- Spending the one cloud run on a head whose local suite was never run
 - Re-merging a branch whose merge was reverted, instead of cutting a new one
 - A mandate accepted by delegation, or with no `expires`
 - Deciding something the mandate parks, or parking something the mandate did not

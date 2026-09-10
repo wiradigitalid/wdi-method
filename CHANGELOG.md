@@ -10,6 +10,37 @@ version contains every fix below it.
 
 ---
 
+## 0.6.19 — 2026-09-10
+
+- **One autopilot run now costs one cloud CI run, not dozens.** A run over fifteen tickets pushed often
+  enough to start GitHub Actions at every ticket commit and every spec close, and spent most of a month's
+  Actions allowance in two days — a Windows runner bills at 2x the minutes and macOS at 10x, and on a
+  private repository every one of those comes out of the allowance. **The fix is not fewer commits**: they
+  stay granular, one per ticket, plus the memlog and the registry catch-up. What changed is what a push
+  triggers.
+  - `wdi-autopilot` gains **§ Cycle-end CI**. Every intermediate push starts nothing; the cloud runner
+    fires **once**, at § Finish, when the final head is pushed and the one PR is marked ready for review.
+    § Door 2 says an iteration MUST NOT dispatch a workflow or mark a PR ready mid-ticket, and § Finish
+    says how the run is triggered at the end — ready-for-review, `workflow_dispatch`, or a final push with
+    no `[skip ci]`, in that order of preference.
+  - What a spec close is judged on until then is the run branch's **own full suite, run locally** — the
+    check that used to be "the last pushed head is green in CI". Nothing closes over red; only the place
+    the red is seen has moved to where it costs nothing.
+  - Preflight gains a row: **no workflow may fire on an intermediate push.** It is red when one does, and
+    it is checked at minute one rather than discovered on the invoice.
+  - `wdi-build` Step 5 says the same thing for a supervised run: one unit of work earns one cloud run.
+- **New guide — `.constitution/method/ci-guide.md`.** The trigger shape (`workflow_dispatch` always;
+  `pull_request` `types: [ready_for_review]` as the one automatic trigger; never a bare `on: push`),
+  `paths-ignore` for the prose and corpus layers, `concurrency` with `cancel-in-progress`, and two
+  copy-paste templates: `ci.yml` for the product's build and test, and `korpus.yml` for the corpus
+  validators, kept separate so the cheap one can still run when the expensive one is ignored.
+
+**What a repo that already has the method installed does about it.** `npx wdi-method@latest update` brings
+the guide and the two skills. The workflows themselves are yours and the installer does not write them:
+open `.constitution/method/ci-guide.md` and compare your `.github/workflows/` against § Trigger shape. A
+workflow with a bare `on: push` is the one that spends the allowance, and it is what the new preflight row
+will refuse to start a mandate over.
+
 ## 0.6.18 — 2026-09-08
 
 - **This file.** The version history was only readable as `git log`, which is the wrong place to look for

@@ -40,8 +40,10 @@ names which; the seams, the `to-tickets` quiz, and § When the code turns out to
 coordinator and written to the ledger, one row each; and whatever the mandate lists as `parked` still stops,
 reported for the owner rather than decided. One thing changes **shape** rather than owner: a mandate is one
 unit of work and reaches `main` through **one PR**, so Step 4 commits the ticket to the run branch instead of
-opening a PR per ticket, and Step 5's push and CI watch happen at every spec close on that one PR — the
-checklist, the head-SHA rule, and the caps are unchanged. Nothing else in this skill relaxes. `wdi-autopilot` owns the
+opening a PR per ticket, and Step 5 splits: the coordinator pushes the run branch at every spec close, but
+**the cloud run happens once, at `wdi-autopilot` § Finish** — every intermediate push starts nothing, and
+what a spec close is judged on until then is the run branch's own full suite, run locally. The checklist,
+the head-SHA rule, and the caps are unchanged. Nothing else in this skill relaxes. `wdi-autopilot` owns the
 mandate, the ledger, and the loop; this skill MUST NOT restate them.
 
 **No orchestration tool is required, and this skill MUST NOT name one.** How the work is carried out is the
@@ -307,6 +309,9 @@ The five items that left this list moved to Phase 4, where the information actua
 
 - MUST wait for every check to conclude, then confirm the checks belong to the **pushed head SHA**. A green
   report from a stale run is a false report.
+- **A cloud runner is metered, and this step is where the meter runs.** One unit of work earns **one** cloud
+  run: the workflow MUST NOT be shaped so that every intermediate push starts one — `ci-guide.md` owns the
+  trigger shape, and under a mandate `wdi-autopilot` § Cycle-end CI moves this step's run to § Finish.
 - `korpus.yml` validates the corpus, not the code. Build and test evidence comes from Step 2's own runs.
 - Classify each failure before acting: a defect from this change → Step 1 if the test was missing, Step 2 if
   the code was wrong, with `wdi-systematic-debugging` when
